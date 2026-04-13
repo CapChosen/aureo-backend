@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aureo - Inteligencia Financiera</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060709;
+  --card: #0e1118;
+  --surface: #0b0d12;
+  --border: rgba(255,255,255,0.065);
+  --border-hi: rgba(196,163,68,0.25);
+  --gold: #C4A344;
+  --gold-lt: #DFC06A;
+  --gold-dim: rgba(196,163,68,0.11);
+  --positive: #34D399;
+  --negative: #F87171;
+  --text: #E8E4DA;
+  --text-2: #7D8494;
+  --text-3: #3A404E;
+  --fs: 'Cormorant Garamond', serif;
+  --fn: 'DM Sans', sans-serif;
+  --fm: 'JetBrains Mono', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--fn);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-image:
+    radial-gradient(ellipse 55% 50% at 8% 10%, rgba(196,163,68,0.055) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 45% at 92% 90%, rgba(45,212,191,0.035) 0%, transparent 65%),
+    linear-gradient(rgba(255,255,255,0.013) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.013) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 52px 52px, 52px 52px;
+}
+.logo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.logo-mark {
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(135deg, #DFC06A 0%, #8B6E1A 100%);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 28px rgba(196,163,68,0.3);
+  margin-bottom: 14px;
+}
+.logo-mark span {
+  font-family: var(--fs);
+  font-size: 26px;
+  font-weight: 700;
+  color: #0a0800;
+}
+.logo-name {
+  font-family: var(--fs);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 4px;
+}
+.logo-name em { color: var(--gold); font-style: normal; }
+.logo-tag {
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--text-3);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-top: 5px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border-hi);
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 0 60px rgba(196,163,68,0.06);
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), var(--gold), var(--gold-dim), transparent);
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 4px;
+  border-radius: 10px;
+  margin-bottom: 1.75rem;
+}
+.tab {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  font-family: var(--fn);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: all 0.15s;
+}
+.tab.active {
+  background: var(--gold-dim);
+  border: 1px solid rgba(196,163,68,0.25);
+  color: var(--gold);
+}
+.form { display: flex; flex-direction: column; gap: 14px; }
+.hidden { display: none !important; }
+.field label {
+  display: block;
+  font-family: var(--fm);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+.field input {
+  width: 100%;
+  padding: 10px 13px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--fn);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.field input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(196,163,68,0.08);
+}
+.field input::placeholder { color: var(--text-3); }
+.btn {
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, #C4A344 0%, #8B6E1A 100%);
+  border: none;
+  border-radius: 8px;
+  color: #0a0800;
+  font-family: var(--fn);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.15s;
+}
+.btn:hover { box-shadow: 0 0 20px rgba(196,163,68,0.3); }
+.btn:disabled { background: #131820; color: var(--text-3); cursor: not-allowed; box-shadow: none; }
+.msg {
+  padding: 9px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-family: var(--fm);
+  letter-spacing: 0.3px;
+}
+.msg-error { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--negative); }
+.msg-ok { background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2); color: var(--positive); }
+.divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 4px 0;
+}
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.divider span { font-family: var(--fm); font-size: 9px; color: var(--text-3); letter-spacing: 1px; }
+.footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--text-3);
+  letter-spacing: 1px;
+  line-height: 1.8;
+}
+.footer a { color: var(--gold); text-decoration: none; }
+.live-row {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin-top: 1.5rem;
+}
+.live-dot {
+  width: 6px; height: 6px;
+  background: var(--positive);
+  border-radius: 50%;
+  animation: blink 2.2s infinite;
+}
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.live-txt {
+  font-family: var(--fm);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--positive);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+<div class="logo-wrap">
+  <div class="logo-mark"><span>A</span></div>
+  <div class="logo-name">AUR<em>E</em>O</div>
+  <div class="logo-tag">Inteligencia Financiera · Chile</div>
+</div>
+
+<div class="card">
+  <div class="tabs">
+    <button class="tab active" id="tab-login" onclick="showTab('login')">Iniciar sesion</button>
+    <button class="tab" id="tab-register" onclick="showTab('register')">Crear cuenta</button>
+  </div>
+
+  <div id="form-login" class="form">
+    <div class="field">
+      <label>Correo electronico</label>
+      <input type="email" id="login-email" placeholder="tu@email.com">
+    </div>
+    <div class="field">
+      <label>Contrasena</label>
+      <input type="password" id="login-password" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn" id="btn-login" onclick="doLogin()">Entrar al dashboard</button>
+    <div id="login-msg" style="display:none" class="msg"></div>
+  </div>
+
+  <div id="form-register" class="form hidden">
+    <div class="field">
+      <label>Correo electronico</label>
+      <input type="email" id="reg-email" placeholder="tu@email.com">
+    </div>
+    <div class="field">
+      <label>Contrasena</label>
+      <input type="password" id="reg-pass" placeholder="Minimo 6 caracteres">
+    </div>
+    <div class="field">
+      <label>Confirmar contrasena</label>
+      <input type="password" id="reg-pass2" placeholder="Repite la contrasena"
+        onkeydown="if(event.key==='Enter') doRegister()">
+    </div>
+    <button class="btn" id="btn-register" onclick="doRegister()">Crear mi cuenta</button>
+    <div id="reg-msg" style="display:none" class="msg"></div>
+  </div>
+
+  <div class="divider"><span>·</span></div>
+
+  <div class="footer">
+    Al continuar aceptas los <a href="#">Terminos de uso</a> de Aureo.<br>
+    No somos un asesor CMF regulado. Herramienta educativa.
+  </div>
+</div>
+
+<div class="live-row">
+  <div class="live-dot"></div>
+  <span class="live-txt">Sistema operativo</span>
+</div>
+
+<script>
+var SB_URL = 'https://yohffffeideggtkcefbv.supabase.co';
+var SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvaGZmZmZlaWRlZ2d0a2NlZmJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4Nzk4OTIsImV4cCI6MjA4OTQ1NTg5Mn0.VWc46msQoAC9cKsqvXMkMQZ8Xr9xa3zXR_CR4GQTcjQ';
+
+function showTab(tab) {
+  document.getElementById('tab-login').classList.remove('active');
+  document.getElementById('tab-register').classList.remove('active');
+  document.getElementById('form-login').classList.add('hidden');
+  document.getElementById('form-register').classList.add('hidden');
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('form-' + tab).classList.remove('hidden');
+}
+
+function showMsg(id, text, type) {
+  var el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg ' + (type === 'ok' ? 'msg-ok' : 'msg-error');
+  el.style.display = 'block';
+}
+
+function doLogin() {
+  var email = document.getElementById('login-email').value.trim();
+  var pass  = document.getElementById('login-password').value;
+  if (!email || !pass) { showMsg('login-msg', 'Completa todos los campos', 'error'); return; }
+
+  var btn = document.getElementById('btn-login');
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+
+  fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SB_ANON },
+    body: JSON.stringify({ email: email, password: pass })
+  })
+  .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+  .then(function(res) {
+    if (!res.ok) throw new Error(res.d.error_description || 'Credenciales invalidas');
+    localStorage.setItem('aureo_token', res.d.access_token);
+    localStorage.setItem('aureo_user', JSON.stringify(res.d.user));
+    showMsg('login-msg', 'Acceso concedido. Redirigiendo...', 'ok');
+    setTimeout(function() { window.location.href = 'dashboard.html'; }, 1200);
+  })
+  .catch(function(err) {
+    showMsg('login-msg', err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Entrar al dashboard';
+  });
+}
+
+function doRegister() {
+  var email = document.getElementById('reg-email').value.trim();
+  var pass  = document.getElementById('reg-pass').value;
+  var pass2 = document.getElementById('reg-pass2').value;
+  if (!email || !pass) { showMsg('reg-msg', 'Completa todos los campos', 'error'); return; }
+  if (pass !== pass2)  { showMsg('reg-msg', 'Las contrasenas no coinciden', 'error'); return; }
+  if (pass.length < 6) { showMsg('reg-msg', 'Minimo 6 caracteres', 'error'); return; }
+
+  var btn = document.getElementById('btn-register');
+  btn.disabled = true;
+  btn.textContent = 'Creando cuenta...';
+
+  fetch(SB_URL + '/auth/v1/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SB_ANON },
+    body: JSON.stringify({ email: email, password: pass })
+  })
+  .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+  .then(function(res) {
+    if (!res.ok) throw new Error(res.d.msg || 'Error al crear cuenta');
+    showMsg('reg-msg', 'Cuenta creada. Revisa tu email para confirmar.', 'ok');
+  })
+  .catch(function(err) {
+    showMsg('reg-msg', err.message, 'error');
+  })
+  .finally(function() {
+    btn.disabled = false;
+    btn.textContent = 'Crear mi cuenta';
+  });
+}
+</script>
+</body>
+</html>
