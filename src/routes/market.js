@@ -655,13 +655,25 @@ router.get('/allprices', (_req, res) => {
 
 // ════════════════════════════════════════════════════════
 // GET /api/market/candle/:symbol?tf=D
-// Returns OHLC candle data for the chart modal.
-// tf: 1H (hourly last 7d), D (daily 6m), M (monthly 3y), Y (monthly 5y)
-// No auth — public price data.
+// Uses Yahoo Finance — free, no key, supports all symbols
+// including crypto (BTC-USD, ETH-USD) natively.
+// Finnhub /stock/candle requires a paid plan, so we avoid it.
+// tf: 1H (1h candles, 5 days), D (daily, 1 year),
+//     M (monthly, 5 years), Y (monthly, max)
 // ════════════════════════════════════════════════════════
+
+// Some symbols differ between our DB and Yahoo Finance
+const YAHOO_SYMBOL_MAP = {
+  'BRK.B': 'BRK-B',
+};
+
+function toYahooSymbol(sym) {
+  return YAHOO_SYMBOL_MAP[sym] || sym;
+}
+
 router.get('/candle/:symbol', async (req, res) => {
-  const raw    = req.params.symbol.toUpperCase();
-  const tf     = req.query.tf || 'D';
+  const raw      = req.params.symbol.toUpperCase();
+  const tf       = req.query.tf || 'D';
   const cacheKey = `${raw}:${tf}`;
 
   const cached = candleCache[cacheKey];
@@ -669,46 +681,76 @@ router.get('/candle/:symbol', async (req, res) => {
     return res.json({ ...cached.data, cached: true });
   }
 
-  const isCrypto = raw === 'BTC-USD' || raw === 'ETH-USD';
-  const finnSym  = QUOTE_SYMBOL_MAP[raw] || raw;
-  const now      = Math.floor(Date.now() / 1000);
-
-  let resolution, from;
+  // Map tf → Yahoo Finance interval + range
+  let interval, range;
   switch (tf) {
-    case '1H': resolution = '60'; from = now - 7  * 24 * 3600; break; // 7 days hourly
-    case 'M':  resolution = 'M';  from = now - 3  * 365 * 24 * 3600; break; // 3 years monthly
-    case 'Y':  resolution = 'M';  from = now - 10 * 365 * 24 * 3600; break; // 10 years monthly
-    default:   resolution = 'D';  from = now - 180 * 24 * 3600; break; // 6 months daily
+    case '1H': interval = '1h';  range = '5d';  break; // 5 days, hourly candles
+    case 'M':  interval = '1mo'; range = '5y';  break; // 5 years, monthly candles
+    case 'Y':  interval = '1mo'; range = 'max'; break; // max history, monthly candles
+    default:   interval = '1d';  range = '1y';  break; // 1 year, daily candles
   }
 
+  const yahooSym = toYahooSymbol(raw);
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSym)}?interval=${interval}&range=${range}`;
+
   try {
-    const endpoint = isCrypto
-      ? `https://finnhub.io/api/v1/crypto/candle?symbol=${encodeURIComponent(finnSym)}&resolution=${resolution}&from=${from}&to=${now}&token=${FINNHUB_KEY}`
-      : `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(raw)}&resolution=${resolution}&from=${from}&to=${now}&token=${FINNHUB_KEY}`;
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; AureoBot/1.0)',
+        'Accept': 'application/json',
+      }
+    });
 
-    const response = await fetch(endpoint);
-    const data = await response.json();
+    if (!response.ok) {
+      console.warn(`[Candle] Yahoo HTTP ${response.status} for ${raw}`);
+      return res.status(404).json({ error: `Sin datos para ${raw}` });
+    }
 
-    if (!response.ok || !data || data.s === 'no_data' || !Array.isArray(data.c)) {
-      console.warn(`[Candle] No data for ${raw} tf=${tf}:`, data?.s || response.status);
+    const body = await response.json();
+    const result = body?.chart?.result?.[0];
+
+    if (!result || !result.timestamp || !result.indicators?.quote?.[0]?.close) {
+      console.warn(`[Candle] Yahoo: no data for ${raw} tf=${tf}`);
       return res.status(404).json({ error: `Sin datos de velas para ${raw}` });
     }
 
-    const result = {
-      symbol: raw,
+    const q      = result.indicators.quote[0];
+    const closes = q.close;
+    const timestamps = result.timestamp;
+
+    // Filter out null values (market closures etc.)
+    const filtered = timestamps.reduce((acc, ts, i) => {
+      if (closes[i] != null) {
+        acc.t.push(ts);
+        acc.o.push(q.open[i]   ?? closes[i]);
+        acc.h.push(q.high[i]   ?? closes[i]);
+        acc.l.push(q.low[i]    ?? closes[i]);
+        acc.c.push(closes[i]);
+        acc.v.push(q.volume[i] ?? 0);
+      }
+      return acc;
+    }, { t:[], o:[], h:[], l:[], c:[], v:[] });
+
+    if (filtered.c.length === 0) {
+      return res.status(404).json({ error: `Sin datos de velas para ${raw}` });
+    }
+
+    const out = {
+      symbol:     raw,
       tf,
-      timestamps: data.t,
-      open:   data.o,
-      high:   data.h,
-      low:    data.l,
-      close:  data.c,
-      volume: data.v,
-      points: data.c.length,
+      timestamps: filtered.t,
+      open:       filtered.o,
+      high:       filtered.h,
+      low:        filtered.l,
+      close:      filtered.c,
+      volume:     filtered.v,
+      points:     filtered.c.length,
+      currency:   result.meta?.currency || 'USD',
     };
 
-    candleCache[cacheKey] = { data: result, ts: Date.now() };
-    console.log(`[Candle] ${raw} tf=${tf}: ${data.c.length} candles`);
-    res.json({ ...result, cached: false });
+    candleCache[cacheKey] = { data: out, ts: Date.now() };
+    console.log(`[Candle] ${raw} tf=${tf}: ${out.points} candles (Yahoo)`);
+    res.json({ ...out, cached: false });
 
   } catch (err) {
     console.error(`[Candle] Error ${raw}:`, err.message);
