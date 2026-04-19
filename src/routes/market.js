@@ -59,6 +59,16 @@ async function fetchPrice(symbol) {
     const response = await fetch(url);
     const data = await response.json();
 
+    if (!response.ok) {
+      console.error(`[Finnhub] HTTP ${response.status} for ${symbol}:`, JSON.stringify(data));
+      return null;
+    }
+
+    if (data.error) {
+      console.error(`[Finnhub] API error for ${symbol}:`, data.error);
+      return null;
+    }
+
     if (data.c && data.c > 0) {
       return {
         symbol,
@@ -70,9 +80,25 @@ async function fetchPrice(symbol) {
         prev_close: parseFloat(data.pc?.toFixed(2) || 0)
       };
     }
+
+    // c=0 typically means outside market hours or symbol not found
+    if (data.pc && data.pc > 0) {
+      // Use previous close as price when market is closed
+      return {
+        symbol,
+        price: parseFloat(data.pc.toFixed(2)),
+        change: 0,
+        change_pct: 0,
+        high: parseFloat(data.h?.toFixed(2) || 0),
+        low: parseFloat(data.l?.toFixed(2) || 0),
+        prev_close: parseFloat(data.pc.toFixed(2))
+      };
+    }
+
+    console.warn(`[Finnhub] No price data for ${symbol}: c=${data.c} pc=${data.pc}`);
     return null;
   } catch (error) {
-    console.error(`Error fetching ${symbol}:`, error.message);
+    console.error(`[Finnhub] Network error for ${symbol}:`, error.message);
     return null;
   }
 }

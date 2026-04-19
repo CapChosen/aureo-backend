@@ -1260,13 +1260,20 @@ async function fetchTickerPrices() {
   try {
     const response = await fetch(`${BACKEND}/api/market/ticker`);
     const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${data.error || response.statusText}`);
+    }
+
     if (data.prices && data.prices.length > 0) {
       TICKER_DATA = data.prices.map(p => ({s: p.symbol, p: p.price, c: p.change_pct}));
       buildTicker();
       console.log(`[TICKER] ${TICKER_DATA.length} símbolos actualizados`);
+    } else {
+      throw new Error(data.error || 'No prices in response');
     }
   } catch (error) {
-    console.error('Error ticker:', error);
+    console.error('[TICKER] Error:', error.message);
     if (TICKER_DATA.length === 0) {
       TICKER_DATA = [
         {s:'SPY',p:541.23,c:+0.82},{s:'QQQ',p:468.90,c:+1.24},
