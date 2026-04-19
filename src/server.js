@@ -21,6 +21,8 @@ const IS_DEV = process.env.NODE_ENV !== 'production';
 const PROD_ORIGINS = [
   'https://aureo.cl',
   'https://www.aureo.cl',
+  'https://xn--ureo-0qa.cl',
+  'http://xn--ureo-0qa.cl',
 ];
 const DEV_ORIGINS = [
   ...PROD_ORIGINS,

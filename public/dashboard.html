@@ -91,7 +91,7 @@ header{
 
 /* TICKER */
 .ticker{
-  height:32px;overflow:hidden;background:rgba(11,13,18,.97);
+  height:38px;overflow:hidden;background:rgba(11,13,18,.97);
   border-bottom:1px solid var(--border);display:flex;align-items:center;flex-shrink:0;
 }
 .ticker-lbl{
@@ -100,16 +100,16 @@ header{
   display:flex;align-items:center;flex-shrink:0;text-transform:uppercase;
 }
 .ticker-scroll{overflow:hidden;flex:1;display:flex;}
-.ticker-track{display:flex;animation:scroll-left 50s linear infinite;}
+.ticker-track{display:flex;animation:scroll-left 70s linear infinite;}
 @keyframes scroll-left{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
 .t-item{display:flex;align-items:center;gap:7px;padding:0 20px;border-right:1px solid var(--border);white-space:nowrap;}
-.t-sym{font-family:var(--font-mono);font-size:10.5px;font-weight:700;color:var(--text);}
-.t-price{font-family:var(--font-mono);font-size:10.5px;color:var(--text-2);}
+.t-sym{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text);}
+.t-price{font-family:var(--font-mono);font-size:12px;color:var(--text-2);}
 .t-chg{font-family:var(--font-mono);font-size:9.5px;font-weight:600;}
 .up{color:var(--positive);}.dn{color:var(--negative);}
 
 /* LAYOUT */
-.app{display:grid;grid-template-columns:284px 1fr 280px;height:calc(100vh - 86px);overflow:hidden;}
+.app{display:grid;grid-template-columns:310px 1fr 300px;height:calc(100vh - 92px);overflow:hidden;}
 .col{overflow-y:auto;overflow-x:hidden;}
 .col-l{border-right:1px solid var(--border);padding:13px 11px;display:flex;flex-direction:column;gap:9px;}
 .col-c{padding:13px 11px;display:flex;flex-direction:column;gap:9px;}
@@ -120,7 +120,7 @@ header{
 .card-gold{border-color:rgba(196,163,68,.15);background:linear-gradient(145deg,rgba(196,163,68,.04) 0%,var(--card) 60%);}
 .ctitle{
   font-size:8.5px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
-  color:var(--text-3);margin-bottom:11px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  color:var(--gold);margin-bottom:11px;display:flex;align-items:center;justify-content:space-between;gap:8px;
 }
 .ctitle .tag{font-size:8.5px;padding:1.5px 7px;border-radius:10px;letter-spacing:.5px;background:var(--gold-dim);color:var(--gold);border:1px solid rgba(196,163,68,.2);}
 
@@ -163,10 +163,10 @@ header{
 .btn-rm:hover{background:rgba(248,113,113,.15);color:var(--negative);}
 .alloc-bar{height:4px;border-radius:2px;background:var(--border);margin:8px 0 4px;overflow:hidden;display:flex;}
 .alloc-seg{height:100%;transition:width .4s;}
-.alloc-lbl{font-family:var(--font-mono);font-size:9px;display:flex;justify-content:space-between;color:var(--text-3);}
+.alloc-lbl{font-family:var(--font-mono);font-size:9px;display:flex;justify-content:space-between;color:var(--text-2);}
 .port-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;}
 .pm-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:7px 9px;}
-.pm-label{font-family:var(--font-mono);font-size:8.5px;color:var(--text-3);letter-spacing:1px;margin-bottom:3px;}
+.pm-label{font-family:var(--font-mono);font-size:8.5px;color:var(--text-2);letter-spacing:1px;margin-bottom:3px;}
 .pm-value{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text);}
 .pm-value.pos{color:var(--positive);}
 
@@ -177,9 +177,9 @@ header{
 }
 .phase-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
 .phase-label{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--gold);}
-.phase-yr-lbl{font-family:var(--font-mono);font-size:9px;color:var(--text-3);margin-left:4px;flex:1;}
+.phase-yr-lbl{font-family:var(--font-mono);font-size:9px;color:var(--text-2);margin-left:4px;flex:1;}
 .phase-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;}
-.p-field label{font-family:var(--font-mono);font-size:8px;color:var(--text-3);letter-spacing:1px;display:block;margin-bottom:3px;}
+.p-field label{font-family:var(--font-mono);font-size:8px;color:var(--text-2);letter-spacing:1px;display:block;margin-bottom:3px;}
 .p-field input{
   width:100%;background:var(--card);border:1px solid var(--border);border-radius:4px;
   color:var(--text);font-family:var(--font-mono);font-size:10px;padding:4px 6px;outline:none;
@@ -193,7 +193,7 @@ header{
 .btn-phase:hover{border-color:var(--gold);color:var(--gold);}
 
 /* CHART AREA */
-.chart-wrap{position:relative;height:200px;margin:8px 0;}
+.chart-wrap{position:relative;height:170px;margin:6px 0;}
 .chart-controls{display:flex;gap:5px;margin-bottom:8px;}
 .cc-btn{
   font-size:9px;padding:3px 9px;border:1px solid var(--border);border-radius:20px;
@@ -207,7 +207,7 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
 .horizon-val{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--gold);width:36px;text-align:right;}
 .proj-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;}
 .ps-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:8px;}
-.ps-label{font-family:var(--font-mono);font-size:8px;color:var(--text-3);letter-spacing:1px;margin-bottom:4px;}
+.ps-label{font-family:var(--font-mono);font-size:8px;color:var(--text-2);letter-spacing:1px;margin-bottom:4px;}
 .ps-val{font-family:var(--font-mono);font-size:12px;font-weight:700;}
 
 /* AI */
@@ -228,7 +228,7 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
   background:var(--gold-dim);border-left:2px solid var(--gold);
   padding:5px 8px;border-radius:0 4px 4px 0;margin:5px 0;font-size:11px;
 }
-.ai-usage{font-family:var(--font-mono);font-size:9px;color:var(--text-3);text-align:right;margin-top:8px;letter-spacing:.5px;}
+.ai-usage{font-family:var(--font-mono);font-size:9px;color:var(--text-2);text-align:right;margin-top:8px;letter-spacing:.5px;}
 
 /* NEWS */
 .news-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
@@ -394,6 +394,27 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
 .asset-subfilter-btn.active{background:rgba(196,163,68,.08);border-color:rgba(196,163,68,.3);color:var(--gold);}
 .asset-subfilter-btn:hover:not(.active){color:var(--text);border-color:rgba(255,255,255,.12);}
 
+/* LIVE PRICE IN ASSET CARDS */
+.asset-live-price{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
+.alp-price{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text);}
+.alp-chg{font-family:var(--font-mono);font-size:10px;font-weight:600;}
+
+/* QUICK SEARCH IN PORTFOLIO */
+.asset-quick-search{
+  width:100%;padding:6px 9px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--rs);color:var(--text);font-family:var(--font-sans);font-size:12px;
+  outline:none;margin-bottom:5px;
+}
+.asset-quick-search:focus{border-color:var(--gold);}
+.asset-quick-search::placeholder{color:var(--text-3);}
+
+/* RELATED TICKERS IN NEWS */
+.news-tickers{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;}
+.news-ticker-badge{font-family:var(--font-mono);font-size:8px;font-weight:700;padding:2px 6px;
+  border-radius:3px;letter-spacing:.5px;background:var(--gold-dim);color:var(--gold);
+  border:1px solid rgba(196,163,68,.2);cursor:pointer;}
+.news-ticker-badge:hover{background:rgba(196,163,68,.2);}
+
 /* PROYECCIONES FULL VIEW */
 .proy-full-view{position:fixed;top:86px;left:0;right:0;bottom:0;background:var(--bg);overflow-y:auto;z-index:100;}
 .proy-container{padding:28px;max-width:1400px;margin:0 auto;}
@@ -473,6 +494,10 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
   <div class="col col-l">
     <div class="card card-gold">
       <div class="ctitle">Portafolio <span class="tag" id="port-count">0 activos</span></div>
+      <input type="text" class="asset-quick-search" id="asset-quick-search"
+        placeholder="Buscar activo... (ej: NVDA, Tesla)"
+        oninput="filterAssetSelect(this.value)"
+        onkeydown="if(event.key==='Enter')addTopMatch()">
       <div class="add-row">
         <select class="asset-sel" id="asset-select"></select>
         <button class="btn-add" onclick="addAsset()">+</button>
@@ -1263,6 +1288,10 @@ function buildTicker() {
     </div>`
   ).join('');
   document.getElementById('ticker-track').innerHTML = items;
+  // FIX 3: Refresh asset explorer prices if open
+  if (document.getElementById('assetsFullView')?.style.display !== 'none') {
+    filterAssetsView();
+  }
 }
 
 setInterval(fetchTickerPrices, 60000);
@@ -1270,6 +1299,130 @@ setInterval(fetchTickerPrices, 60000);
 // ════════════════════════════════════════════════════════
 // PORTFOLIO
 // ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+// STOCK LEADERS (CEO · Sector) — FIX 4
+// ════════════════════════════════════════════════════════
+const STOCK_LEADERS = {
+  'AAPL':'Tim Cook · Consumer Electronics','MSFT':'Satya Nadella · Software & Cloud',
+  'GOOGL':'Sundar Pichai · Search & Cloud','AMZN':'Andy Jassy · E-commerce & Cloud',
+  'NVDA':'Jensen Huang · Semiconductors','META':'Mark Zuckerberg · Social Media',
+  'TSLA':'Elon Musk · Electric Vehicles','AMD':'Lisa Su · Semiconductors',
+  'INTC':'Pat Gelsinger · Semiconductors','AVGO':'Hock Tan · Semiconductors',
+  'QCOM':'Cristiano Amon · Wireless Tech','TSM':'C.C. Wei · Semiconductor Foundry',
+  'ASML':'Christophe Fouquet · Lithography','CRM':'Marc Benioff · CRM Cloud',
+  'ORCL':'Larry Ellison · Enterprise Software','ADBE':'Shantanu Narayen · Creative Software',
+  'NOW':'Bill McDermott · Enterprise Automation','SNOW':'Sridhar Ramaswamy · Data Cloud',
+  'PLTR':'Alex Karp · Data Analytics','PANW':'Nikesh Arora · Cybersecurity',
+  'CRWD':'George Kurtz · Cybersecurity','NET':'Matthew Prince · Internet Security',
+  'DDOG':'Olivier Pomel · Cloud Monitoring','ZS':'Jay Chaudhry · Zero Trust Security',
+  'WMT':'Doug McMillon · Retail','COST':'Ron Vachris · Membership Retail',
+  'TGT':'Brian Cornell · Retail','HD':'Ted Decker · Home Improvement',
+  'LOW':'Marvin Ellison · Home Improvement','NKE':'Elliott Hill · Sportswear',
+  'SBUX':'Brian Niccol · Coffee Retail','MCD':'Chris Kempczinski · Fast Food',
+  'KO':'James Quincey · Beverages','PEP':'Ramon Laguarta · Food & Beverages',
+  'PG':'Jon Moeller · Consumer Goods','JNJ':'Joaquin Duato · Healthcare',
+  'UNH':'Andrew Witty · Health Insurance','PFE':'Albert Bourla · Pharmaceuticals',
+  'ABBV':'Richard Gonzalez · Biopharma','LLY':'David Ricks · Pharmaceuticals',
+  'TMO':'Marc Casper · Life Sciences','ABT':'Robert Ford · Medical Devices',
+  'AMGN':'Robert Bradway · Biotechnology','GILD':'Daniel O\'Day · Antiviral',
+  'MRNA':'Stéphane Bancel · mRNA Platform','BRK.B':'Warren Buffett · Conglomerate',
+  'JPM':'Jamie Dimon · Banking','BAC':'Brian Moynihan · Banking',
+  'WFC':'Charlie Scharf · Banking','C':'Jane Fraser · Global Banking',
+  'GS':'David Solomon · Investment Banking','MS':'Ted Pick · Wealth Management',
+  'BLK':'Larry Fink · Asset Management','SCHW':'Rick Wurster · Brokerage',
+  'V':'Ryan McInerney · Payment Networks','MA':'Michael Miebach · Payment Networks',
+  'PYPL':'Alex Chriss · Fintech','SQ':'Jack Dorsey · Fintech',
+  'XOM':'Darren Woods · Oil & Gas','CVX':'Mike Wirth · Oil & Gas',
+  'COP':'Ryan Lance · E&P Oil','SLB':'Olivier Le Peuch · Oilfield Services',
+  'NEE':'John Ketchum · Renewable Energy','DUK':'Lynn Good · Electric Utility',
+  'BA':'Kelly Ortberg · Aerospace','LMT':'James Taiclet · Defense',
+  'CAT':'Jim Umpleby · Heavy Machinery','DE':'John May · Agricultural Machinery',
+  'UPS':'Carol Tomé · Logistics','FDX':'Raj Subramaniam · Logistics',
+  'NEM':'Tom Palmer · Gold Mining','FCX':'Richard Adkerson · Copper Mining',
+  'CCJ':'Tim Gitzel · Uranium Mining','NTR':'Ken Seitz · Fertilizers',
+  'DIS':'Bob Iger · Entertainment','NFLX':'Greg Peters · Streaming',
+  'SPOT':'Daniel Ek · Music Streaming','UBER':'Dara Khosrowshahi · Ride-sharing',
+  'ABNB':'Brian Chesky · Travel Platform','SHOP':'Tobias Lütke · E-commerce Platform',
+  'DASH':'Tony Xu · Food Delivery','SAP':'Christian Klein · Enterprise Software',
+  'NVO':'Lars Fruergaard Jørgensen · Diabetes & Obesity','LVMH':'Bernard Arnault · Luxury Goods',
+  'OR':'Nicolas Hieronimus · Cosmetics','NESN':'Laurent Freixe · Food & Beverages',
+  'RHHBY':'Thomas Schinecker · Pharma & Diagnostics','NVS':'Vas Narasimhan · Pharmaceuticals',
+  'UL':'Hein Schumacher · Consumer Goods','BP':'Murray Auchincloss · Oil & Gas',
+  'SHEL':'Wael Sawan · Oil & Gas','VOW':'Oliver Blume · Automotive',
+  'BMW':'Oliver Zipse · Premium Automotive','BABA':'Eddie Wu · Chinese E-commerce',
+  'TCEHY':'Pony Ma · Social & Gaming','PDD':'Chen Lei · E-commerce',
+  'NIO':'William Li · Electric Vehicles','SONY':'Kenichiro Yoshida · Electronics & Entertainment',
+};
+
+// ════════════════════════════════════════════════════════
+// BÚSQUEDA RÁPIDA DE ACTIVOS — FIX 6
+// ════════════════════════════════════════════════════════
+function filterAssetSelect(q) {
+  const sel = document.getElementById('asset-select');
+  const query = q.trim().toLowerCase();
+  if (!query) { initSelect(); return; }
+  // Buscar coincidencias
+  const matches = Object.entries(DB).filter(([sym, d]) =>
+    sym.toLowerCase().includes(query) || (d.name||'').toLowerCase().includes(query)
+  );
+  // Rebuild select con solo los matches
+  sel.innerHTML = '';
+  if (!matches.length) {
+    const opt = document.createElement('option');
+    opt.textContent = 'Sin resultados';
+    opt.disabled = true;
+    sel.appendChild(opt);
+    return;
+  }
+  matches.slice(0, 30).forEach(([sym, d]) => {
+    const opt = document.createElement('option');
+    opt.value = sym;
+    opt.textContent = `${sym} — ${d.name || sym}`;
+    sel.appendChild(opt);
+  });
+}
+
+function addTopMatch() {
+  const q = document.getElementById('asset-quick-search').value.trim().toLowerCase();
+  if (!q) { addAsset(); return; }
+  const match = Object.keys(DB).find(sym =>
+    sym.toLowerCase() === q || (DB[sym].name||'').toLowerCase().includes(q)
+  );
+  if (match) {
+    document.getElementById('asset-select').value = match;
+    addAsset();
+    document.getElementById('asset-quick-search').value = '';
+    initSelect(); // reset select to full list
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// RELATED TICKERS IN NEWS — FIX 5
+// ════════════════════════════════════════════════════════
+const TICKER_KW = {
+  'AAPL':['apple','iphone','ipad','app store'],'MSFT':['microsoft','azure','windows','office'],
+  'GOOGL':['google','alphabet','youtube','gemini'],'AMZN':['amazon','aws'],
+  'NVDA':['nvidia','gpu','h100','cuda'],'META':['meta','facebook','instagram'],
+  'TSLA':['tesla','electric vehicle'],'AMD':['amd','radeon','ryzen'],
+  'INTC':['intel'],'TSM':['tsmc','taiwan semiconductor'],
+  'JPM':['jpmorgan','jp morgan'],'BRK.B':['berkshire','warren buffett'],
+  'XOM':['exxon','exxonmobil'],'CVX':['chevron'],
+  'LLY':['lilly','eli lilly','ozempic','mounjaro','glp-1'],'NVO':['novo nordisk','wegovy'],
+  'SPY':['s&p 500','sp500'],'QQQ':['nasdaq 100'],'GLD':['gold','oro'],
+  'BTC-USD':['bitcoin','btc'],'ETH-USD':['ethereum','eth'],
+  'NEE':['renewable energy','solar energy'],'BA':['boeing'],
+  'LMT':['lockheed','defense'],'DIS':['disney'],'NFLX':['netflix'],
+  'PANW':['palo alto'],'CRWD':['crowdstrike'],'SHOP':['shopify'],
+};
+
+function findRelatedTickers(title, summary) {
+  const text = `${title} ${summary}`.toLowerCase();
+  return Object.entries(TICKER_KW)
+    .filter(([, kws]) => kws.some(kw => text.includes(kw)))
+    .map(([sym]) => sym)
+    .slice(0, 5);
+}
+
 function initSelect() {
   const sel = document.getElementById('asset-select');
   const groups = {
@@ -1943,10 +2096,12 @@ function scheduleSave() {
 async function savePortfolio() {
   try {
     const assets = S.port.map(a=>({ticker:a.t, name:DB[a.t]?.name||a.t, weight:a.w, cagr:(DB[a.t]?.mu||.08)*100, vol:(DB[a.t]?.sig||.15)*100}));
-    const phases = S.phases.map(p=>({label:'Fase', year_from:Math.floor((p.start-1)/12), year_to:Math.ceil(p.end/12), monthly_amount:p.monthly*12}));
+    // monthly_amount guarda el monto mensual directamente (sin *12)
+    const phases = S.phases.map(p=>({label:'Fase', year_from:Math.floor((p.start-1)/12), year_to:Math.ceil(p.end/12), monthly_amount:p.monthly}));
     await api('/api/portfolio',{method:'POST',body:JSON.stringify({name:'Mi Portafolio', initial_investment:parseFloat(document.getElementById('init-amount').value)||10000, assets, phases})});
     document.getElementById('save-ind').innerHTML = '<div class="save-dot"></div><span>Guardado automáticamente</span>';
   } catch(e) {
+    console.error('[Save] Error:', e);
     document.getElementById('save-ind').innerHTML = '<div class="save-dot" style="background:var(--negative)"></div><span>Error al guardar</span>';
   }
 }
@@ -1957,9 +2112,27 @@ async function loadPortfolio() {
     if (data.assets && Array.isArray(data.assets) && data.assets.length) {
       S.port = data.assets.map(a=>({t:a.ticker, w:a.weight}));
     }
-    if (data.initial_investment) document.getElementById('init-amount').value = data.initial_investment;
-  } catch(e) {}
-  renderAssets(); updateAllocBar(); updatePortMeta();
+    if (data.initial_investment) {
+      document.getElementById('init-amount').value = data.initial_investment;
+    }
+    // Restaurar fases guardadas
+    if (data.phases && Array.isArray(data.phases) && data.phases.length) {
+      const total = getHorizonMonths();
+      S.phases = data.phases
+        .sort((a,b) => (a.year_from||0) - (b.year_from||0))
+        .map((p, i) => {
+          const start   = Math.max(1, (p.year_from || 0) * 12 + 1);
+          const end     = Math.min((p.year_to || 10) * 12, total);
+          const monthly = p.monthly_amount || 500;
+          return {id: Date.now() + i, start, end, monthly};
+        });
+      rechainPhases(); // garantiza consistencia
+    }
+    console.log(`[Portfolio] Cargado: ${S.port.length} activos, ${S.phases.length} fases`);
+  } catch(e) {
+    console.warn('[Portfolio] Error al cargar:', e.message);
+  }
+  renderAssets(); updateAllocBar(); updatePortMeta(); renderPhases();
 }
 
 // ════════════════════════════════════════════════════════
@@ -2025,7 +2198,12 @@ function determinarSentimiento(article) {
 function renderNewsSidebar(items) {
   const CAT_CLASS = {economia:'nc-eco',geopolitica:'nc-geo',commodities:'nc-com',cripto:'nc-cry',tecnologia:'nc-tec'};
   const catNames = {economia:'Economía',geopolitica:'Geopolítica',tecnologia:'Tecnología',commodities:'Commodities',cripto:'Cripto'};
-  document.getElementById('newsList').innerHTML = items.map(n => `
+  document.getElementById('newsList').innerHTML = items.map(n => {
+    const tickers = findRelatedTickers(n.title, n.summary);
+    const tickerBadges = tickers.length
+      ? `<div class="news-tickers">${tickers.map(t=>`<span class="news-ticker-badge" onclick="event.stopPropagation();document.getElementById('asset-quick-search').value='${t}';filterAssetSelect('${t}')">${t}</span>`).join('')}</div>`
+      : '';
+    return `
     <div class="news-item ${n.sent}">
       <div class="news-meta">
         <span class="news-cat ${CAT_CLASS[n.cat]||'nc-eco'}">${catNames[n.cat]||n.cat}</span>
@@ -2034,8 +2212,9 @@ function renderNewsSidebar(items) {
       </div>
       <div class="news-title">${n.title}</div>
       <div class="news-summary">${n.summary}</div>
-    </div>
-  `).join('');
+      ${tickerBadges}
+    </div>`;
+  }).join('');
 }
 
 async function fetchNews(manual=false) {
@@ -2119,6 +2298,7 @@ function renderNewsGrid(filter) {
       <div class="news-full-title">${n.title}</div>
       <div class="news-full-summary">${n.summary}</div>
       ${n.content&&n.content!==n.summary?`<div class="news-full-content">${n.content}</div>`:''}
+      ${(()=>{const t=findRelatedTickers(n.title,n.summary);return t.length?`<div class="news-tickers">${t.map(tk=>`<span class="news-ticker-badge">${tk}</span>`).join('')}</div>`:''})()}
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
         <a href="${n.url}" target="_blank" style="font-size:11px;color:var(--gold);text-decoration:none;font-family:var(--font-mono);letter-spacing:0.5px;">Leer artículo completo →</a>
       </div>
@@ -2274,6 +2454,21 @@ function renderAssetsGrid(entries) {
       const srcBadge = real
         ? '<span class="dsrc-real" style="margin-left:0">HISTÓRICO</span>'
         : '<span class="dsrc-est"  style="margin-left:0">ESTIMADO</span>';
+      // FIX 3: live price from ticker
+      const tick = TICKER_DATA.find(t => t.s === sym);
+      const livePriceHtml = tick
+        ? `<div class="asset-live-price">
+            <span class="alp-price">$${tick.p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+            <span class="alp-chg ${tick.c>=0?'up':'dn'}">${tick.c>=0?'+':''}${tick.c.toFixed(2)}%</span>
+           </div>`
+        : `<div class="asset-live-price"><span class="alp-price" style="color:var(--text-3)">—</span></div>`;
+      // FIX 4: leader label
+      const isStock = d.type === 'Stock';
+      const isCrypto = d.type === 'Crypto';
+      const ownerLabel = isStock ? 'Líder:' : 'Emisor:';
+      const ownerValue = isStock ? (STOCK_LEADERS[sym] || d.owner || '—')
+                       : isCrypto ? 'Descentralizado · Blockchain'
+                       : (d.owner || '—');
       return `<div class="asset-card ${tc[d.type]||'stock'}">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
           <div>
@@ -2284,9 +2479,10 @@ function renderAssetsGrid(entries) {
             </div>
             <div class="asset-full-name">${d.name||sym}</div>
           </div>
+          ${livePriceHtml}
         </div>
         <div class="asset-desc">${d.description||'Sin descripción disponible.'}</div>
-        <div class="asset-owner-lbl">Emisor: <span style="color:var(--text-2)">${d.owner||'—'}</span></div>
+        <div class="asset-owner-lbl">${ownerLabel} <span style="color:var(--text-2)">${ownerValue}</span></div>
         <div class="asset-metrics">
           <div class="am-box"><div class="am-label">RETORNO μ</div><div class="am-value" style="color:var(--positive)">${(mu_use*100).toFixed(1)}%</div></div>
           <div class="am-box"><div class="am-label">VOLATILIDAD σ</div><div class="am-value">${(sig_use*100).toFixed(1)}%</div></div>

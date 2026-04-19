@@ -22,6 +22,7 @@ async function fetchNewsFromAPI() {
   if (!NEWS_API_KEY) {
     throw new Error('NEWS_API_KEY no configurada en .env');
   }
+  console.log(`[NewsAPI] Key: ${NEWS_API_KEY.substring(0,4)}... (${NEWS_API_KEY.length} chars)`);
 
   const today = new Date();
   const twoWeeksAgo = new Date();
