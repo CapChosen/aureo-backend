@@ -415,6 +415,11 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
   border:1px solid rgba(196,163,68,.2);cursor:pointer;}
 .news-ticker-badge:hover{background:rgba(196,163,68,.2);}
 
+/* CHART MODAL */
+.cm-tf-btn{padding:5px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text-2);font-family:var(--font-mono);font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.5px;transition:all .15s;}
+.cm-tf-btn:hover{border-color:var(--gold);color:var(--gold);}
+.cm-tf-btn.active{background:var(--gold-dim);border-color:rgba(196,163,68,.35);color:var(--gold);}
+
 /* PROYECCIONES FULL VIEW */
 .proy-full-view{position:fixed;top:86px;left:0;right:0;bottom:0;background:var(--bg);overflow-y:auto;z-index:100;}
 .proy-container{padding:28px;max-width:1400px;margin:0 auto;}
@@ -621,6 +626,44 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
     </div>
     <div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;min-height:26px;" id="asset-sub-filters"></div>
     <div id="assets-grid-container"></div>
+  </div>
+</div>
+
+<!-- MODAL GRÁFICO DE ACTIVO -->
+<div id="chartModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(6,7,9,0.88);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div style="background:var(--card);border:1px solid var(--border-hi);border-radius:20px;width:min(900px,95vw);max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 80px rgba(196,163,68,0.12);">
+    <!-- Header del modal -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:2px;">
+            <span id="cm-symbol" style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--gold);"></span>
+            <span id="cm-type-badge" style="font-family:var(--font-mono);font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:1px;"></span>
+          </div>
+          <div id="cm-name" style="font-family:var(--font-sans);font-size:13px;color:var(--text-2);"></div>
+        </div>
+        <div style="border-left:1px solid var(--border);padding-left:14px;margin-left:4px;">
+          <div id="cm-price" style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--text);"></div>
+          <div id="cm-change" style="font-family:var(--font-mono);font-size:12px;font-weight:600;"></div>
+        </div>
+      </div>
+      <button onclick="closeAssetChart()" style="background:none;border:1px solid var(--border);color:var(--text-2);width:32px;height:32px;border-radius:8px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <!-- Time frame buttons -->
+    <div style="display:flex;gap:6px;padding:14px 24px 0;">
+      <button class="cm-tf-btn active" onclick="loadChartData('1H',this)">1H</button>
+      <button class="cm-tf-btn" onclick="loadChartData('D',this)">D</button>
+      <button class="cm-tf-btn" onclick="loadChartData('M',this)">M</button>
+      <button class="cm-tf-btn" onclick="loadChartData('Y',this)">1A</button>
+    </div>
+    <!-- Chart container -->
+    <div style="padding:16px 24px 24px;flex:1;position:relative;min-height:320px;">
+      <div id="cm-loading" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;background:var(--card);">
+        <div class="spin" style="width:28px;height:28px;border-width:3px;"></div>
+      </div>
+      <div id="cm-error" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:var(--text-3);font-size:13px;font-family:var(--font-mono);">Sin datos disponibles para este activo</div>
+      <canvas id="cm-chart" style="width:100%;"></canvas>
+    </div>
   </div>
 </div>
 
@@ -1255,6 +1298,28 @@ let S = {
 // TICKER CON PRECIOS REALES
 // ════════════════════════════════════════════════════════
 let TICKER_DATA = [];
+// Extended price cache — covers all 170 assets (populated by /api/market/allprices)
+let ALL_PRICES_DATA = {};
+let allPricesFetched = false;
+
+async function fetchAllPrices() {
+  try {
+    const response = await fetch(`${BACKEND}/api/market/allprices`);
+    if (!response.ok) return;
+    const data = await response.json();
+    if (data.prices && Object.keys(data.prices).length > 0) {
+      ALL_PRICES_DATA = data.prices;
+      allPricesFetched = true;
+      console.log(`[AllPrices] ${data.count} precios cargados (preload_complete=${data.preload_complete})`);
+      // Refresh asset grid if open
+      if (document.getElementById('assetsFullView')?.style.display !== 'none') {
+        filterAssetsView();
+      }
+    }
+  } catch (e) {
+    console.warn('[AllPrices] Error:', e.message);
+  }
+}
 
 async function fetchTickerPrices() {
   try {
@@ -2337,6 +2402,7 @@ function showView(view) {
     assetsView.style.display = 'block';
     proyView.style.display = 'none';
     if (!window.assetsLoaded) { renderAssetsExplorer(); window.assetsLoaded = true; }
+    fetchAllPrices();
   } else if (view === 'proyecciones') {
     app.style.display = 'none';
     newsView.style.display = 'none';
@@ -2461,12 +2527,14 @@ function renderAssetsGrid(entries) {
       const srcBadge = real
         ? '<span class="dsrc-real" style="margin-left:0">HISTÓRICO</span>'
         : '<span class="dsrc-est"  style="margin-left:0">ESTIMADO</span>';
-      // FIX 3: live price from ticker
+      // Live price: prefer ticker (freshest), fall back to extended cache
       const tick = TICKER_DATA.find(t => t.s === sym);
-      const livePriceHtml = tick
+      const ext  = ALL_PRICES_DATA[sym];
+      const liveP = tick ? { p: tick.p, c: tick.c } : ext ? { p: ext.price, c: ext.change_pct } : null;
+      const livePriceHtml = liveP
         ? `<div class="asset-live-price">
-            <span class="alp-price">$${tick.p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
-            <span class="alp-chg ${tick.c>=0?'up':'dn'}">${tick.c>=0?'+':''}${tick.c.toFixed(2)}%</span>
+            <span class="alp-price">$${liveP.p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+            <span class="alp-chg ${liveP.c>=0?'up':'dn'}">${liveP.c>=0?'+':''}${liveP.c.toFixed(2)}%</span>
            </div>`
         : `<div class="asset-live-price"><span class="alp-price" style="color:var(--text-3)">—</span></div>`;
       // FIX 4: leader label
@@ -2476,7 +2544,9 @@ function renderAssetsGrid(entries) {
       const ownerValue = isStock ? (STOCK_LEADERS[sym] || d.owner || '—')
                        : isCrypto ? 'Descentralizado · Blockchain'
                        : (d.owner || '—');
-      return `<div class="asset-card ${tc[d.type]||'stock'}">
+      const safeType = encodeURIComponent(d.type||'');
+      const safeName2 = (d.name||sym).replace(/'/g,"\\'");
+      return `<div class="asset-card ${tc[d.type]||'stock'}" onclick="openAssetChart('${safeSym}','${safeName2}','${safeType}')" style="cursor:pointer;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
           <div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
@@ -2497,7 +2567,7 @@ function renderAssetsGrid(entries) {
           <div class="am-box"><div class="am-label">${ret5Label}</div><div class="am-value" style="color:${ret5Color}">${ret5Val}</div></div>
           ${ddBox}
         </div>
-        <button class="btn-add-asset${inPort?' in-port':''}" onclick="${inPort?'':'addAssetFromExplorer(\''+safeSym+'\')'}">
+        <button class="btn-add-asset${inPort?' in-port':''}" onclick="event.stopPropagation();${inPort?'':'addAssetFromExplorer(\''+safeSym+'\')'}">
           ${inPort ? '✓ Ya está en tu portafolio' : '+ Agregar al portafolio'}
         </button>
       </div>`;
@@ -2562,6 +2632,170 @@ async function fetchHistoricalData() {
     if (document.getElementById('assetsFullView')?.style.display !== 'none') {
       filterAssetsView();
     }
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// CHART MODAL — click en tarjeta de activo
+// ════════════════════════════════════════════════════════
+let cmChart = null;
+let cmSymbol = null;
+let cmCurrentTF = 'D';
+
+function openAssetChart(sym, name, type) {
+  cmSymbol = sym;
+  cmCurrentTF = 'D';
+
+  // Populate header
+  document.getElementById('cm-symbol').textContent = sym;
+  document.getElementById('cm-name').textContent = decodeURIComponent(name);
+  const tb = {ETF:'atb-etf',Stock:'atb-stock',Crypto:'atb-crypto'};
+  const badge = document.getElementById('cm-type-badge');
+  badge.textContent = decodeURIComponent(type).toUpperCase();
+  badge.className = tb[decodeURIComponent(type)] || 'atb-stock';
+
+  // Price from existing cache
+  const tick = TICKER_DATA.find(t => t.s === sym);
+  const ext  = ALL_PRICES_DATA[sym];
+  const liveP = tick ? { p: tick.p, c: tick.c } : ext ? { p: ext.price, c: ext.change_pct } : null;
+  if (liveP) {
+    document.getElementById('cm-price').textContent = '$' + liveP.p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const chEl = document.getElementById('cm-change');
+    chEl.textContent = (liveP.c >= 0 ? '+' : '') + liveP.c.toFixed(2) + '%';
+    chEl.style.color = liveP.c >= 0 ? 'var(--positive)' : 'var(--negative)';
+  } else {
+    document.getElementById('cm-price').textContent = '—';
+    document.getElementById('cm-change').textContent = '';
+  }
+
+  // Reset TF buttons
+  document.querySelectorAll('.cm-tf-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.cm-tf-btn')[1]?.classList.add('active'); // 'D' = second button
+
+  // Show modal
+  const modal = document.getElementById('chartModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  loadChartData('D', document.querySelectorAll('.cm-tf-btn')[1]);
+}
+
+function closeAssetChart() {
+  document.getElementById('chartModal').style.display = 'none';
+  document.body.style.overflow = '';
+  if (cmChart) { cmChart.destroy(); cmChart = null; }
+}
+
+// Close modal on backdrop click
+document.getElementById('chartModal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeAssetChart();
+});
+
+async function loadChartData(tf, btn) {
+  if (!cmSymbol) return;
+  cmCurrentTF = tf;
+
+  document.querySelectorAll('.cm-tf-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const loading = document.getElementById('cm-loading');
+  const errEl   = document.getElementById('cm-error');
+  const canvas  = document.getElementById('cm-chart');
+  loading.style.display = 'flex';
+  errEl.style.display = 'none';
+  canvas.style.display = 'none';
+
+  if (cmChart) { cmChart.destroy(); cmChart = null; }
+
+  try {
+    const res  = await fetch(`${BACKEND}/api/market/candle/${encodeURIComponent(cmSymbol)}?tf=${tf}`);
+    const data = await res.json();
+
+    if (!res.ok || !data.close || data.close.length === 0) {
+      loading.style.display = 'none';
+      errEl.style.display = 'flex';
+      return;
+    }
+
+    // Build labels
+    const labels = data.timestamps.map(ts => {
+      const d = new Date(ts * 1000);
+      if (tf === '1H') return d.toLocaleDateString('es-CL',{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+      if (tf === 'M' || tf === 'Y') return d.toLocaleDateString('es-CL',{year:'numeric',month:'short'});
+      return d.toLocaleDateString('es-CL',{month:'short',day:'numeric',year:'2-digit'});
+    });
+
+    const closes = data.close;
+    const isUp   = closes[closes.length-1] >= closes[0];
+    const lineColor = isUp ? '#34D399' : '#F87171';
+    const fillColor = isUp ? 'rgba(52,211,153,0.08)' : 'rgba(248,113,113,0.08)';
+
+    canvas.style.display = 'block';
+    loading.style.display = 'none';
+
+    cmChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: closes,
+          borderColor: lineColor,
+          backgroundColor: fillColor,
+          borderWidth: 1.5,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: lineColor,
+          fill: true,
+          tension: 0.15,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2.8,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0e1118',
+            borderColor: 'rgba(196,163,68,0.25)',
+            borderWidth: 1,
+            titleColor: '#7D8494',
+            bodyColor: '#E8E4DA',
+            titleFont: { family: "'JetBrains Mono'", size: 10 },
+            bodyFont: { family: "'JetBrains Mono'", size: 12 },
+            callbacks: {
+              label: ctx => ' $' + ctx.parsed.y.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+            ticks: {
+              color: '#3A404E',
+              font: { family: "'JetBrains Mono'", size: 9 },
+              maxTicksLimit: 8,
+              maxRotation: 0,
+            }
+          },
+          y: {
+            position: 'right',
+            grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+            ticks: {
+              color: '#7D8494',
+              font: { family: "'JetBrains Mono'", size: 9 },
+              callback: v => '$' + v.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})
+            }
+          }
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error('[Chart]', err);
+    loading.style.display = 'none';
+    errEl.style.display = 'flex';
   }
 }
 

@@ -42,6 +42,59 @@ const TICKER_SYMBOLS = [
   'COST'
 ];
 
+// ════════════════════════════════════════════════════════
+// Todos los símbolos que Áureo maneja (excluidos de TICKER_SYMBOLS)
+// Se pre-cargan en background al arrancar el servidor
+// ════════════════════════════════════════════════════════
+const EXTENDED_SYMBOLS = [
+  // ETFs amplios
+  'IVV','VTI','ITOT','SCHB','VUG','IWF','VOOG','SCHG',
+  'VTV','IWD','VOOV','SCHV','VYM','SCHD','DVY','VIG','DGRO','NOBL',
+  'IJH','VO','IWR','IJR','VB',
+  // ETFs sectoriales
+  'VGT','XLK','FTEC','SMH','IGV','ARKW',
+  'VHT','XLV','IYH','IBB','XBI','VFH','XLF','KRE',
+  'VDE','XLE','XOP','IAU','GDX',
+  'VCR','XLY','VDC','XLP','VIS','XLI','VNQ','XLRE','IYR',
+  'VPU','XLU','VOX','XLC',
+  // Renta fija
+  'BND','IEF','SHY','LQD','HYG','TIP','MUB',
+  // Internacional
+  'IXUS','VEA','IEFA','EFA','VGK','EWG','EWU','EWJ','EWY',
+  'VWO','IEMG','EEM','INDA','MCHI','FXI','EWT',
+  // Temáticos
+  'ICLN','TAN','LIT','DRIV','HACK','CLOU','FINX','BOTZ','WCLD','ESPO','HERO',
+  // Stocks tech
+  'INTC','QCOM','TSM','ASML','ORCL','ADBE','NOW','SNOW','PLTR','PANW','CRWD','NET','DDOG','ZS',
+  // Consumo
+  'WMT','TGT','HD','LOW','NKE','SBUX','MCD','KO','PEP','PG',
+  // Salud
+  'JNJ','PFE','ABBV','TMO','ABT','AMGN','GILD','MRNA',
+  // Finanzas
+  'BAC','WFC','C','GS','MS','BLK','SCHW','MA','PYPL','SQ',
+  // Energía & industrial
+  'CVX','COP','SLB','NEE','DUK','BA','LMT','CAT','DE','UPS','FDX',
+  'NEM','FCX','CCJ','NTR','DIS','NFLX','SPOT','UBER','ABNB','SHOP','DASH',
+  // Internacionales
+  'SAP','NVO','RHHBY','NVS','UL','BP','SHEL','BABA','TCEHY','PDD','NIO','SONY',
+  'LVMH','OR','NESN','VOW','BMW',
+];
+
+// Mapeo de símbolos propios → formato Finnhub
+const QUOTE_SYMBOL_MAP = {
+  'BTC-USD': 'BINANCE:BTCUSDT',
+  'ETH-USD': 'BINANCE:ETHUSDT',
+};
+
+// Cache extendida (todos los activos extra)
+let extendedCache = {};
+let extendedTimestamp = 0;
+let preloadRunning = false;
+
+// Cache para datos de velas (chart)
+const candleCache = {};
+const CANDLE_CACHE_TTL = 2 * 60 * 60 * 1000; // 2 horas
+
 // Cache
 let priceCache = {};
 let tickerCache = [];
@@ -532,6 +585,134 @@ router.get('/historical/:symbol', requireAuth, async (req, res) => {
   } catch (err) {
     console.error(`[Hist] Error ${symbol}:`, err);
     res.status(500).json({ error: 'Error al obtener datos históricos' });
+  }
+});
+
+// ════════════════════════════════════════════════════════
+// BACKGROUND PRICE PRELOADER
+// Fetches all extended symbols sequentially (1 per 2s = 30/min)
+// so we stay under the 60/min Finnhub free-plan limit while
+// the ticker batch may also be running.
+// ════════════════════════════════════════════════════════
+async function fetchPriceSimple(symbol) {
+  const finnhubSym = QUOTE_SYMBOL_MAP[symbol] || symbol;
+  try {
+    const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(finnhubSym)}&token=${FINNHUB_KEY}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    if (!response.ok || data.error) return null;
+    if (data.c && data.c > 0) {
+      return { symbol, price: parseFloat(data.c.toFixed(2)), change_pct: parseFloat(data.dp?.toFixed(2) || 0) };
+    }
+    if (data.pc && data.pc > 0) {
+      return { symbol, price: parseFloat(data.pc.toFixed(2)), change_pct: 0 };
+    }
+    return null;
+  } catch { return null; }
+}
+
+async function startBackgroundPreload() {
+  if (preloadRunning) return;
+  preloadRunning = true;
+  const symbols = [...EXTENDED_SYMBOLS, 'BTC-USD', 'ETH-USD'];
+  console.log(`[Market] Background preload started — ${symbols.length} symbols @ 1 per 2s`);
+  let loaded = 0;
+  for (const sym of symbols) {
+    const p = await fetchPriceSimple(sym);
+    if (p) { extendedCache[sym] = p; loaded++; }
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  extendedTimestamp = Date.now();
+  preloadRunning = false;
+  console.log(`[Market] Preload done: ${loaded}/${symbols.length} prices cached`);
+}
+
+// Run immediately on module load, then every 15 minutes
+startBackgroundPreload();
+setInterval(startBackgroundPreload, 15 * 60 * 1000).unref();
+
+// ════════════════════════════════════════════════════════
+// GET /api/market/allprices
+// Returns merged prices from ticker + extended cache.
+// No auth — used by the public asset explorer.
+// ════════════════════════════════════════════════════════
+router.get('/allprices', (_req, res) => {
+  const all = {};
+  // Ticker symbols first (freshest)
+  for (const p of tickerCache) {
+    all[p.symbol] = { price: p.price, change_pct: p.change_pct };
+  }
+  // Extended symbols fill in the rest
+  for (const [sym, p] of Object.entries(extendedCache)) {
+    if (!all[sym]) all[sym] = { price: p.price, change_pct: p.change_pct };
+  }
+  res.json({
+    prices: all,
+    count: Object.keys(all).length,
+    preload_complete: !preloadRunning,
+  });
+});
+
+// ════════════════════════════════════════════════════════
+// GET /api/market/candle/:symbol?tf=D
+// Returns OHLC candle data for the chart modal.
+// tf: 1H (hourly last 7d), D (daily 6m), M (monthly 3y), Y (monthly 5y)
+// No auth — public price data.
+// ════════════════════════════════════════════════════════
+router.get('/candle/:symbol', async (req, res) => {
+  const raw    = req.params.symbol.toUpperCase();
+  const tf     = req.query.tf || 'D';
+  const cacheKey = `${raw}:${tf}`;
+
+  const cached = candleCache[cacheKey];
+  if (cached && (Date.now() - cached.ts) < CANDLE_CACHE_TTL) {
+    return res.json({ ...cached.data, cached: true });
+  }
+
+  const isCrypto = raw === 'BTC-USD' || raw === 'ETH-USD';
+  const finnSym  = QUOTE_SYMBOL_MAP[raw] || raw;
+  const now      = Math.floor(Date.now() / 1000);
+
+  let resolution, from;
+  switch (tf) {
+    case '1H': resolution = '60'; from = now - 7  * 24 * 3600; break; // 7 days hourly
+    case 'M':  resolution = 'M';  from = now - 3  * 365 * 24 * 3600; break; // 3 years monthly
+    case 'Y':  resolution = 'M';  from = now - 10 * 365 * 24 * 3600; break; // 10 years monthly
+    default:   resolution = 'D';  from = now - 180 * 24 * 3600; break; // 6 months daily
+  }
+
+  try {
+    const endpoint = isCrypto
+      ? `https://finnhub.io/api/v1/crypto/candle?symbol=${encodeURIComponent(finnSym)}&resolution=${resolution}&from=${from}&to=${now}&token=${FINNHUB_KEY}`
+      : `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(raw)}&resolution=${resolution}&from=${from}&to=${now}&token=${FINNHUB_KEY}`;
+
+    const response = await fetch(endpoint);
+    const data = await response.json();
+
+    if (!response.ok || !data || data.s === 'no_data' || !Array.isArray(data.c)) {
+      console.warn(`[Candle] No data for ${raw} tf=${tf}:`, data?.s || response.status);
+      return res.status(404).json({ error: `Sin datos de velas para ${raw}` });
+    }
+
+    const result = {
+      symbol: raw,
+      tf,
+      timestamps: data.t,
+      open:   data.o,
+      high:   data.h,
+      low:    data.l,
+      close:  data.c,
+      volume: data.v,
+      points: data.c.length,
+    };
+
+    candleCache[cacheKey] = { data: result, ts: Date.now() };
+    console.log(`[Candle] ${raw} tf=${tf}: ${data.c.length} candles`);
+    res.json({ ...result, cached: false });
+
+  } catch (err) {
+    console.error(`[Candle] Error ${raw}:`, err.message);
+    res.status(500).json({ error: 'Error al obtener datos de velas' });
   }
 });
 
