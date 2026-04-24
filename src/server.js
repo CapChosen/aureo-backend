@@ -95,10 +95,11 @@ app.use('/api/community', communityRoutes);
 // ════════════════════════════════════════════════════════
 // Fallback: servir dashboard para rutas no-API
 // ════════════════════════════════════════════════════════
-app.get('/',          (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'index.html')));
-app.get('/login',     (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'login.html')));
-app.get('/dashboard', (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html')));
-app.get('/app',       (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html')));
+app.get('/',               (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'index.html')));
+app.get('/login',          (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'login.html')));
+app.get('/dashboard',      (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html')));
+app.get('/app',            (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html')));
+app.get('/auth/callback',  (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'auth-callback.html')));
 
 // ════════════════════════════════════════════════════════
 // 404

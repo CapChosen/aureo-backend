@@ -308,8 +308,8 @@ var SB_URL  = 'https://yohffffeideggtkcefbv.supabase.co';
 var SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvaGZmZmZlaWRlZ2d0a2NlZmJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4Nzk4OTIsImV4cCI6MjA4OTQ1NTg5Mn0.VWc46msQoAC9cKsqvXMkMQZ8Xr9xa3zXR_CR4GQTcjQ';
 var sb = window.supabase.createClient(SB_URL, SB_ANON);
 
-// URL de redirección dinámica: apunta siempre al host actual → funciona en Railway Y localhost
-var REDIRECT_URL = window.location.origin + '/login';
+// Redirige siempre a /auth/callback — página neutral que intercambia PKCE y reenvía
+var REDIRECT_URL = window.location.origin + '/auth/callback';
 
 var recoveryEmail = '';
 
@@ -353,65 +353,16 @@ function checkStrength(val, barId, hintId) {
   hint.textContent = score === 0 ? 'Mínimo 8 caracteres' : (labels[score] || '');
 }
 
-// ── AUTH STATE CHANGE (SDK detecta PKCE callback automáticamente) ──
-sb.auth.onAuthStateChange(function(event, session) {
-  if (event === 'PASSWORD_RECOVERY') {
-    // El SDK ya intercambió el code PKCE — solo mostramos el formulario de nueva contraseña
-    showView('v-new-pass');
-  } else if (event === 'SIGNED_IN' && window._justVerified) {
-    // Confirmación de email completada
-    if (session) {
-      localStorage.setItem('aureo_token', session.access_token);
-      localStorage.setItem('aureo_user', JSON.stringify(session.user));
-    }
-    showView('v-confirmed');
-    setTimeout(function() { window.location.href = '/dashboard'; }, 2500);
-  }
-});
-
-// Disparar el intercambio PKCE si hay un code en la URL
+// ── Detectar si venimos desde /auth/callback en modo recovery ──
 (function() {
   var params = new URLSearchParams(window.location.search);
-  var code = params.get('code');
-  if (code) {
-    // Detectar si es confirmación de signup o recovery por el hash/state
-    var hash = window.location.hash;
-    var hashParams = {};
-    if (hash) hash.replace(/^#/,'').split('&').forEach(function(p){
-      var kv = p.split('='); hashParams[kv[0]] = kv[1];
-    });
-    var type = params.get('type') || hashParams['type'] || '';
-    if (type === 'signup' || type === 'email') window._justVerified = true;
-    // El SDK intercambia el code en el siguiente tick y dispara onAuthStateChange
-    sb.auth.exchangeCodeForSession(window.location.href).then(function(res) {
-      if (res.error) {
-        // Enlace expirado o ya usado
-        showMsg('login-msg', 'El enlace expiró o ya fue utilizado. Inicia sesión o solicita uno nuevo.', 'error');
-        showView('v-login');
-      }
-    });
+  if (params.get('mode') === 'recovery') {
+    // auth-callback.html ya intercambió el código PKCE, la sesión está en localStorage del SDK
     window.history.replaceState(null, '', window.location.pathname);
-  }
-  // Mantener soporte para flujo implícito (hash) por compatibilidad con proyectos legacy
-  var hash = window.location.hash;
-  if (hash && hash.includes('access_token')) {
-    var hp = {};
-    hash.replace(/^#/,'').split('&').forEach(function(p){
-      var kv = p.split('='); hp[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]||'');
-    });
-    if (hp.type === 'recovery' && hp.access_token) {
-      window._recoveryToken = hp.access_token;
-      window.history.replaceState(null, '', window.location.pathname);
-      showView('v-new-pass');
-    } else if ((hp.type === 'signup' || hp.type === 'email') && hp.access_token) {
-      localStorage.setItem('aureo_token', hp.access_token);
-      fetch(SB_URL + '/auth/v1/user', {
-        headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + hp.access_token }
-      }).then(function(r){return r.json();}).then(function(u){ if (u && u.id) localStorage.setItem('aureo_user', JSON.stringify(u)); });
-      window.history.replaceState(null, '', window.location.pathname);
-      showView('v-confirmed');
-      setTimeout(function() { window.location.href = '/dashboard'; }, 2500);
+    if (sessionStorage.getItem('aureo_recovery_active')) {
+      sessionStorage.removeItem('aureo_recovery_active');
     }
+    showView('v-new-pass');
   }
 })();
 
@@ -535,6 +486,7 @@ async function doRecover(isResend) {
 }
 
 // ── GUARDAR NUEVA CONTRASEÑA ──
+// La sesión de recovery ya está activa (intercambiada por auth-callback.html)
 async function doNewPassword() {
   var pass  = document.getElementById('np-pass').value;
   var pass2 = document.getElementById('np-pass2').value;
@@ -545,34 +497,20 @@ async function doNewPassword() {
   var btn = document.getElementById('btn-new-pass');
   btn.disabled = true; btn.textContent = 'Guardando...';
   try {
-    // El SDK ya tiene la sesión de recovery activa por onAuthStateChange
     var res = await sb.auth.updateUser({ password: pass });
     if (res.error) {
-      // Fallback: si el SDK no tiene sesión, intentar con el token del flujo implícito
-      if (window._recoveryToken) {
-        var r2 = await fetch(SB_URL + '/auth/v1/user', {
-          method: 'PUT',
-          headers: { 'Content-Type':'application/json', 'apikey': SB_ANON, 'Authorization': 'Bearer ' + window._recoveryToken },
-          body: JSON.stringify({ password: pass })
-        });
-        var d2 = await r2.json();
-        if (!r2.ok) throw new Error(d2.msg || d2.error_description || 'Error al cambiar la contraseña');
-        window._recoveryToken = null;
-      } else {
-        throw new Error(res.error.message);
+      var msg = res.error.message || 'Error al cambiar la contraseña';
+      if (msg.toLowerCase().includes('session') || msg.toLowerCase().includes('expired')) {
+        msg = 'La sesión expiró. Solicita un nuevo enlace de recuperación.';
+        setTimeout(function() { showView('v-recover'); }, 2500);
       }
+      throw new Error(msg);
     }
     showMsg('np-msg','¡Contraseña actualizada correctamente!','ok');
     await sb.auth.signOut();
     setTimeout(function() { showView('v-login'); }, 1800);
   } catch(e) {
     showMsg('np-msg', e.message, 'error');
-    if (e.message.toLowerCase().includes('expired') || e.message.toLowerCase().includes('invalid')) {
-      setTimeout(function() {
-        showMsg('np-msg', 'El enlace expiró. Solicita uno nuevo desde "¿Olvidaste tu contraseña?".', 'error');
-        setTimeout(function() { showView('v-recover'); }, 3000);
-      }, 500);
-    }
   } finally {
     btn.disabled = false; btn.textContent = 'Guardar nueva contraseña';
   }

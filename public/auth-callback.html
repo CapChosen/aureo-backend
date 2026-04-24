@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Áureo — Verificando...</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:#060709;color:#E8E4DA;font-family:'DM Sans',sans-serif;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:20px;
+  }
+  .logo{font-family:Georgia,serif;font-size:28px;letter-spacing:4px;color:#C4A344;}
+  .msg{font-size:13px;color:#7D8494;letter-spacing:.5px;}
+  .spin{
+    width:28px;height:28px;border:2.5px solid rgba(196,163,68,.2);
+    border-top-color:#C4A344;border-radius:50%;animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .err{color:#F87171;font-size:12px;max-width:320px;text-align:center;line-height:1.6;}
+  .link{color:#C4A344;text-decoration:underline;cursor:pointer;font-size:12px;}
+</style>
+</head>
+<body>
+  <div class="logo">ÁUREO</div>
+  <div class="spin" id="spin"></div>
+  <div class="msg" id="msg">Verificando tu cuenta...</div>
+  <div class="err hidden" id="err"></div>
+  <a class="link hidden" id="back" href="/login">← Volver al inicio de sesión</a>
+
+<script>
+var SB_URL  = 'https://yohffffeideggtkcefbv.supabase.co';
+var SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvaGZmZmZlaWRlZ2d0a2NlZmJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4Nzk4OTIsImV4cCI6MjA4OTQ1NTg5Mn0.VWc46msQoAC9cKsqvXMkMQZ8Xr9xa3zXR_CR4GQTcjQ';
+var sb = window.supabase.createClient(SB_URL, SB_ANON);
+
+function showError(text) {
+  document.getElementById('spin').style.display = 'none';
+  document.getElementById('msg').style.display  = 'none';
+  var err  = document.getElementById('err');
+  var back = document.getElementById('back');
+  err.textContent = text;
+  err.classList.remove('hidden');
+  back.classList.remove('hidden');
+}
+
+// Escucha el cambio de estado de auth — el SDK intercambia el code automáticamente
+sb.auth.onAuthStateChange(function(event, session) {
+  if (event === 'PASSWORD_RECOVERY') {
+    // Sesión de recovery activa — guardarla y redirigir al login en modo "nueva contraseña"
+    document.getElementById('msg').textContent = 'Abriendo formulario de nueva contraseña...';
+    sessionStorage.setItem('aureo_recovery_active', '1');
+    setTimeout(function() { window.location.href = '/login?mode=recovery'; }, 600);
+
+  } else if (event === 'SIGNED_IN') {
+    // Email confirmado — guardar sesión y mandar al dashboard
+    document.getElementById('msg').textContent = '¡Cuenta verificada! Redirigiendo...';
+    if (session) {
+      localStorage.setItem('aureo_token', session.access_token);
+      localStorage.setItem('aureo_user', JSON.stringify(session.user));
+    }
+    setTimeout(function() { window.location.href = '/dashboard'; }, 800);
+  }
+});
+
+// Disparar el intercambio PKCE con la URL actual
+sb.auth.exchangeCodeForSession(window.location.href)
+  .then(function(result) {
+    if (result.error) {
+      // El código puede ya haber sido usado o expirado
+      var msg = result.error.message || '';
+      if (msg.includes('expired') || msg.includes('invalid') || msg.includes('used')) {
+        showError('El enlace expiró o ya fue utilizado. Solicita uno nuevo desde la página de inicio de sesión.');
+      } else {
+        showError('Error al verificar: ' + msg);
+      }
+    }
+    // Si no hay error, onAuthStateChange manejará la redirección
+  })
+  .catch(function(err) {
+    showError('Error inesperado: ' + (err.message || err));
+  });
+
+// Timeout de seguridad: si en 10s no pasó nada, mostrar error
+setTimeout(function() {
+  if (document.getElementById('spin').style.display !== 'none') {
+    showError('La verificación tardó demasiado. Intenta solicitar un nuevo enlace.');
+  }
+}, 10000);
+</script>
+</body>
+</html>
