@@ -353,16 +353,22 @@ function checkStrength(val, barId, hintId) {
   hint.textContent = score === 0 ? 'Mínimo 8 caracteres' : (labels[score] || '');
 }
 
-// ── Detectar si venimos desde /auth/callback en modo recovery ──
+// ── Detectar si venimos desde /auth/callback ──
 (function() {
+  // Modo recovery: auth-callback intercambió el PKCE, sesión activa en SDK
   var params = new URLSearchParams(window.location.search);
   if (params.get('mode') === 'recovery') {
-    // auth-callback.html ya intercambió el código PKCE, la sesión está en localStorage del SDK
     window.history.replaceState(null, '', window.location.pathname);
-    if (sessionStorage.getItem('aureo_recovery_active')) {
-      sessionStorage.removeItem('aureo_recovery_active');
-    }
+    sessionStorage.removeItem('aureo_recovery_active');
     showView('v-new-pass');
+    return;
+  }
+  // Error reenviado desde auth-callback (ej: link expirado)
+  var authErr = sessionStorage.getItem('aureo_auth_error');
+  if (authErr) {
+    sessionStorage.removeItem('aureo_auth_error');
+    showMsg('login-msg', authErr, 'error');
+    showView('v-recover'); // mostrar directamente el form de recovery
   }
 })();
 
@@ -470,7 +476,11 @@ async function doRecover(isResend) {
   var btn = document.getElementById(btnId);
   btn.disabled = true; btn.textContent = 'Enviando...';
   try {
-    var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: REDIRECT_URL });
+    // redirectTo apunta a /auth/callback — debe estar en la allowlist de Supabase.
+    // Si la allowlist está vacía, Supabase usa el Site URL, que debe ser https://aureo-backend-production.up.railway.app
+    var res = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/auth/callback'
+    });
     if (res.error) throw new Error(res.error.message);
     if (!isResend) {
       document.getElementById('recovery-email-lbl').textContent = email;

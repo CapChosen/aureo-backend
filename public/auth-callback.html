@@ -64,23 +64,40 @@ sb.auth.onAuthStateChange(function(event, session) {
   }
 });
 
-// Disparar el intercambio PKCE con la URL actual
-sb.auth.exchangeCodeForSession(window.location.href)
-  .then(function(result) {
-    if (result.error) {
-      // El código puede ya haber sido usado o expirado
-      var msg = result.error.message || '';
-      if (msg.includes('expired') || msg.includes('invalid') || msg.includes('used')) {
-        showError('El enlace expiró o ya fue utilizado. Solicita uno nuevo desde la página de inicio de sesión.');
-      } else {
-        showError('Error al verificar: ' + msg);
-      }
+// Detectar error en el hash ANTES de intentar el exchange (ej: link expirado)
+(function() {
+  var hash = window.location.hash;
+  if (hash && hash.includes('error=')) {
+    var hp = {};
+    hash.replace(/^#/,'').split('&').forEach(function(p) {
+      var kv = p.split('=');
+      hp[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1]||'').replace(/\+/g,' '));
+    });
+    if (hp.error_code === 'otp_expired' || hp.error === 'access_denied') {
+      // Guardar mensaje de error y redirigir al login para mostrarlo ahí
+      sessionStorage.setItem('aureo_auth_error', hp.error_description || 'El enlace expiró. Solicita uno nuevo.');
+      window.location.href = '/login';
+      return;
     }
-    // Si no hay error, onAuthStateChange manejará la redirección
-  })
-  .catch(function(err) {
-    showError('Error inesperado: ' + (err.message || err));
-  });
+  }
+
+  // Disparar el intercambio PKCE con la URL actual
+  sb.auth.exchangeCodeForSession(window.location.href)
+    .then(function(result) {
+      if (result.error) {
+        var msg = result.error.message || '';
+        if (msg.includes('expired') || msg.includes('invalid') || msg.includes('used')) {
+          showError('El enlace expiró o ya fue utilizado. Solicita uno nuevo desde la página de inicio de sesión.');
+        } else {
+          showError('Error al verificar: ' + msg);
+        }
+      }
+      // Si no hay error, onAuthStateChange manejará la redirección
+    })
+    .catch(function(err) {
+      showError('Error inesperado: ' + (err.message || err));
+    });
+})();
 
 // Timeout de seguridad: si en 10s no pasó nada, mostrar error
 setTimeout(function() {
