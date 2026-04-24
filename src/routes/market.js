@@ -396,13 +396,6 @@ router.get('/company/:symbol', requireAuth, async (req, res) => {
 const historicalCache = {};
 const HIST_CACHE_TTL  = 24 * 60 * 60 * 1000; // 24 horas
 
-// Mapea símbolo de la app al formato Finnhub
-function toFinnhubSym(symbol) {
-  if (symbol === 'BTC-USD') return { type:'crypto', sym:'COINBASE:BTC-USD' };
-  if (symbol === 'ETH-USD') return { type:'crypto', sym:'COINBASE:ETH-USD' };
-  return { type:'stock', sym: symbol };
-}
-
 // Correlación de Pearson entre dos arrays del mismo largo
 function pearsonCorr(a, b) {
   const n = a.length;
@@ -419,67 +412,80 @@ function pearsonCorr(a, b) {
   return denom < 1e-12 ? 0 : parseFloat((num/denom).toFixed(4));
 }
 
-// Obtiene datos históricos de un símbolo (con cache 24h)
+// Obtiene datos históricos mensuales usando Yahoo Finance (5 años, gratis, sin key)
+// Reemplaza el endpoint Finnhub /stock/candle que requiere plan pago.
 async function fetchHistorical(symbol) {
   const cached = historicalCache[symbol];
   if (cached && (Date.now() - cached.timestamp) < HIST_CACHE_TTL) {
     return cached.data;
   }
 
-  const now         = Math.floor(Date.now() / 1000);
-  const fiveYearsAgo = now - Math.floor(5.1 * 365.25 * 24 * 3600);
-  const { type, sym } = toFinnhubSym(symbol);
-
-  const endpoint = type === 'crypto'
-    ? `https://finnhub.io/api/v1/crypto/candle?symbol=${sym}&resolution=M&from=${fiveYearsAgo}&to=${now}&token=${FINNHUB_KEY}`
-    : `https://finnhub.io/api/v1/stock/candle?symbol=${sym}&resolution=M&from=${fiveYearsAgo}&to=${now}&token=${FINNHUB_KEY}`;
+  const yahooSym = toYahooSymbol(symbol); // BRK.B → BRK-B, etc.
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSym)}?interval=1mo&range=5y`;
 
   let response;
   try {
-    response = await fetch(endpoint);
+    response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; AureoBot/1.0)',
+        'Accept': 'application/json',
+      }
+    });
   } catch (err) {
     console.error(`[Hist] Network error ${symbol}:`, err.message);
     return null;
   }
 
-  if (response.status === 429) {
-    console.warn(`[Hist] Rate-limit ${symbol}`);
+  if (!response.ok) {
+    console.warn(`[Hist] Yahoo HTTP ${response.status} for ${symbol}`);
     return null;
   }
 
-  const data = await response.json();
+  const body = await response.json();
+  const chart = body?.chart?.result?.[0];
 
-  if (!data || data.s === 'no_data' || !Array.isArray(data.c) || data.c.length < 12) {
-    console.log(`[Hist] Sin datos para ${symbol} (pts=${data?.c?.length ?? 0})`);
+  if (!chart || !chart.timestamp || !chart.indicators?.quote?.[0]?.close) {
+    console.log(`[Hist] Sin datos Yahoo para ${symbol}`);
     return null;
   }
 
-  const closes     = data.c;
-  const timestamps = data.t;
-  const N = closes.length;
+  const rawCloses = chart.indicators.quote[0].close;
+  const rawTimestamps = chart.timestamp;
+
+  // Filtrar nulos (fines de semana, feriados sin precio)
+  const valid = rawTimestamps.reduce((acc, ts, i) => {
+    if (rawCloses[i] != null) { acc.ts.push(ts); acc.c.push(rawCloses[i]); }
+    return acc;
+  }, { ts: [], c: [] });
+
+  const N = valid.c.length;
+  if (N < 12) {
+    console.log(`[Hist] Datos insuficientes para ${symbol}: ${N} puntos`);
+    return null;
+  }
 
   // Retornos logarítmicos mensuales
-  const returns       = [];
+  const returns = [];
   const returnsByMonth = {};
   for (let i = 1; i < N; i++) {
-    const r = Math.log(closes[i] / closes[i-1]);
+    const r = Math.log(valid.c[i] / valid.c[i - 1]);
     returns.push(r);
-    const d   = new Date(timestamps[i] * 1000);
-    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
+    const d   = new Date(valid.ts[i] * 1000);
+    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
     returnsByMonth[key] = r;
   }
 
   if (returns.length < 6) return null;
 
-  const mean     = returns.reduce((a,b)=>a+b, 0) / returns.length;
-  const variance = returns.reduce((a,b)=>a+(b-mean)**2, 0) / Math.max(1, returns.length - 1);
+  const mean     = returns.reduce((a, b) => a + b, 0) / returns.length;
+  const variance = returns.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, returns.length - 1);
 
   const mu        = parseFloat((mean * 12).toFixed(4));
   const sigma     = parseFloat((Math.sqrt(variance) * Math.sqrt(12)).toFixed(4));
-  const return_5y = parseFloat(((closes[N-1] / closes[0]) - 1).toFixed(4));
+  const return_5y = parseFloat(((valid.c[N - 1] / valid.c[0]) - 1).toFixed(4));
 
-  let maxDD = 0, peak = closes[0];
-  for (const c of closes) {
+  let maxDD = 0, peak = valid.c[0];
+  for (const c of valid.c) {
     if (c > peak) peak = c;
     const dd = (peak - c) / peak;
     if (dd > maxDD) maxDD = dd;
@@ -489,12 +495,12 @@ async function fetchHistorical(symbol) {
     symbol, mu, sigma, return_5y,
     max_drawdown : parseFloat(maxDD.toFixed(4)),
     data_points  : N,
-    period       : `${new Date(timestamps[0]*1000).toISOString().slice(0,7)} – ${new Date(timestamps[N-1]*1000).toISOString().slice(0,7)}`,
-    returnsByMonth  // solo para correlación interna, no se expone en la API
+    period       : `${new Date(valid.ts[0] * 1000).toISOString().slice(0, 7)} – ${new Date(valid.ts[N - 1] * 1000).toISOString().slice(0, 7)}`,
+    returnsByMonth,
   };
 
   historicalCache[symbol] = { data: result, timestamp: Date.now() };
-  console.log(`[Hist] ${symbol}: μ=${mu.toFixed(3)} σ=${sigma.toFixed(3)} 5y=${(return_5y*100).toFixed(1)}% pts=${N}`);
+  console.log(`[Hist] ${symbol}: μ=${mu.toFixed(3)} σ=${sigma.toFixed(3)} 5y=${(return_5y * 100).toFixed(1)}% pts=${N}`);
   return result;
 }
 
@@ -514,29 +520,21 @@ router.get('/historical/batch', requireAuth, async (req, res) => {
   }
 
   const results = {};
-  const BATCH   = 4;   // llamadas por "ronda"
-  const DELAY   = 1500; // ms entre rondas — seguro bajo 60/min
-
-  for (let i = 0; i < symbols.length; i += BATCH) {
-    const batch     = symbols.slice(i, i + BATCH);
-    const batchData = await Promise.all(batch.map(s => fetchHistorical(s)));
-    batch.forEach((s, idx) => {
-      const d = batchData[idx];
-      if (d) {
-        results[s] = {
-          mu          : d.mu,
-          sigma       : d.sigma,
-          return_5y   : d.return_5y,
-          max_drawdown: d.max_drawdown,
-          data_points : d.data_points,
-          period      : d.period
-        };
-      }
-    });
-    if (i + BATCH < symbols.length) {
-      await new Promise(r => setTimeout(r, DELAY));
+  // Yahoo Finance no tiene rate-limit documentado → paralelo puro
+  const batchData = await Promise.all(symbols.map(s => fetchHistorical(s)));
+  symbols.forEach((s, idx) => {
+    const d = batchData[idx];
+    if (d) {
+      results[s] = {
+        mu          : d.mu,
+        sigma       : d.sigma,
+        return_5y   : d.return_5y,
+        max_drawdown: d.max_drawdown,
+        data_points : d.data_points,
+        period      : d.period,
+      };
     }
-  }
+  });
 
   // Correlaciones para todos los pares con datos disponibles
   const correlations = {};
@@ -607,15 +605,9 @@ router.get('/correlations', requireAuth, async (req, res) => {
   const allSyms = symbols.includes('SPY') ? symbols : ['SPY', ...symbols];
 
   const results = {};
-  const BATCH = 4, DELAY = 1500;
-  for (let i = 0; i < allSyms.length; i += BATCH) {
-    const batch = allSyms.slice(i, i + BATCH);
-    const batchData = await Promise.all(batch.map(s => fetchHistorical(s)));
-    batch.forEach((s, idx) => {
-      if (batchData[idx]) results[s] = batchData[idx];
-    });
-    if (i + BATCH < allSyms.length) await new Promise(r => setTimeout(r, DELAY));
-  }
+  // Yahoo Finance: paralelo puro, sin delays
+  const fetched = await Promise.all(allSyms.map(s => fetchHistorical(s)));
+  allSyms.forEach((s, i) => { if (fetched[i]) results[s] = fetched[i]; });
 
   // Full NxN correlation matrix (only for the requested symbols)
   const matrix = {};
