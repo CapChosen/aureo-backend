@@ -5,14 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Áureo — Acceso</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- Supabase JS SDK v2 — handles PKCE, token refresh, auth state automatically -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root {
-  --bg: #060709; --card: #0e1118; --surface: #0b0d12;
-  --border: rgba(255,255,255,0.065); --border-hi: rgba(196,163,68,0.25);
-  --gold: #C4A344; --gold-lt: #DFC06A; --gold-dim: rgba(196,163,68,0.11);
-  --positive: #34D399; --negative: #F87171; --teal: #2DD4BF;
-  --text: #E8E4DA; --text-2: #7D8494; --text-3: #3A404E;
-  --fs: 'Cormorant Garamond', serif; --fn: 'DM Sans', sans-serif; --fm: 'JetBrains Mono', monospace;
+  --bg:#060709;--card:#0e1118;--surface:#0b0d12;
+  --border:rgba(255,255,255,.065);--border-hi:rgba(196,163,68,.25);
+  --gold:#C4A344;--gold-lt:#DFC06A;--gold-dim:rgba(196,163,68,.11);
+  --positive:#34D399;--negative:#F87171;
+  --text:#E8E4DA;--text-2:#7D8494;--text-3:#3A404E;
+  --fs:'Cormorant Garamond',serif;--fn:'DM Sans',sans-serif;--fm:'JetBrains Mono',monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{
@@ -26,8 +28,6 @@ body{
     linear-gradient(90deg,rgba(255,255,255,.013) 1px,transparent 1px);
   background-size:100% 100%,100% 100%,52px 52px,52px 52px;
 }
-
-/* ── Logo ── */
 .logo-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:1.8rem;}
 .logo-mark{
   width:52px;height:52px;background:linear-gradient(135deg,#DFC06A 0%,#8B6E1A 100%);
@@ -38,20 +38,15 @@ body{
 .logo-name{font-family:var(--fs);font-size:26px;font-weight:600;letter-spacing:4px;}
 .logo-name em{color:var(--gold);font-style:normal;}
 .logo-tag{font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:2.5px;text-transform:uppercase;margin-top:4px;}
-
-/* ── Card ── */
 .card{
   background:var(--card);border:1px solid var(--border-hi);border-radius:18px;
   padding:28px 28px 24px;width:100%;max-width:420px;
   box-shadow:0 0 60px rgba(196,163,68,.06);position:relative;overflow:hidden;
-  transition:min-height .3s;
 }
 .card::before{
   content:'';position:absolute;top:0;left:0;right:0;height:1px;
   background:linear-gradient(90deg,transparent,var(--gold-dim),var(--gold),var(--gold-dim),transparent);
 }
-
-/* ── Tabs ── */
 .tabs{
   display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);
   padding:4px;border-radius:10px;margin-bottom:20px;
@@ -62,8 +57,6 @@ body{
   cursor:pointer;letter-spacing:.3px;transition:all .15s;
 }
 .tab.active{background:var(--gold-dim);border:1px solid rgba(196,163,68,.25);color:var(--gold);}
-
-/* ── Form elements ── */
 .form{display:flex;flex-direction:column;gap:13px;}
 .hidden{display:none!important;}
 .field label{
@@ -76,26 +69,18 @@ body{
 }
 .field input:focus,.field select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(196,163,68,.08);}
 .field input::placeholder{color:var(--text-3);}
-.field select{cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237D8494'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.field select{cursor:pointer;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237D8494'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;}
 .field select option{background:var(--card);}
-
-/* Phone row */
 .phone-row{display:grid;grid-template-columns:110px 1fr;gap:8px;}
-
-/* Password strength */
 .pw-strength{height:3px;border-radius:2px;margin-top:5px;background:var(--border);overflow:hidden;}
 .pw-strength-bar{height:100%;border-radius:2px;transition:width .3s,background .3s;}
 .pw-hint{font-family:var(--fm);font-size:8.5px;color:var(--text-3);margin-top:3px;}
-
-/* Terms checkbox */
 .terms-row{display:flex;align-items:flex-start;gap:9px;cursor:pointer;}
-.terms-row input[type=checkbox]{
-  width:16px;height:16px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:2px;
-}
+.terms-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:2px;}
 .terms-row span{font-family:var(--fm);font-size:9.5px;color:var(--text-2);letter-spacing:.3px;line-height:1.6;}
 .terms-row a{color:var(--gold);text-decoration:none;}
-
-/* Buttons */
 .btn{
   width:100%;padding:11px;background:linear-gradient(135deg,#C4A344 0%,#8B6E1A 100%);
   border:none;border-radius:8px;color:#0a0800;font-family:var(--fn);font-size:13px;
@@ -105,53 +90,29 @@ body{
 .btn:disabled{background:#131820;color:var(--text-3);cursor:not-allowed;box-shadow:none;}
 .btn-ghost{
   width:100%;padding:10px;background:transparent;border:1px solid var(--border);
-  border-radius:8px;color:var(--text-2);font-family:var(--fn);font-size:12px;
-  cursor:pointer;transition:all .15s;
+  border-radius:8px;color:var(--text-2);font-family:var(--fn);font-size:12px;cursor:pointer;transition:all .15s;
 }
 .btn-ghost:hover{border-color:var(--text-2);color:var(--text);}
-
-/* Messages */
 .msg{padding:9px 12px;border-radius:7px;font-size:11.5px;font-family:var(--fm);letter-spacing:.3px;line-height:1.5;}
 .msg-error{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:var(--negative);}
 .msg-ok{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:var(--positive);}
-
-/* Link buttons */
-.link-btn{
-  background:none;border:none;color:var(--gold);font-family:var(--fm);font-size:9.5px;
-  cursor:pointer;letter-spacing:.5px;text-decoration:underline;padding:0;
-}
+.link-btn{background:none;border:none;color:var(--gold);font-family:var(--fm);font-size:9.5px;cursor:pointer;letter-spacing:.5px;text-decoration:underline;padding:0;}
 .link-btn:hover{color:var(--gold-lt);}
 .text-center{text-align:center;}
-.mt-4{margin-top:4px;}
-.mt-8{margin-top:8px;}
-.mt-12{margin-top:12px;}
-
-/* Divider */
+.mt-4{margin-top:4px;}.mt-8{margin-top:8px;}.mt-12{margin-top:12px;}
 .divider{display:flex;align-items:center;gap:10px;margin:6px 0;}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
 .divider span{font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:1px;}
-
-/* Footer */
 .footer{margin-top:18px;text-align:center;font-family:var(--fm);font-size:8.5px;color:var(--text-3);letter-spacing:.8px;line-height:1.9;}
 .footer a{color:var(--gold);text-decoration:none;}
-
-/* Big icon views (verify / recovery sent) */
 .big-icon{font-size:48px;text-align:center;margin:8px 0 16px;}
 .big-title{font-family:var(--fs);font-size:22px;font-weight:600;color:var(--gold);text-align:center;margin-bottom:8px;}
 .big-sub{font-family:var(--fm);font-size:10px;color:var(--text-2);text-align:center;letter-spacing:.5px;line-height:1.8;margin-bottom:20px;}
 .big-sub strong{color:var(--text);}
-
-/* Live dot */
 .live-row{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:1.4rem;}
 .live-dot{width:6px;height:6px;background:var(--positive);border-radius:50%;animation:blink 2.2s infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
 .live-txt{font-family:var(--fm);font-size:9px;font-weight:700;color:var(--positive);letter-spacing:2px;text-transform:uppercase;}
-
-/* Step indicator */
-.step-bar{display:flex;gap:6px;justify-content:center;margin-bottom:20px;}
-.step{width:28px;height:3px;border-radius:2px;background:var(--border);}
-.step.done{background:var(--gold);}
-.step.active{background:rgba(196,163,68,.5);}
 </style>
 </head>
 <body>
@@ -164,13 +125,11 @@ body{
 
 <div class="card" id="card">
 
-  <!-- ═══════════════════════════════════════
-       VIEW 1: LOGIN
-  ═══════════════════════════════════════ -->
+  <!-- VIEW 1: LOGIN -->
   <div id="v-login">
     <div class="tabs">
       <button class="tab active" onclick="switchTab('login')">Iniciar sesión</button>
-      <button class="tab" id="tab-reg" onclick="switchTab('register')">Crear cuenta</button>
+      <button class="tab" onclick="switchTab('register')">Crear cuenta</button>
     </div>
     <div class="form">
       <div class="field">
@@ -190,13 +149,11 @@ body{
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════
-       VIEW 2: REGISTER
-  ═══════════════════════════════════════ -->
+  <!-- VIEW 2: REGISTER -->
   <div id="v-register" class="hidden">
     <div class="tabs">
       <button class="tab" onclick="switchTab('login')">Iniciar sesión</button>
-      <button class="tab active" id="tab-reg2" onclick="switchTab('register')">Crear cuenta</button>
+      <button class="tab active" onclick="switchTab('register')">Crear cuenta</button>
     </div>
     <div class="form">
       <div class="field">
@@ -244,17 +201,14 @@ body{
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════
-       VIEW 3: VERIFICAR EMAIL (post-registro)
-  ═══════════════════════════════════════ -->
+  <!-- VIEW 3: VERIFICAR EMAIL (post-registro) -->
   <div id="v-verify" class="hidden">
     <div class="big-icon">📬</div>
     <div class="big-title">Verifica tu correo</div>
     <div class="big-sub">
       Enviamos un enlace de confirmación a<br>
       <strong id="verify-email-lbl">tu email</strong><br><br>
-      Revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.
-      No olvides revisar la carpeta de spam.
+      Revisa tu bandeja de entrada (y spam) y haz clic en el enlace para activar tu cuenta.
     </div>
     <button class="btn" id="btn-resend" onclick="resendVerification()">Reenviar correo de verificación</button>
     <div id="resend-msg" class="msg hidden mt-8"></div>
@@ -263,9 +217,7 @@ body{
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════
-       VIEW 4: RECUPERAR CONTRASEÑA
-  ═══════════════════════════════════════ -->
+  <!-- VIEW 4: RECUPERAR CONTRASEÑA -->
   <div id="v-recover" class="hidden">
     <div class="big-icon" style="font-size:36px;margin-bottom:10px;">🔑</div>
     <div class="big-title">Recuperar contraseña</div>
@@ -286,9 +238,7 @@ body{
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════
-       VIEW 5: RECOVERY EMAIL ENVIADO
-  ═══════════════════════════════════════ -->
+  <!-- VIEW 5: RECOVERY EMAIL ENVIADO -->
   <div id="v-recovery-sent" class="hidden">
     <div class="big-icon">✉️</div>
     <div class="big-title">Revisa tu correo</div>
@@ -304,9 +254,7 @@ body{
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════
-       VIEW 6: NUEVA CONTRASEÑA (recovery link)
-  ═══════════════════════════════════════ -->
+  <!-- VIEW 6: NUEVA CONTRASEÑA (viene del enlace de recovery) -->
   <div id="v-new-pass" class="hidden">
     <div class="big-icon" style="font-size:36px;margin-bottom:10px;">🔒</div>
     <div class="big-title">Nueva contraseña</div>
@@ -329,9 +277,7 @@ body{
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════
-       VIEW 7: EMAIL CONFIRMADO ✓
-  ═══════════════════════════════════════ -->
+  <!-- VIEW 7: EMAIL CONFIRMADO ✓ -->
   <div id="v-confirmed" class="hidden">
     <div class="big-icon">✅</div>
     <div class="big-title" style="color:var(--positive)">¡Cuenta verificada!</div>
@@ -340,7 +286,7 @@ body{
       Redirigiendo al dashboard...
     </div>
     <div style="text-align:center;margin-top:8px;">
-      <div class="live-dot" style="display:inline-block;animation:blink 1s infinite;background:var(--positive);width:8px;height:8px;border-radius:50%;"></div>
+      <div style="display:inline-block;animation:blink 1s infinite;background:var(--positive);width:8px;height:8px;border-radius:50%;"></div>
     </div>
   </div>
 
@@ -357,28 +303,27 @@ body{
 </div>
 
 <script>
+// ── Supabase SDK (maneja PKCE, refresh tokens y auth state automáticamente) ──
 var SB_URL  = 'https://yohffffeideggtkcefbv.supabase.co';
 var SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvaGZmZmZlaWRlZ2d0a2NlZmJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4Nzk4OTIsImV4cCI6MjA4OTQ1NTg5Mn0.VWc46msQoAC9cKsqvXMkMQZ8Xr9xa3zXR_CR4GQTcjQ';
+var sb = window.supabase.createClient(SB_URL, SB_ANON);
 
-var currentView = 'v-login';
+// URL de redirección dinámica: apunta siempre al host actual → funciona en Railway Y localhost
+var REDIRECT_URL = window.location.origin + '/login';
+
 var recoveryEmail = '';
-var recoveryToken = null;
 
-// ── Utilidades ──
+// ── Vistas ──
 function showView(id) {
-  var views = ['v-login','v-register','v-verify','v-recover','v-recovery-sent','v-new-pass','v-confirmed'];
-  views.forEach(function(v) {
+  ['v-login','v-register','v-verify','v-recover','v-recovery-sent','v-new-pass','v-confirmed'].forEach(function(v) {
     var el = document.getElementById(v);
     if (el) el.classList.add('hidden');
   });
-  var target = document.getElementById(id);
-  if (target) target.classList.remove('hidden');
-  currentView = id;
+  var t = document.getElementById(id);
+  if (t) t.classList.remove('hidden');
 }
 
-function switchTab(tab) {
-  showView(tab === 'login' ? 'v-login' : 'v-register');
-}
+function switchTab(tab) { showView(tab === 'login' ? 'v-login' : 'v-register'); }
 
 function showMsg(id, text, type) {
   var el = document.getElementById(id);
@@ -387,110 +332,123 @@ function showMsg(id, text, type) {
   el.className = 'msg ' + (type === 'ok' ? 'msg-ok' : 'msg-error');
   el.classList.remove('hidden');
 }
+function hideMsg(id) { var el = document.getElementById(id); if (el) el.classList.add('hidden'); }
 
-function hideMsg(id) {
-  var el = document.getElementById(id);
-  if (el) el.classList.add('hidden');
-}
-
-function sbFetch(path, opts) {
-  var headers = Object.assign({ 'Content-Type': 'application/json', 'apikey': SB_ANON }, opts.headers || {});
-  return fetch(SB_URL + path, Object.assign({}, opts, { headers: headers }))
-    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, status: r.status, d: d }; }); });
-}
-
-// ── Password strength ──
+// ── Indicador de fortaleza de contraseña ──
 function checkStrength(val, barId, hintId) {
-  barId  = barId  || 'pw-bar';
-  hintId = hintId || 'pw-hint';
-  var bar  = document.getElementById(barId);
-  var hint = document.getElementById(hintId);
+  var bar  = document.getElementById(barId  || 'pw-bar');
+  var hint = document.getElementById(hintId || 'pw-hint');
   if (!bar || !hint) return;
   var score = 0;
-  if (val.length >= 8)  score++;
-  if (val.length >= 12) score++;
-  if (/[A-Z]/.test(val)) score++;
-  if (/[0-9]/.test(val)) score++;
-  if (/[^A-Za-z0-9]/.test(val)) score++;
-  var pct    = Math.round((score / 5) * 100);
+  if (val.length >= 8)            score++;
+  if (val.length >= 12)           score++;
+  if (/[A-Z]/.test(val))          score++;
+  if (/[0-9]/.test(val))          score++;
+  if (/[^A-Za-z0-9]/.test(val))   score++;
   var color  = score <= 1 ? '#F87171' : score <= 3 ? '#C4A344' : '#34D399';
   var labels = ['','Muy débil','Débil','Moderada','Fuerte','Muy fuerte'];
-  bar.style.width   = pct + '%';
+  bar.style.width = Math.round(score/5*100) + '%';
   bar.style.background = color;
-  hint.style.color  = color;
-  hint.textContent  = score === 0 ? 'Mínimo 8 caracteres' : (labels[score] || '');
+  hint.style.color = color;
+  hint.textContent = score === 0 ? 'Mínimo 8 caracteres' : (labels[score] || '');
 }
 
-// ── Detect URL hash tokens on load (Supabase magic links) ──
-(function() {
-  var hash = window.location.hash;
-  if (!hash) return;
-  var params = {};
-  hash.replace(/^#/, '').split('&').forEach(function(p) {
-    var kv = p.split('=');
-    params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
-  });
-
-  if (params.type === 'recovery' && params.access_token) {
-    // Password recovery link clicked
-    recoveryToken = params.access_token;
-    window.history.replaceState(null, '', window.location.pathname);
+// ── AUTH STATE CHANGE (SDK detecta PKCE callback automáticamente) ──
+sb.auth.onAuthStateChange(function(event, session) {
+  if (event === 'PASSWORD_RECOVERY') {
+    // El SDK ya intercambió el code PKCE — solo mostramos el formulario de nueva contraseña
     showView('v-new-pass');
-  } else if (params.type === 'signup' && params.access_token) {
-    // Email verification link clicked
-    localStorage.setItem('aureo_token', params.access_token);
-    if (params.refresh_token) localStorage.setItem('aureo_refresh', params.refresh_token);
-    // Fetch user
-    fetch(SB_URL + '/auth/v1/user', {
-      headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + params.access_token }
-    }).then(function(r) { return r.json(); }).then(function(user) {
-      if (user && user.id) {
-        localStorage.setItem('aureo_user', JSON.stringify(user));
+  } else if (event === 'SIGNED_IN' && window._justVerified) {
+    // Confirmación de email completada
+    if (session) {
+      localStorage.setItem('aureo_token', session.access_token);
+      localStorage.setItem('aureo_user', JSON.stringify(session.user));
+    }
+    showView('v-confirmed');
+    setTimeout(function() { window.location.href = '/dashboard'; }, 2500);
+  }
+});
+
+// Disparar el intercambio PKCE si hay un code en la URL
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get('code');
+  if (code) {
+    // Detectar si es confirmación de signup o recovery por el hash/state
+    var hash = window.location.hash;
+    var hashParams = {};
+    if (hash) hash.replace(/^#/,'').split('&').forEach(function(p){
+      var kv = p.split('='); hashParams[kv[0]] = kv[1];
+    });
+    var type = params.get('type') || hashParams['type'] || '';
+    if (type === 'signup' || type === 'email') window._justVerified = true;
+    // El SDK intercambia el code en el siguiente tick y dispara onAuthStateChange
+    sb.auth.exchangeCodeForSession(window.location.href).then(function(res) {
+      if (res.error) {
+        // Enlace expirado o ya usado
+        showMsg('login-msg', 'El enlace expiró o ya fue utilizado. Inicia sesión o solicita uno nuevo.', 'error');
+        showView('v-login');
       }
     });
     window.history.replaceState(null, '', window.location.pathname);
-    showView('v-confirmed');
-    setTimeout(function() { window.location.href = '/dashboard'; }, 2500);
+  }
+  // Mantener soporte para flujo implícito (hash) por compatibilidad con proyectos legacy
+  var hash = window.location.hash;
+  if (hash && hash.includes('access_token')) {
+    var hp = {};
+    hash.replace(/^#/,'').split('&').forEach(function(p){
+      var kv = p.split('='); hp[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]||'');
+    });
+    if (hp.type === 'recovery' && hp.access_token) {
+      window._recoveryToken = hp.access_token;
+      window.history.replaceState(null, '', window.location.pathname);
+      showView('v-new-pass');
+    } else if ((hp.type === 'signup' || hp.type === 'email') && hp.access_token) {
+      localStorage.setItem('aureo_token', hp.access_token);
+      fetch(SB_URL + '/auth/v1/user', {
+        headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + hp.access_token }
+      }).then(function(r){return r.json();}).then(function(u){ if (u && u.id) localStorage.setItem('aureo_user', JSON.stringify(u)); });
+      window.history.replaceState(null, '', window.location.pathname);
+      showView('v-confirmed');
+      setTimeout(function() { window.location.href = '/dashboard'; }, 2500);
+    }
   }
 })();
 
 // ── LOGIN ──
-function doLogin() {
+async function doLogin() {
   var email = document.getElementById('l-email').value.trim();
   var pass  = document.getElementById('l-pass').value;
   hideMsg('login-msg');
   if (!email || !pass) { showMsg('login-msg','Completa todos los campos','error'); return; }
-
   var btn = document.getElementById('btn-login');
   btn.disabled = true; btn.textContent = 'Verificando...';
-
-  sbFetch('/auth/v1/token?grant_type=password', {
-    method: 'POST',
-    body: JSON.stringify({ email: email, password: pass })
-  }).then(function(res) {
-    if (!res.ok) {
-      var msg = res.d.error_description || res.d.msg || 'Credenciales incorrectas';
-      if (res.status === 400 && msg.toLowerCase().includes('email not confirmed')) {
-        showView('v-verify');
-        document.getElementById('verify-email-lbl').textContent = email;
+  try {
+    var res = await sb.auth.signInWithPassword({ email: email, password: pass });
+    if (res.error) {
+      var msg = res.error.message || 'Credenciales incorrectas';
+      if (msg.toLowerCase().includes('email not confirmed')) {
         window._verifyEmail = email;
+        document.getElementById('verify-email-lbl').textContent = email;
+        showView('v-verify');
         return;
       }
+      if (msg.toLowerCase().includes('invalid login')) msg = 'Correo o contraseña incorrectos.';
       throw new Error(msg);
     }
-    localStorage.setItem('aureo_token', res.d.access_token);
-    localStorage.setItem('aureo_user', JSON.stringify(res.d.user));
+    localStorage.setItem('aureo_token', res.data.session.access_token);
+    localStorage.setItem('aureo_user', JSON.stringify(res.data.user));
     showMsg('login-msg','Acceso concedido. Redirigiendo...','ok');
-    setTimeout(function() { window.location.href = '/dashboard'; }, 1000);
-  }).catch(function(err) {
-    showMsg('login-msg', err.message, 'error');
-  }).finally(function() {
+    setTimeout(function() { window.location.href = '/dashboard'; }, 900);
+  } catch(e) {
+    showMsg('login-msg', e.message, 'error');
+  } finally {
     btn.disabled = false; btn.textContent = 'Entrar al dashboard';
-  });
+  }
 }
 
-// ── REGISTER ──
-function doRegister() {
+// ── REGISTRO ──
+async function doRegister() {
   var name  = document.getElementById('r-name').value.trim();
   var email = document.getElementById('r-email').value.trim();
   var code  = document.getElementById('r-country').value;
@@ -499,133 +457,125 @@ function doRegister() {
   var pass2 = document.getElementById('r-pass2').value;
   var terms = document.getElementById('r-terms').checked;
   hideMsg('reg-msg');
-
   if (!email || !pass)   { showMsg('reg-msg','El correo y la contraseña son obligatorios','error'); return; }
   if (pass !== pass2)    { showMsg('reg-msg','Las contraseñas no coinciden','error'); return; }
   if (pass.length < 8)   { showMsg('reg-msg','La contraseña debe tener al menos 8 caracteres','error'); return; }
   if (!terms)            { showMsg('reg-msg','Debes aceptar los Términos de uso para continuar','error'); return; }
-
-  var phoneFull = phone ? (code + phone.replace(/\s/g,'')) : null;
-
   var btn = document.getElementById('btn-register');
   btn.disabled = true; btn.textContent = 'Creando cuenta...';
-
-  sbFetch('/auth/v1/signup', {
-    method: 'POST',
-    body: JSON.stringify({
+  try {
+    var res = await sb.auth.signUp({
       email: email,
       password: pass,
-      data: {
-        name: name || email.split('@')[0],
-        phone: phoneFull || null,
-        registered_at: new Date().toISOString()
+      options: {
+        emailRedirectTo: REDIRECT_URL,  // enlace apunta al host actual, no a localhost
+        data: {
+          name: name || email.split('@')[0],
+          phone: phone ? (code + phone.replace(/\s/g,'')) : null,
+          registered_at: new Date().toISOString()
+        }
       }
-    })
-  }).then(function(res) {
-    if (!res.ok) throw new Error(res.d.msg || res.d.error_description || 'Error al crear la cuenta');
-    // Supabase returns user with identities[] — if empty, email already exists
-    if (res.d.identities && res.d.identities.length === 0) {
+    });
+    if (res.error) throw new Error(res.error.message);
+    if (res.data.user && res.data.user.identities && res.data.user.identities.length === 0) {
       throw new Error('Este correo ya tiene una cuenta registrada. Inicia sesión.');
     }
-    // Show verification screen
     window._verifyEmail = email;
     document.getElementById('verify-email-lbl').textContent = email;
     showView('v-verify');
-  }).catch(function(err) {
-    showMsg('reg-msg', err.message, 'error');
-  }).finally(function() {
+  } catch(e) {
+    showMsg('reg-msg', e.message, 'error');
+  } finally {
     btn.disabled = false; btn.textContent = 'Crear mi cuenta gratuita';
-  });
+  }
 }
 
-// ── RESEND VERIFICATION ──
-function resendVerification() {
+// ── REENVIAR VERIFICACIÓN ──
+async function resendVerification() {
   var email = window._verifyEmail || '';
   if (!email) { showMsg('resend-msg','No se encontró el correo. Vuelve a registrarte.','error'); return; }
   hideMsg('resend-msg');
   var btn = document.getElementById('btn-resend');
   btn.disabled = true; btn.textContent = 'Enviando...';
-
-  sbFetch('/auth/v1/resend', {
-    method: 'POST',
-    body: JSON.stringify({ type: 'signup', email: email })
-  }).then(function(res) {
-    if (!res.ok) throw new Error(res.d.msg || 'Error al reenviar');
-    showMsg('resend-msg','Correo reenviado. Revisa tu bandeja de entrada.','ok');
-  }).catch(function(err) {
-    showMsg('resend-msg', err.message, 'error');
-  }).finally(function() {
+  try {
+    var res = await sb.auth.resend({ type: 'signup', email: email, options: { emailRedirectTo: REDIRECT_URL } });
+    if (res.error) throw new Error(res.error.message);
+    showMsg('resend-msg','Correo reenviado. Revisa tu bandeja de entrada y spam.','ok');
+  } catch(e) {
+    showMsg('resend-msg', e.message, 'error');
+  } finally {
     btn.disabled = false; btn.textContent = 'Reenviar correo de verificación';
-  });
+  }
 }
 
-// ── RECOVER PASSWORD ──
-function doRecover(isResend) {
-  var email;
-  if (isResend) {
-    email = recoveryEmail;
-  } else {
-    email = document.getElementById('rec-email').value.trim();
-    if (!email) { showMsg('recover-msg','Ingresa tu correo electrónico','error'); return; }
-    recoveryEmail = email;
-  }
+// ── RECUPERAR CONTRASEÑA ──
+async function doRecover(isResend) {
+  var email = isResend ? recoveryEmail : document.getElementById('rec-email').value.trim();
   var msgId = isResend ? 'resend-rec-msg' : 'recover-msg';
   var btnId = isResend ? 'btn-resend-rec' : 'btn-recover';
+  if (!email) { showMsg('recover-msg','Ingresa tu correo electrónico','error'); return; }
+  recoveryEmail = email;
   hideMsg(msgId);
   var btn = document.getElementById(btnId);
   btn.disabled = true; btn.textContent = 'Enviando...';
-
-  sbFetch('/auth/v1/recover', {
-    method: 'POST',
-    body: JSON.stringify({ email: email })
-  }).then(function(res) {
-    if (!res.ok) throw new Error(res.d.msg || 'Error al enviar');
+  try {
+    var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: REDIRECT_URL });
+    if (res.error) throw new Error(res.error.message);
     if (!isResend) {
       document.getElementById('recovery-email-lbl').textContent = email;
       showView('v-recovery-sent');
     } else {
       showMsg(msgId,'Correo reenviado correctamente.','ok');
     }
-  }).catch(function(err) {
-    showMsg(msgId, err.message, 'error');
-  }).finally(function() {
-    btn.disabled = false;
-    btn.textContent = isResend ? 'Reenviar correo' : 'Enviar instrucciones';
-  });
+  } catch(e) {
+    showMsg(msgId, e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = isResend ? 'Reenviar correo' : 'Enviar instrucciones';
+  }
 }
 
-// ── NEW PASSWORD (after recovery link) ──
-function doNewPassword() {
+// ── GUARDAR NUEVA CONTRASEÑA ──
+async function doNewPassword() {
   var pass  = document.getElementById('np-pass').value;
   var pass2 = document.getElementById('np-pass2').value;
   hideMsg('np-msg');
   if (!pass)           { showMsg('np-msg','Ingresa la nueva contraseña','error'); return; }
   if (pass.length < 8) { showMsg('np-msg','Mínimo 8 caracteres','error'); return; }
   if (pass !== pass2)  { showMsg('np-msg','Las contraseñas no coinciden','error'); return; }
-  if (!recoveryToken)  { showMsg('np-msg','Token expirado. Vuelve a solicitar el enlace.','error'); return; }
-
   var btn = document.getElementById('btn-new-pass');
   btn.disabled = true; btn.textContent = 'Guardando...';
-
-  fetch(SB_URL + '/auth/v1/user', {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SB_ANON,
-      'Authorization': 'Bearer ' + recoveryToken
-    },
-    body: JSON.stringify({ password: pass })
-  }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
-  .then(function(res) {
-    if (!res.ok) throw new Error(res.d.msg || res.d.error_description || 'Error al cambiar la contraseña');
-    showMsg('np-msg','¡Contraseña actualizada! Redirigiendo al inicio de sesión...','ok');
-    recoveryToken = null;
-    setTimeout(function() { showView('v-login'); }, 2000);
-  }).catch(function(err) {
-    showMsg('np-msg', err.message, 'error');
-  }).finally(function() {
+  try {
+    // El SDK ya tiene la sesión de recovery activa por onAuthStateChange
+    var res = await sb.auth.updateUser({ password: pass });
+    if (res.error) {
+      // Fallback: si el SDK no tiene sesión, intentar con el token del flujo implícito
+      if (window._recoveryToken) {
+        var r2 = await fetch(SB_URL + '/auth/v1/user', {
+          method: 'PUT',
+          headers: { 'Content-Type':'application/json', 'apikey': SB_ANON, 'Authorization': 'Bearer ' + window._recoveryToken },
+          body: JSON.stringify({ password: pass })
+        });
+        var d2 = await r2.json();
+        if (!r2.ok) throw new Error(d2.msg || d2.error_description || 'Error al cambiar la contraseña');
+        window._recoveryToken = null;
+      } else {
+        throw new Error(res.error.message);
+      }
+    }
+    showMsg('np-msg','¡Contraseña actualizada correctamente!','ok');
+    await sb.auth.signOut();
+    setTimeout(function() { showView('v-login'); }, 1800);
+  } catch(e) {
+    showMsg('np-msg', e.message, 'error');
+    if (e.message.toLowerCase().includes('expired') || e.message.toLowerCase().includes('invalid')) {
+      setTimeout(function() {
+        showMsg('np-msg', 'El enlace expiró. Solicita uno nuevo desde "¿Olvidaste tu contraseña?".', 'error');
+        setTimeout(function() { showView('v-recover'); }, 3000);
+      }, 500);
+    }
+  } finally {
     btn.disabled = false; btn.textContent = 'Guardar nueva contraseña';
-  });
+  }
 }
 </script>
 </body>
