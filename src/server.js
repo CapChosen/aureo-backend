@@ -92,9 +92,9 @@ app.use('/api/news', newsRoutes);
 // ════════════════════════════════════════════════════════
 // Fallback: servir dashboard para rutas no-API
 // ════════════════════════════════════════════════════════
-app.get('/', (_req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html'));
-});
+app.get('/',          (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'index.html')));
+app.get('/login',     (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'login.html')));
+app.get('/dashboard', (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html')));
 
 // ════════════════════════════════════════════════════════
 // 404

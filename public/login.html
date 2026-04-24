@@ -318,7 +318,7 @@ function doLogin() {
     localStorage.setItem('aureo_token', res.d.access_token);
     localStorage.setItem('aureo_user', JSON.stringify(res.d.user));
     showMsg('login-msg', 'Acceso concedido. Redirigiendo...', 'ok');
-    setTimeout(function() { window.location.href = 'dashboard.html'; }, 1200);
+    setTimeout(function() { window.location.href = '/dashboard'; }, 1200);
   })
   .catch(function(err) {
     showMsg('login-msg', err.message, 'error');

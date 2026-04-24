@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Áureo — Inteligencia Financiera para Chile</title>
+<meta name="description" content="Simula portafolios de inversión, proyecta tu futuro financiero con Monte Carlo y explora +200 activos globales. Herramienta educativa gratuita.">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #060709;
+  --card:      #0e1118;
+  --surface:   #0b0d12;
+  --border:    rgba(255,255,255,0.065);
+  --border-hi: rgba(196,163,68,0.25);
+  --gold:      #C4A344;
+  --gold-lt:   #DFC06A;
+  --gold-dim:  rgba(196,163,68,0.11);
+  --positive:  #34D399;
+  --negative:  #F87171;
+  --text:      #E8E4DA;
+  --text-2:    #7D8494;
+  --text-3:    #3A404E;
+  --fs: 'Cormorant Garamond', serif;
+  --fn: 'DM Sans', sans-serif;
+  --fm: 'JetBrains Mono', monospace;
+  --radius: 14px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--fn);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── NAVBAR ─────────────────────────────────────────── */
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 999;
+  background: rgba(6,7,9,0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  height: 62px;
+  display: flex;
+  align-items: center;
+  padding: 0 5%;
+  gap: 32px;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.nav-logo-mark {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg,#DFC06A 0%,#8B6E1A 100%);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 18px rgba(196,163,68,0.25);
+}
+.nav-logo-mark span { font-family:var(--fs); font-size:17px; font-weight:700; color:#0a0800; }
+.nav-logo-name { font-family:var(--fs); font-size:20px; font-weight:600; letter-spacing:3px; color:var(--text); }
+.nav-logo-name em { color:var(--gold); font-style:normal; }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  list-style: none;
+  flex: 1;
+}
+.nav-links a {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-decoration: none;
+  transition: color .15s;
+  letter-spacing: .2px;
+}
+.nav-links a:hover { color: var(--text); }
+
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  background: linear-gradient(135deg,#C4A344 0%,#8B6E1A 100%);
+  color: #0a0800;
+  font-family: var(--fn);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 8px;
+  letter-spacing: .3px;
+  transition: box-shadow .15s;
+  white-space: nowrap;
+}
+.nav-cta:hover { box-shadow: 0 0 20px rgba(196,163,68,0.35); }
+
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: auto;
+}
+.nav-hamburger span {
+  display: block; width: 22px; height: 2px;
+  background: var(--text-2); border-radius: 2px; transition: .2s;
+}
+
+/* ── SHARED HELPERS ─────────────────────────────────── */
+section { padding: 96px 5%; }
+.section-inner { max-width: 1140px; margin: 0 auto; }
+
+.tag {
+  display: inline-block;
+  font-family: var(--fm);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--gold-dim);
+  border: 1px solid var(--border-hi);
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 18px;
+}
+
+.section-title {
+  font-family: var(--fs);
+  font-size: clamp(32px, 4vw, 50px);
+  font-weight: 600;
+  line-height: 1.12;
+  margin-bottom: 16px;
+}
+.section-title em { color: var(--gold); font-style: normal; }
+
+.section-sub {
+  font-size: 16px;
+  color: var(--text-2);
+  max-width: 620px;
+  line-height: 1.7;
+}
+
+/* ── SCROLL ANIMATIONS ──────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: .1s; }
+.reveal-delay-2 { transition-delay: .2s; }
+.reveal-delay-3 { transition-delay: .3s; }
+.reveal-delay-4 { transition-delay: .4s; }
+
+/* ── HERO ───────────────────────────────────────────── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: 62px;
+  background:
+    radial-gradient(ellipse 60% 55% at 10% 15%, rgba(196,163,68,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 45% at 90% 85%, rgba(52,211,153,0.04) 0%, transparent 65%),
+    linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 52px 52px, 52px 52px;
+}
+
+.hero-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.hero-eyebrow {
+  font-family: var(--fm);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hero-eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background: var(--gold);
+}
+
+.hero-title {
+  font-family: var(--fs);
+  font-size: clamp(38px, 4.5vw, 62px);
+  font-weight: 700;
+  line-height: 1.08;
+  margin-bottom: 22px;
+  letter-spacing: -.5px;
+}
+.hero-title em { color: var(--gold); font-style: normal; }
+
+.hero-sub {
+  font-size: 16px;
+  color: var(--text-2);
+  line-height: 1.75;
+  margin-bottom: 36px;
+  max-width: 480px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 44px;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 28px;
+  background: linear-gradient(135deg,#C4A344 0%,#8B6E1A 100%);
+  color: #0a0800;
+  font-family: var(--fn);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 10px;
+  letter-spacing: .3px;
+  transition: all .15s;
+}
+.btn-primary:hover { box-shadow: 0 0 28px rgba(196,163,68,0.4); transform: translateY(-1px); }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 24px;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--fn);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: all .15s;
+}
+.btn-secondary:hover { border-color: var(--border-hi); color: var(--gold); }
+
+.hero-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(196,163,68,.1) 0%, rgba(196,163,68,.04) 100%);
+  border: 1px solid rgba(196,163,68,.25);
+  border-radius: 10px;
+  padding: 12px 18px;
+}
+.banner-vs {
+  font-family: var(--fm);
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.banner-item { text-align: center; }
+.banner-label { font-family: var(--fm); font-size: 9px; color: var(--text-3); letter-spacing: 1px; margin-bottom: 2px; }
+.banner-val { font-family: var(--fm); font-size: 15px; font-weight: 700; }
+.banner-val.bad  { color: var(--negative); }
+.banner-val.good { color: var(--positive); }
+
+/* Hero mockup */
+.hero-visual {
+  position: relative;
+}
+.mockup-frame {
+  background: var(--card);
+  border: 1px solid var(--border-hi);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 0 80px rgba(196,163,68,.08), 0 40px 80px rgba(0,0,0,.5);
+  position: relative;
+}
+.mockup-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mockup-dot { width:8px; height:8px; border-radius:50%; }
+.mockup-content { padding: 20px; }
+
+.mockup-ticker {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  gap: 18px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.mt-item { display:flex; align-items:center; gap:6px; }
+.mt-sym  { font-family:var(--fm); font-size:10px; font-weight:700; color:var(--text); }
+.mt-price{ font-family:var(--fm); font-size:10px; color:var(--text-2); }
+.mt-chg  { font-family:var(--fm); font-size:10px; font-weight:700; }
+.mt-chg.up { color:var(--positive); }
+.mt-chg.dn { color:var(--negative); }
+
+.mockup-chart {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  height: 130px;
+  position: relative;
+  overflow: hidden;
+}
+.chart-label { font-family:var(--fm); font-size:9px; color:var(--text-3); letter-spacing:1px; margin-bottom:8px; }
+
+.chart-svg { width:100%; height:80px; }
+
+.mockup-cards {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 8px;
+}
+.mc-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+}
+.mc-label { font-family:var(--fm); font-size:8px; color:var(--text-3); letter-spacing:1px; margin-bottom:4px; }
+.mc-value { font-family:var(--fm); font-size:13px; font-weight:700; }
+
+.mockup-glow {
+  position: absolute;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(196,163,68,.15) 0%, transparent 70%);
+  top: -60px; right: -60px;
+  pointer-events: none;
+}
+
+/* ── SECTION — PROBLEMA ─────────────────────────────── */
+.s-problem { background: var(--surface); }
+
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 20px;
+  margin-top: 48px;
+}
+.problem-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  transition: border-color .2s, transform .2s;
+}
+.problem-card:hover { border-color: var(--border-hi); transform: translateY(-3px); }
+.problem-icon {
+  width: 44px; height: 44px;
+  background: var(--gold-dim);
+  border: 1px solid var(--border-hi);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+.problem-title { font-family:var(--fs); font-size:20px; font-weight:600; margin-bottom:8px; }
+.problem-desc  { font-size:13px; color:var(--text-2); line-height:1.6; }
+
+.problem-footer {
+  margin-top: 40px;
+  padding: 24px 28px;
+  background: var(--gold-dim);
+  border: 1px solid var(--border-hi);
+  border-radius: var(--radius);
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.6;
+}
+.problem-footer strong { color: var(--gold); font-weight: 600; }
+
+/* ── SECTION — QUÉ ES ───────────────────────────────── */
+.s-quees { background: var(--bg); }
+
+.quees-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.quees-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 36px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+}
+.stat-val   { font-family:var(--fm); font-size:28px; font-weight:700; color:var(--gold); margin-bottom:4px; }
+.stat-label { font-size:12px; color:var(--text-2); }
+
+.quees-visual {
+  background: var(--card);
+  border: 1px solid var(--border-hi);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 0 60px rgba(196,163,68,.06);
+  position: relative;
+  overflow: hidden;
+}
+.quees-visual::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), var(--gold), var(--gold-dim), transparent);
+}
+.disclaimer-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  font-family: var(--fm);
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: .5px;
+  line-height: 1.6;
+  margin-top: 20px;
+}
+.disclaimer-box strong { color: var(--gold); }
+
+/* ── SECTION — CÓMO FUNCIONA ────────────────────────── */
+.s-como { background: var(--surface); }
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 20px;
+  margin-top: 52px;
+  position: relative;
+}
+.steps-grid::before {
+  content: '';
+  position: absolute;
+  top: 28px; left: calc(16.66% + 20px); right: calc(16.66% + 20px);
+  height: 1px;
+  background: linear-gradient(90deg, var(--border-hi), var(--border-hi));
+  pointer-events: none;
+}
+
+.step-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 26px;
+  position: relative;
+  transition: border-color .2s;
+}
+.step-card:hover { border-color: var(--border-hi); }
+
+.step-num {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg,#C4A344,#8B6E1A);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fm);
+  font-size: 16px;
+  font-weight: 700;
+  color: #0a0800;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+.step-title { font-family:var(--fs); font-size:22px; font-weight:600; margin-bottom:10px; }
+.step-desc  { font-size:13px; color:var(--text-2); line-height:1.65; }
+
+/* ── SECTION — VENTAJAS ─────────────────────────────── */
+.s-ventajas { background: var(--bg); }
+
+.compare-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 48px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.compare-table th {
+  padding: 14px 20px;
+  text-align: left;
+  font-family: var(--fm);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.compare-table th.col-aureo { color: var(--gold); background: var(--gold-dim); }
+
+.compare-table td {
+  padding: 13px 20px;
+  font-size: 13px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--border);
+}
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table td.col-feature { color: var(--text); font-weight: 500; font-size: 13px; }
+.compare-table td.col-aureo   { background: rgba(196,163,68,.04); color: var(--text); font-weight: 500; }
+.compare-table td.col-aureo .check { color: var(--positive); font-weight: 700; }
+.compare-table td.col-aureo .gold-val { color: var(--gold); font-weight: 700; }
+.compare-table tr:hover td { background: rgba(255,255,255,.015); }
+.compare-table tr:hover td.col-aureo { background: rgba(196,163,68,.07); }
+
+/* ── SECTION — PLANES ───────────────────────────────── */
+.s-planes { background: var(--surface); }
+
+.planes-grid {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 24px;
+  margin-top: 52px;
+  max-width: 760px;
+}
+
+.plan-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s, transform .2s;
+}
+.plan-card:hover { transform: translateY(-3px); }
+.plan-card.featured { border-color: var(--border-hi); }
+.plan-card.featured::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.plan-badge {
+  display: inline-block;
+  font-family: var(--fm);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+.badge-free { background: var(--gold-dim); color: var(--gold); border: 1px solid var(--border-hi); }
+.badge-soon { background: rgba(125,132,148,.1); color: var(--text-3); border: 1px solid var(--border); }
+
+.plan-price {
+  font-family: var(--fs);
+  font-size: 40px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+.plan-price sup { font-size: 20px; vertical-align: top; margin-top: 6px; display: inline-block; }
+.plan-price span { font-family:var(--fn); font-size:14px; color:var(--text-2); font-weight:400; }
+.plan-period { font-family:var(--fm); font-size:10px; color:var(--text-3); letter-spacing:1px; margin-bottom:24px; }
+
+.plan-divider { border:none; border-top:1px solid var(--border); margin: 20px 0; }
+
+.plan-features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.plan-features li::before {
+  content: '✓';
+  color: var(--positive);
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.plan-features li.disabled { color: var(--text-3); }
+.plan-features li.disabled::before { content: '—'; color: var(--text-3); }
+
+.plan-cta {
+  display: block;
+  width: 100%;
+  margin-top: 28px;
+  padding: 12px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 9px;
+  font-family: var(--fn);
+  font-size: 14px;
+  font-weight: 600;
+  transition: all .15s;
+}
+.plan-cta.gold {
+  background: linear-gradient(135deg,#C4A344,#8B6E1A);
+  color: #0a0800;
+}
+.plan-cta.gold:hover { box-shadow: 0 0 24px rgba(196,163,68,.35); }
+.plan-cta.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-3);
+  cursor: default;
+}
+
+/* ── SECTION — CTA FINAL ────────────────────────────── */
+.s-cta {
+  background: var(--bg);
+  text-align: center;
+}
+.cta-box {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 72px 40px;
+  background: var(--card);
+  border: 1px solid var(--border-hi);
+  border-radius: 24px;
+  box-shadow: 0 0 80px rgba(196,163,68,.07);
+  position: relative;
+  overflow: hidden;
+}
+.cta-box::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), var(--gold), var(--gold-dim), transparent);
+}
+.cta-glow {
+  position: absolute;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(196,163,68,.08) 0%, transparent 70%);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+.cta-box .section-title { font-size: clamp(28px,3.5vw,44px); margin-bottom: 14px; }
+.cta-sub { font-size:15px; color:var(--text-2); margin-bottom:36px; }
+.cta-note {
+  margin-top: 18px;
+  font-family: var(--fm);
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 1px;
+}
+
+/* ── FOOTER ─────────────────────────────────────────── */
+footer {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 40px 5% 32px;
+}
+.footer-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.footer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footer-links {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+}
+.footer-links a {
+  font-family: var(--fm);
+  font-size: 10px;
+  color: var(--text-3);
+  text-decoration: none;
+  letter-spacing: 1px;
+  transition: color .15s;
+}
+.footer-links a:hover { color: var(--gold); }
+.footer-disclaimer {
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--text-3);
+  letter-spacing: .5px;
+  line-height: 1.7;
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+.footer-copy {
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--text-3);
+  letter-spacing: 1px;
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 900px) {
+  section { padding: 72px 6%; }
+  .hero-inner { grid-template-columns: 1fr; }
+  .hero-visual { display: none; }
+  .problem-grid { grid-template-columns: 1fr; }
+  .steps-grid { grid-template-columns: 1fr; }
+  .steps-grid::before { display: none; }
+  .quees-inner { grid-template-columns: 1fr; gap: 40px; }
+  .quees-visual { display: none; }
+  .planes-grid { grid-template-columns: 1fr; }
+  .compare-table { font-size: 12px; }
+  .compare-table th, .compare-table td { padding: 10px 12px; }
+}
+
+@media (max-width: 640px) {
+  .nav-links { display: none; }
+  .nav-hamburger { display: flex; }
+  .hero-title { font-size: 36px; }
+  .hero-actions { flex-direction: column; }
+  .hero-banner { flex-direction: column; text-align: center; }
+  .quees-stats { grid-template-columns: 1fr 1fr; }
+  .cta-box { padding: 48px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ NAVBAR ══════════════════════════════════════════ -->
+<nav class="navbar">
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-mark"><span>A</span></div>
+    <div class="nav-logo-name">AUR<em>E</em>O</div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#que-es">Qué es Áureo</a></li>
+    <li><a href="#como-funciona">Cómo funciona</a></li>
+    <li><a href="#ventajas">Ventajas</a></li>
+    <li><a href="#planes">Planes</a></li>
+  </ul>
+  <a href="login.html" class="nav-cta">Comenzar gratis →</a>
+  <div class="nav-hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- ══ HERO ════════════════════════════════════════════ -->
+<section class="hero" id="hero">
+  <div class="hero-inner section-inner">
+
+    <!-- Left: copy -->
+    <div>
+      <div class="hero-eyebrow reveal">Plataforma de simulación financiera</div>
+
+      <h1 class="hero-title reveal reveal-delay-1">
+        Proyecta tu futuro<br><em>financiero</em> con<br>inteligencia
+      </h1>
+
+      <p class="hero-sub reveal reveal-delay-2">
+        Áureo te permite simular portafolios de inversión, analizar escenarios y tomar decisiones informadas — sin ser experto en mercados financieros.
+      </p>
+
+      <div class="hero-actions reveal reveal-delay-3">
+        <a href="login.html" class="btn-primary">Crear cuenta gratis →</a>
+        <a href="#como-funciona" class="btn-secondary">Ver cómo funciona ↓</a>
+      </div>
+
+      <div class="hero-banner reveal reveal-delay-4">
+        <div class="banner-item">
+          <div class="banner-label">DAP Chile promedio</div>
+          <div class="banner-val bad">0.48%/mes</div>
+        </div>
+        <div class="banner-vs">vs</div>
+        <div class="banner-item">
+          <div class="banner-label">Portafolio conservador Áureo</div>
+          <div class="banner-val good">0.9–1.3%/mes est.*</div>
+        </div>
+      </div>
+      <p style="font-family:var(--fm);font-size:8.5px;color:var(--text-3);margin-top:8px;letter-spacing:.4px;">
+        *Rentabilidades estimadas en base a datos históricos. Rendimientos pasados no garantizan resultados futuros.
+      </p>
+    </div>
+
+    <!-- Right: dashboard mockup -->
+    <div class="hero-visual reveal reveal-delay-2">
+      <div class="mockup-frame">
+        <div class="mockup-glow"></div>
+        <div class="mockup-bar">
+          <div class="mockup-dot" style="background:#F87171"></div>
+          <div class="mockup-dot" style="background:#FBBF24"></div>
+          <div class="mockup-dot" style="background:#34D399"></div>
+          <span style="font-family:var(--fm);font-size:9px;color:var(--text-3);margin-left:8px;">aureo.cl/dashboard</span>
+        </div>
+        <div class="mockup-content">
+          <!-- Ticker bar -->
+          <div class="mockup-ticker">
+            <div class="mt-item"><span class="mt-sym">SPY</span><span class="mt-price">$541.23</span><span class="mt-chg up">+0.82%</span></div>
+            <div class="mt-item"><span class="mt-sym">NVDA</span><span class="mt-price">$875.50</span><span class="mt-chg up">+3.21%</span></div>
+            <div class="mt-item"><span class="mt-sym">GLD</span><span class="mt-price">$302.14</span><span class="mt-chg up">+0.43%</span></div>
+            <div class="mt-item"><span class="mt-sym">BTC</span><span class="mt-price">$67,420</span><span class="mt-chg dn">−1.12%</span></div>
+          </div>
+          <!-- Chart -->
+          <div class="mockup-chart">
+            <div class="chart-label">SIMULACIÓN MONTE CARLO · PORTAFOLIO · 10 AÑOS</div>
+            <svg class="chart-svg" viewBox="0 0 360 80" preserveAspectRatio="none">
+              <!-- p90 band -->
+              <path d="M0,60 C60,45 120,20 180,10 C240,2 300,5 360,8 L360,30 C300,28 240,28 180,35 C120,42 60,55 0,65 Z" fill="rgba(52,211,153,0.08)"/>
+              <!-- p50 line -->
+              <path d="M0,65 C60,55 120,42 180,35 C240,28 300,28 360,30" fill="none" stroke="#34D399" stroke-width="1.5"/>
+              <!-- p10 band bottom -->
+              <path d="M0,65 C60,55 120,42 180,35 C240,28 300,28 360,30 L360,55 C300,52 240,50 180,58 C120,65 60,72 0,75 Z" fill="rgba(196,163,68,0.05)"/>
+              <!-- p10 line -->
+              <path d="M0,75 C60,72 120,65 180,58 C240,50 300,52 360,55" fill="none" stroke="rgba(196,163,68,0.5)" stroke-width="1" stroke-dasharray="4,3"/>
+            </svg>
+          </div>
+          <!-- Metric cards -->
+          <div class="mockup-cards">
+            <div class="mc-card">
+              <div class="mc-label">ESCENARIO P50</div>
+              <div class="mc-value" style="color:var(--positive)">$1.82M</div>
+            </div>
+            <div class="mc-card">
+              <div class="mc-label">ESCENARIO P90</div>
+              <div class="mc-value" style="color:var(--gold)">$3.10M</div>
+            </div>
+            <div class="mc-card">
+              <div class="mc-label">ESCENARIO P10</div>
+              <div class="mc-value" style="color:var(--text-2)">$890K</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ PROBLEMA ════════════════════════════════════════ -->
+<section class="s-problem" id="problema">
+  <div class="section-inner">
+    <div class="reveal"><div class="tag">El problema</div></div>
+    <h2 class="section-title reveal reveal-delay-1">¿Tu dinero está rindiendo<br>lo que <em>debería</em>?</h2>
+
+    <div class="problem-grid">
+      <div class="problem-card reveal reveal-delay-1">
+        <div class="problem-icon">📉</div>
+        <div class="problem-title">Los DAP ofrecen tasas cada vez más bajas</div>
+        <div class="problem-desc">El Banco Central ha bajado la tasa de política monetaria. Los depósitos a plazo ya no protegen tu capital del todo frente a la inflación real.</div>
+      </div>
+      <div class="problem-card reveal reveal-delay-2">
+        <div class="problem-icon">❓</div>
+        <div class="problem-title">Invertir parece complejo y riesgoso</div>
+        <div class="problem-desc">La jerga financiera, los brokers con comisiones altas y la falta de información hacen que muchos chilenos eviten los mercados internacionales.</div>
+      </div>
+      <div class="problem-card reveal reveal-delay-3">
+        <div class="problem-icon">🧩</div>
+        <div class="problem-title">No sabes cómo armar un portafolio</div>
+        <div class="problem-desc">Diversificar entre ETFs, acciones y activos alternativos requiere conocimiento y herramientas que hasta ahora solo tenían los profesionales.</div>
+      </div>
+    </div>
+
+    <div class="problem-footer reveal">
+      <strong>Áureo democratiza el acceso</strong> a herramientas de simulación financiera que antes solo tenían los profesionales. Sin comisiones ocultas, sin mínimos de inversión, sin letra chica.
+    </div>
+  </div>
+</section>
+
+<!-- ══ QUÉ ES ÁUREO ════════════════════════════════════ -->
+<section class="s-quees" id="que-es">
+  <div class="section-inner">
+    <div class="quees-inner">
+      <div>
+        <div class="reveal"><div class="tag">Qué es Áureo</div></div>
+        <h2 class="section-title reveal reveal-delay-1">Inteligencia financiera<br>al alcance de <em>todos</em></h2>
+        <p class="section-sub reveal reveal-delay-2">
+          Áureo es una plataforma de simulación y planificación de portafolios de inversión. Te permite explorar más de 200 activos globales — ETFs, acciones, criptomonedas —, proyectar escenarios a largo plazo con simulación Monte Carlo, y recibir asistencia de <strong style="color:var(--gold)">Au·IA</strong>, nuestro asistente financiero con inteligencia artificial.
+        </p>
+
+        <div class="quees-stats reveal reveal-delay-3">
+          <div class="stat-card">
+            <div class="stat-val">+200</div>
+            <div class="stat-label">Activos globales disponibles</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">1,000</div>
+            <div class="stat-label">Simulaciones Monte Carlo</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">5</div>
+            <div class="stat-label">Percentiles de escenario</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">Gratis</div>
+            <div class="stat-label">Plan base completo</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quees-visual reveal reveal-delay-2">
+        <div style="font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:1.5px;margin-bottom:16px;">AU·IA — ASISTENTE FINANCIERO</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 10px 2px;padding:12px 14px;font-size:13px;color:var(--text-2);max-width:85%;">
+            ¿Cómo debería distribuir mi portafolio para jubilarme en 20 años con bajo riesgo?
+          </div>
+          <div style="background:var(--gold-dim);border:1px solid var(--border-hi);border-radius:10px 10px 2px 10px;padding:14px 16px;font-size:13px;color:var(--text);align-self:flex-end;max-width:90%;">
+            Para un horizonte de 20 años con perfil conservador, recomiendo: <strong style="color:var(--gold)">60% ETFs de renta variable</strong> (VOO/VTI), <strong style="color:var(--gold)">25% renta fija</strong> (AGG/TLT) y <strong style="color:var(--gold)">15% activos refugio</strong> (GLD). La simulación muestra una probabilidad del 87% de superar el retorno de un DAP a 5 años.
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 10px 2px;padding:12px 14px;font-size:13px;color:var(--text-2);max-width:75%;">
+            ¿Y si el mercado cae un 30%?
+          </div>
+          <div style="background:var(--gold-dim);border:1px solid var(--border-hi);border-radius:10px 10px 2px 10px;padding:14px 16px;font-size:13px;color:var(--text);align-self:flex-end;max-width:90%;">
+            Con ese portafolio, una caída del 30% en renta variable implicaría una pérdida temporal de ~18%. El modelo Monte Carlo muestra recuperación en 14-24 meses en el percentil 75.
+          </div>
+        </div>
+
+        <div class="disclaimer-box">
+          <strong>Nota importante:</strong> Áureo no es una corredora de bolsa ni provee asesoría financiera personalizada. Es una herramienta educativa de simulación. Las recomendaciones de Au·IA son orientativas y no constituyen consejo de inversión.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CÓMO FUNCIONA ════════════════════════════════════ -->
+<section class="s-como" id="como-funciona">
+  <div class="section-inner">
+    <div style="text-align:center;">
+      <div class="reveal"><div class="tag">Proceso</div></div>
+      <h2 class="section-title reveal reveal-delay-1" style="text-align:center;">Tres pasos para empezar<br>a <em>proyectar tu futuro</em></h2>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card reveal reveal-delay-1">
+        <div class="step-num">01</div>
+        <div class="step-title">Elige tus activos</div>
+        <div class="step-desc">Explora +200 ETFs, acciones y criptomonedas. Cada activo incluye descripción, métricas de riesgo/retorno histórico, precio en tiempo real y gráficos interactivos.</div>
+      </div>
+      <div class="step-card reveal reveal-delay-2">
+        <div class="step-num">02</div>
+        <div class="step-title">Arma tu portafolio</div>
+        <div class="step-desc">Define pesos de asignación, fases de aportación mensual y horizonte de inversión. La barra de diversificación te guía visualmente en tiempo real.</div>
+      </div>
+      <div class="step-card reveal reveal-delay-3">
+        <div class="step-num">03</div>
+        <div class="step-title">Simula y decide</div>
+        <div class="step-desc">1,000 simulaciones Monte Carlo proyectan escenarios optimistas, medianos y conservadores. Compara con inflación, DAP y otros benchmarks para tomar mejores decisiones.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ VENTAJAS ═════════════════════════════════════════ -->
+<section class="s-ventajas" id="ventajas">
+  <div class="section-inner">
+    <div class="reveal"><div class="tag">Comparativa</div></div>
+    <h2 class="section-title reveal reveal-delay-1">Por qué <em>Áureo</em> es diferente</h2>
+
+    <div class="reveal reveal-delay-2" style="overflow-x:auto;">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width:30%">Característica</th>
+            <th>DAP Bancario</th>
+            <th>Fintual / Racional</th>
+            <th class="col-aureo">Áureo ✦</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="col-feature">Rentabilidad estimada</td>
+            <td>0.48%/mes</td>
+            <td>Variable, gestión pasiva</td>
+            <td class="col-aureo"><span class="gold-val">Tú decides</span></td>
+          </tr>
+          <tr>
+            <td class="col-feature">Control del portafolio</td>
+            <td>Ninguno</td>
+            <td>Limitado (~4 fondos)</td>
+            <td class="col-aureo"><span class="check">✓</span> Total, +200 activos</td>
+          </tr>
+          <tr>
+            <td class="col-feature">Simulación Monte Carlo</td>
+            <td>No</td>
+            <td>No</td>
+            <td class="col-aureo"><span class="check">✓</span> 1,000 simulaciones</td>
+          </tr>
+          <tr>
+            <td class="col-feature">Activos globales</td>
+            <td>No</td>
+            <td>~10 fondos</td>
+            <td class="col-aureo"><span class="check">✓</span> +200 activos</td>
+          </tr>
+          <tr>
+            <td class="col-feature">Asistente con IA</td>
+            <td>No</td>
+            <td>No</td>
+            <td class="col-aureo"><span class="check">✓</span> Au·IA incluido</td>
+          </tr>
+          <tr>
+            <td class="col-feature">Noticias de mercado</td>
+            <td>No</td>
+            <td>No</td>
+            <td class="col-aureo"><span class="check">✓</span> Tiempo real</td>
+          </tr>
+          <tr>
+            <td class="col-feature">Gráficos por activo</td>
+            <td>No</td>
+            <td>Básico</td>
+            <td class="col-aureo"><span class="check">✓</span> 1H / D / M / 1A</td>
+          </tr>
+          <tr>
+            <td class="col-feature">Costo para el usuario</td>
+            <td>Gratis</td>
+            <td>0.5–1% anual</td>
+            <td class="col-aureo"><span class="gold-val">Gratis*</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-family:var(--fm);font-size:9px;color:var(--text-3);margin-top:10px;letter-spacing:.4px;">
+      *Plan base gratuito. Funcionalidades avanzadas disponibles próximamente en planes de pago.
+    </p>
+  </div>
+</section>
+
+<!-- ══ PLANES ═══════════════════════════════════════════ -->
+<section class="s-planes" id="planes">
+  <div class="section-inner">
+    <div class="reveal"><div class="tag">Planes</div></div>
+    <h2 class="section-title reveal reveal-delay-1">Empieza <em>gratis</em>,<br>escala cuando quieras</h2>
+
+    <div class="planes-grid">
+      <!-- Plan Free -->
+      <div class="plan-card featured reveal reveal-delay-1">
+        <div class="plan-badge badge-free">Free · Disponible ahora</div>
+        <div class="plan-price"><sup>$</sup>0 <span>/mes</span></div>
+        <div class="plan-period">GRATIS PARA SIEMPRE</div>
+        <hr class="plan-divider">
+        <ul class="plan-features">
+          <li>Portafolio personalizado completo</li>
+          <li>+200 activos globales</li>
+          <li>Simulación Monte Carlo (1,000 escenarios)</li>
+          <li>Gráficos por activo (1H / D / M / 1A)</li>
+          <li>Noticias de mercado en tiempo real</li>
+          <li>5 consultas a Au·IA por mes</li>
+          <li>Persistencia de portafolio</li>
+        </ul>
+        <a href="login.html" class="plan-cta gold">Crear cuenta gratis →</a>
+      </div>
+
+      <!-- Plan Pro -->
+      <div class="plan-card reveal reveal-delay-2">
+        <div class="plan-badge badge-soon">Pro · Próximamente</div>
+        <div class="plan-price"><sup>$</sup>9.990 <span>/mes</span></div>
+        <div class="plan-period">CLP · PAGO MENSUAL</div>
+        <hr class="plan-divider">
+        <ul class="plan-features">
+          <li>Todo lo del plan Free</li>
+          <li>Au·IA ilimitado</li>
+          <li>Datos históricos reales (5 años)</li>
+          <li>Escenarios de estrés y correlaciones</li>
+          <li>Múltiples portafolios guardados</li>
+          <li>Exportar reportes PDF</li>
+          <li>Alertas de mercado personalizadas</li>
+        </ul>
+        <div class="plan-cta ghost">Próximamente</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CTA FINAL ════════════════════════════════════════ -->
+<section class="s-cta" id="cta">
+  <div class="section-inner">
+    <div class="cta-box reveal">
+      <div class="cta-glow"></div>
+      <div class="tag">Únete hoy</div>
+      <h2 class="section-title">Empieza a proyectar<br>tu futuro <em>hoy</em></h2>
+      <p class="cta-sub">Sin tarjeta de crédito. Sin compromisos.<br>Tu portafolio queda guardado desde el primer día.</p>
+      <a href="login.html" class="btn-primary" style="font-size:15px;padding:15px 36px;">Crear cuenta gratis →</a>
+      <div class="cta-note">SIN TARJETA DE CRÉDITO · SIN COMPROMISOS · GRATIS</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <a href="/" class="nav-logo" style="gap:8px;">
+        <div class="nav-logo-mark" style="width:28px;height:28px;border-radius:7px;"><span style="font-size:14px;">A</span></div>
+        <div class="nav-logo-name" style="font-size:16px;letter-spacing:2px;">AUR<em>E</em>O</div>
+      </a>
+      <ul class="footer-links">
+        <li><a href="#">Términos de uso</a></li>
+        <li><a href="#">Privacidad</a></li>
+        <li><a href="#">Contacto</a></li>
+      </ul>
+    </div>
+    <div class="footer-disclaimer">
+      Áureo no es una corredora de valores ni provee asesoría financiera personalizada. Es una herramienta educativa de simulación y planificación. Las rentabilidades mostradas son estimaciones basadas en datos históricos y no garantizan resultados futuros. Toda decisión de inversión es responsabilidad exclusiva del usuario.
+    </div>
+    <div class="footer-copy">© 2026 ÁUREO · SANTIAGO, CHILE · HERRAMIENTA EDUCATIVA</div>
+  </div>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Hamburger menu (mobile)
+let menuOpen = false;
+function toggleMenu() {
+  menuOpen = !menuOpen;
+  const links = document.querySelector('.nav-links');
+  if (!links) return;
+  if (menuOpen) {
+    links.style.cssText = 'display:flex;flex-direction:column;position:fixed;top:62px;left:0;right:0;background:rgba(6,7,9,0.97);backdrop-filter:blur(16px);padding:24px 6%;gap:20px;border-bottom:1px solid rgba(255,255,255,0.065);';
+  } else {
+    links.style.cssText = '';
+  }
+}
+
+// Close mobile menu on link click
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', () => { menuOpen = false; document.querySelector('.nav-links').style.cssText = ''; });
+});
+</script>
+
+</body>
+</html>

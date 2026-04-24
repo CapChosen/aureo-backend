@@ -759,7 +759,7 @@ const token = localStorage.getItem('aureo_token');
 const userRaw = localStorage.getItem('aureo_user');
 
 if (!token) {
-  window.location.href = 'login.html';
+  window.location.href = '/login';
 }
 
 const currentUser = userRaw ? JSON.parse(userRaw) : null;
@@ -778,7 +778,7 @@ async function api(path, opts = {}) {
   });
   if (res.status === 401) {
     localStorage.removeItem('aureo_token');
-    window.location.href = 'login.html';
+    window.location.href = '/login';
   }
   return res.json();
 }
@@ -786,7 +786,7 @@ async function api(path, opts = {}) {
 function logout() {
   localStorage.removeItem('aureo_token');
   localStorage.removeItem('aureo_user');
-  window.location.href = 'login.html';
+  window.location.href = '/login';
 }
 
 async function loadUser() {
