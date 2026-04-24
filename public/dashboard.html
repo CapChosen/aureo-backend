@@ -36,10 +36,10 @@ body{
 /* HEADER */
 header{
   height:54px;display:flex;align-items:center;justify-content:space-between;
-  padding:0 22px;background:rgba(6,7,9,.94);border-bottom:1px solid var(--border);
-  backdrop-filter:blur(16px);position:relative;z-index:50;flex-shrink:0;
+  padding:0 18px;background:rgba(6,7,9,.94);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(16px);position:relative;z-index:50;flex-shrink:0;gap:12px;
 }
-.logo{display:flex;align-items:center;gap:11px;}
+.logo{display:flex;align-items:center;gap:11px;flex-shrink:0;}
 .logo-mark{
   width:32px;height:32px;
   background:linear-gradient(135deg,var(--gold-lt) 0%,#8B6E1A 100%);
@@ -48,17 +48,19 @@ header{
 }
 .logo-mark::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,transparent 60%);}
 .logo-mark span{font-family:var(--font-serif);font-size:18px;font-weight:700;color:#0a0800;position:relative;z-index:1;}
-.logo-name{font-family:var(--font-serif);font-size:22px;font-weight:600;letter-spacing:3px;color:var(--text);}
+.logo-name{font-family:var(--font-serif);font-size:20px;font-weight:600;letter-spacing:3px;color:var(--text);}
 .logo-name em{color:var(--gold);font-style:normal;}
-.hdr-center{display:flex;align-items:center;gap:6px;}
+/* Nav scrollable */
+.hdr-center{display:flex;align-items:center;gap:5px;overflow-x:auto;flex:1;scrollbar-width:none;padding:0 4px;}
+.hdr-center::-webkit-scrollbar{display:none;}
 .nav-pill{
-  font-size:11px;font-weight:500;padding:5px 13px;border:1px solid var(--border);
-  border-radius:20px;color:var(--text-2);cursor:pointer;background:transparent;
-  font-family:var(--font-sans);transition:all .15s;letter-spacing:.3px;
+  font-size:10.5px;font-weight:500;padding:4px 11px;border:1px solid var(--border);
+  border-radius:20px;color:var(--text-2);cursor:pointer;background:transparent;white-space:nowrap;
+  font-family:var(--font-sans);transition:all .15s;letter-spacing:.3px;flex-shrink:0;
 }
 .nav-pill.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold);}
 .nav-pill:hover:not(.active){border-color:rgba(255,255,255,.12);color:var(--text);}
-.hdr-right{display:flex;align-items:center;gap:10px;}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .live-badge{
   display:flex;align-items:center;gap:5px;
   background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);
@@ -68,11 +70,25 @@ header{
 @keyframes blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(52,211,153,.5);}50%{opacity:.3;box-shadow:0 0 0 4px transparent;}}
 .live-txt{font-size:9px;font-weight:700;font-family:var(--font-mono);color:var(--positive);letter-spacing:2px;}
 .user-info{font-family:var(--font-mono);font-size:10px;color:var(--text-2);letter-spacing:.5px;}
-.plan-badge{
-  font-size:8.5px;font-weight:700;font-family:var(--font-mono);
-  padding:2px 8px;border-radius:3px;letter-spacing:1.5px;
-  background:var(--gold-dim);color:var(--gold);border:1px solid rgba(196,163,68,.2);
+/* Profile button in header */
+.btn-profile{
+  display:flex;align-items:center;gap:7px;padding:4px 10px 4px 5px;
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  cursor:pointer;transition:all .15s;
 }
+.btn-profile:hover{border-color:var(--gold);background:var(--gold-dim);}
+.profile-av{
+  width:26px;height:26px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold-lt),#8B6E1A);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-serif);font-size:13px;font-weight:700;color:#0a0800;
+}
+.profile-info{display:flex;flex-direction:column;gap:1px;}
+.profile-email-short{font-family:var(--font-mono);font-size:9.5px;color:var(--text);letter-spacing:.3px;}
+.profile-plan{font-family:var(--font-mono);font-size:7.5px;letter-spacing:1.2px;font-weight:700;}
+.plan-free{color:#7D8494;}
+.plan-pro{color:var(--gold);}
+.plan-elite{color:var(--purple);}
 .btn-logout{
   font-size:10px;padding:4px 12px;border:1px solid var(--border);border-radius:20px;
   color:var(--text-2);cursor:pointer;background:transparent;font-family:var(--font-mono);
@@ -83,11 +99,69 @@ header{
   display: flex;gap: 2px;background: var(--surface);border: 1px solid var(--border);border-radius: 4px;padding: 2px;
 }
 .lang-btn {
-  font-size: 9px;font-weight: 700;font-family: var(--font-mono);padding: 3px 8px;border: none;border-radius: 3px;
+  font-size: 9px;font-weight: 700;font-family: var(--font-mono);padding: 3px 7px;border: none;border-radius: 3px;
   color: var(--text-3);background: transparent;cursor: pointer;transition: all 0.15s;letter-spacing: 0.5px;
 }
 .lang-btn.active {background: var(--gold);color: #0a0800;}
 .lang-btn:hover:not(.active) {color: var(--text);}
+
+/* PROFILE PANEL (slide-in from right) */
+.profile-overlay{
+  position:fixed;inset:0;z-index:200;background:rgba(6,7,9,.6);backdrop-filter:blur(4px);
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.profile-overlay.open{opacity:1;pointer-events:all;}
+.profile-panel{
+  position:fixed;top:0;right:-380px;bottom:0;width:360px;z-index:201;
+  background:var(--card);border-left:1px solid var(--border-hi);
+  padding:28px 24px;overflow-y:auto;transition:right .3s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;gap:20px;
+}
+.profile-panel.open{right:0;}
+.profile-panel-header{display:flex;align-items:center;justify-content:space-between;}
+.profile-panel-title{font-family:var(--font-serif);font-size:22px;font-weight:600;color:var(--gold);}
+.pp-close{background:none;border:1px solid var(--border);color:var(--text-2);width:30px;height:30px;border-radius:8px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.pp-close:hover{border-color:var(--negative);color:var(--negative);}
+.pp-avatar{
+  width:64px;height:64px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold-lt),#8B6E1A);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-serif);font-size:32px;font-weight:700;color:#0a0800;
+  box-shadow:0 0 30px rgba(196,163,68,.25);
+}
+.pp-name{font-family:var(--font-mono);font-size:14px;font-weight:700;color:var(--text);letter-spacing:.5px;margin-top:4px;}
+.pp-email{font-family:var(--font-mono);font-size:11px;color:var(--text-2);margin-top:2px;}
+.pp-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;}
+.pp-section-title{font-family:var(--font-mono);font-size:8px;font-weight:700;color:var(--text-3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;}
+.pp-plan-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:6px;font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1.5px;
+  margin-bottom:8px;
+}
+.pp-plan-free{background:rgba(125,132,148,.1);border:1px solid rgba(125,132,148,.2);color:#9CA3AF;}
+.pp-plan-pro{background:var(--gold-dim);border:1px solid rgba(196,163,68,.3);color:var(--gold);}
+.pp-plan-elite{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);color:var(--purple);}
+.pp-stat-row{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:11px;padding:5px 0;border-bottom:1px solid var(--border);}
+.pp-stat-row:last-child{border-bottom:none;}
+.pp-stat-label{color:var(--text-2);}
+.pp-stat-val{color:var(--text);font-weight:600;}
+.pp-upgrade{
+  display:block;width:100%;padding:12px;text-align:center;
+  background:linear-gradient(135deg,var(--gold-lt),#8B6E1A);
+  border:none;border-radius:10px;color:#0a0800;font-family:var(--font-sans);font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .15s;text-decoration:none;
+}
+.pp-upgrade:hover{box-shadow:0 0 24px rgba(196,163,68,.4);}
+.pp-btn{
+  display:block;width:100%;padding:10px;text-align:center;
+  background:transparent;border:1px solid var(--border);border-radius:8px;
+  color:var(--text-2);font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all .15s;
+}
+.pp-btn:hover{border-color:var(--text-2);color:var(--text);}
+.pp-btn-danger{border-color:rgba(248,113,113,.2);color:var(--negative);}
+.pp-btn-danger:hover{border-color:var(--negative);background:rgba(248,113,113,.06);}
+.pp-btn-blue{border-color:rgba(96,165,250,.2);color:var(--blue);}
+.pp-btn-blue:hover{border-color:var(--blue);background:rgba(96,165,250,.06);}
 
 /* TICKER */
 .ticker{
@@ -454,6 +528,79 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
 .stress-final{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;margin-top:8px;}
 .stress-val{font-size:16px;font-weight:700;}
 @media(max-width:900px){.proy-two-col{grid-template-columns:1fr;}.stress-grid{grid-template-columns:1fr;}}
+
+/* ── CORRELACIONES VIEW ── */
+.corr-full-view,.comunidad-full-view{
+  position:fixed;top:86px;left:0;right:0;bottom:0;background:var(--bg);overflow-y:auto;z-index:100;
+}
+.corr-container,.com-container{padding:24px;max-width:1400px;margin:0 auto;}
+.corr-header,.com-header{margin-bottom:28px;}
+.corr-header h1,.com-header h1{font-family:var(--font-serif);font-size:36px;font-weight:600;color:var(--purple);margin:0 0 8px 0;}
+.com-header h1{color:var(--teal);}
+.corr-sub{font-family:var(--font-mono);font-size:11px;color:var(--text-3);letter-spacing:1px;}
+.corr-section{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:20px;}
+.corr-section-title{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
+.corr-matrix-wrap{overflow-x:auto;}
+.corr-matrix{border-collapse:collapse;font-family:var(--font-mono);font-size:11px;min-width:100%;}
+.corr-matrix th{padding:8px 12px;color:var(--text-2);font-weight:500;font-size:10px;letter-spacing:.5px;background:var(--surface);border:1px solid var(--border);white-space:nowrap;}
+.corr-matrix td{padding:8px 10px;text-align:center;border:1px solid rgba(255,255,255,.04);font-weight:700;font-size:12px;cursor:default;transition:filter .1s;}
+.corr-matrix td:hover{filter:brightness(1.3);}
+.corr-info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:16px;}
+.corr-info-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:14px;}
+.corr-info-sym{font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--gold);}
+.corr-info-label{font-family:var(--font-mono);font-size:8px;color:var(--text-3);letter-spacing:1px;margin-top:6px;}
+.corr-info-val{font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--text);margin-top:1px;}
+.regime-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:12px;}
+.regime-alcista{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:var(--positive);}
+.regime-bajista{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--negative);}
+.regime-lateral{background:rgba(196,163,68,.1);border:1px solid rgba(196,163,68,.3);color:var(--gold);}
+.corr-empty{text-align:center;padding:60px 20px;color:var(--text-3);font-size:13px;font-family:var(--font-mono);}
+.corr-loading{display:flex;align-items:center;justify-content:center;gap:12px;padding:40px;color:var(--text-2);font-family:var(--font-mono);font-size:12px;}
+
+/* ── COMUNIDAD VIEW ── */
+.com-post-form{background:var(--card);border:1px solid var(--border-hi);border-radius:var(--r);padding:20px;margin-bottom:20px;}
+.com-post-form textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--font-sans);font-size:13px;padding:12px 14px;outline:none;resize:vertical;min-height:90px;transition:border-color .15s;}
+.com-post-form textarea:focus{border-color:var(--teal);}
+.com-post-form textarea::placeholder{color:var(--text-3);}
+.com-post-actions{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:10px;}
+.com-char-count{font-family:var(--font-mono);font-size:9px;color:var(--text-3);}
+.com-post-btn{padding:9px 20px;background:linear-gradient(135deg,var(--teal),#1a9e8f);border:none;border-radius:8px;color:#0a0e0e;font-family:var(--font-sans);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+.com-post-btn:hover{box-shadow:0 0 16px rgba(45,212,191,.3);}
+.com-post-btn:disabled{background:var(--surface);color:var(--text-3);cursor:not-allowed;box-shadow:none;}
+.com-share-toggle{font-family:var(--font-mono);font-size:10px;color:var(--text-2);cursor:pointer;display:flex;align-items:center;gap:6px;}
+.com-share-toggle input{accent-color:var(--teal);}
+.com-feed{display:flex;flex-direction:column;gap:14px;}
+.com-post-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;transition:border-color .15s;}
+.com-post-card:hover{border-color:rgba(45,212,191,.2);}
+.com-post-meta{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.com-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--teal),#1a9e8f);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:13px;font-weight:700;color:#0a0e0e;flex-shrink:0;}
+.com-author{font-family:var(--font-mono);font-size:11px;color:var(--gold);}
+.com-time{font-family:var(--font-mono);font-size:9px;color:var(--text-3);}
+.com-content{font-size:13px;color:var(--text);line-height:1.65;margin-bottom:12px;}
+.com-portfolio-ctx{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-family:var(--font-mono);font-size:10px;color:var(--text-2);}
+.com-actions{display:flex;align-items:center;gap:14px;}
+.com-like-btn{display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--border);border-radius:20px;color:var(--text-2);font-family:var(--font-mono);font-size:10px;padding:4px 12px;cursor:pointer;transition:all .15s;}
+.com-like-btn.liked{border-color:rgba(248,113,113,.4);color:var(--negative);}
+.com-like-btn:hover{border-color:rgba(248,113,113,.3);color:var(--negative);}
+.com-del-btn{background:none;border:none;color:var(--text-3);font-size:11px;cursor:pointer;font-family:var(--font-mono);padding:4px 8px;}
+.com-del-btn:hover{color:var(--negative);}
+.com-load-more{display:block;width:100%;margin-top:16px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);color:var(--text-2);font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all .15s;}
+.com-load-more:hover{border-color:var(--teal);color:var(--teal);}
+
+/* ── PRINT / PDF ── */
+@media print {
+  header,.ticker,#chartModal,.proy-full-view,.news-full-view,.assets-full-view,
+  .corr-full-view,.comunidad-full-view,.col-r,.btn-phase,.btn-add,.btn-logout,
+  .btn-rm,.chat-input-row,.ai-usage,.hdr-right,.hdr-center,.btn-logout {
+    display:none!important;
+  }
+  body,html{overflow:visible!important;height:auto!important;background:#fff!important;color:#000!important;}
+  .app{display:block!important;overflow:visible!important;height:auto!important;}
+  .col{break-inside:avoid;margin-bottom:20px;}
+  .card{border:1px solid #ccc!important;background:#fff!important;break-inside:avoid;}
+  .ctitle,.pm-label,.ps-label{color:#555!important;}
+  .ps-val,.pm-value{color:#000!important;}
+}
 </style>
 </head>
 <body>
@@ -471,18 +618,80 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
     <button class="nav-pill" onclick="showView('proyecciones')" data-i18n="projections">Proyecciones</button>
     <button class="nav-pill" onclick="showView('activos')" data-i18n="assets">Activos</button>
     <button class="nav-pill" onclick="showView('noticias')" data-i18n="news">Noticias</button>
+    <button class="nav-pill" onclick="showView('correlaciones')" style="border-color:rgba(167,139,250,.3);color:var(--purple)">Correlaciones</button>
+    <button class="nav-pill" onclick="showView('comunidad')" style="border-color:rgba(45,212,191,.25);color:var(--teal)">Comunidad</button>
   </div>
   <div class="hdr-right">
-    <div class="live-badge"><div class="live-dot"></div><span class="live-txt" data-i18n="live">Live</span></div>
+    <div class="live-badge"><div class="live-dot"></div><span class="live-txt">Live</span></div>
     <div class="lang-selector">
       <button class="lang-btn active" id="lang-es" onclick="changeLanguage('es')">ES</button>
       <button class="lang-btn" id="lang-en" onclick="changeLanguage('en')">EN</button>
     </div>
-    <span class="user-info" id="user-email">cargando...</span>
-    <span class="plan-badge" id="user-plan">STARTER</span>
-    <button class="btn-logout" onclick="logout()" data-i18n="logout">Salir</button>
+    <!-- Profile button -->
+    <button class="btn-profile" onclick="openProfilePanel()" id="btn-profile">
+      <div class="profile-av" id="hdr-avatar">?</div>
+      <div class="profile-info">
+        <span class="profile-email-short" id="hdr-email-short">cargando...</span>
+        <span class="profile-plan plan-free" id="hdr-plan">FREE</span>
+      </div>
+    </button>
   </div>
 </header>
+
+<!-- PROFILE PANEL -->
+<div class="profile-overlay" id="profileOverlay" onclick="closeProfilePanel()"></div>
+<div class="profile-panel" id="profilePanel">
+  <div class="profile-panel-header">
+    <span class="profile-panel-title">Mi Cuenta</span>
+    <button class="pp-close" onclick="closeProfilePanel()">✕</button>
+  </div>
+
+  <!-- Avatar + identidad -->
+  <div style="display:flex;flex-direction:column;align-items:center;padding:8px 0;">
+    <div class="pp-avatar" id="pp-avatar">?</div>
+    <div class="pp-name" id="pp-name">—</div>
+    <div class="pp-email" id="pp-email">—</div>
+  </div>
+
+  <!-- Plan -->
+  <div class="pp-section">
+    <div class="pp-section-title">Plan activo</div>
+    <div class="pp-plan-badge pp-plan-free" id="pp-plan-badge">FREE</div>
+    <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);margin-top:4px;" id="pp-plan-desc">
+      Acceso completo durante el período de prueba.
+    </div>
+  </div>
+
+  <!-- Uso AI -->
+  <div class="pp-section">
+    <div class="pp-section-title">Au·IA — Asistente</div>
+    <div class="pp-stat-row">
+      <span class="pp-stat-label">Consultas usadas</span>
+      <span class="pp-stat-val" id="pp-ai-used">—</span>
+    </div>
+    <div class="pp-stat-row">
+      <span class="pp-stat-label">Límite semanal</span>
+      <span class="pp-stat-val" id="pp-ai-limit">—</span>
+    </div>
+    <div class="pp-stat-row">
+      <span class="pp-stat-label">Disponibles</span>
+      <span class="pp-stat-val" style="color:var(--positive)" id="pp-ai-remaining">—</span>
+    </div>
+  </div>
+
+  <!-- Acciones -->
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <button class="pp-btn pp-btn-blue" onclick="closeProfilePanel();exportPDF()">⬇ Exportar portafolio PDF</button>
+    <button class="pp-btn" onclick="closeProfilePanel();showView('correlaciones')">⬡ Análisis de correlaciones</button>
+    <button class="pp-btn" onclick="closeProfilePanel();showView('comunidad')">◎ Comunidad Áureo</button>
+    <button class="pp-btn pp-btn-danger" onclick="logout()">Cerrar sesión</button>
+  </div>
+
+  <!-- Footer -->
+  <div style="font-family:var(--font-mono);font-size:8px;color:var(--text-3);letter-spacing:.5px;text-align:center;margin-top:auto;padding-top:16px;">
+    Áureo v1.0 · Herramienta educativa · No asesor CMF
+  </div>
+</div>
 
 <!-- TICKER -->
 <div class="ticker">
@@ -746,6 +955,80 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
   </div>
 </div>
 
+<!-- VISTA CORRELACIONES -->
+<div class="corr-full-view" id="corrFullView" style="display:none;">
+  <div class="corr-container">
+    <div class="corr-header">
+      <h1>Análisis de Correlaciones</h1>
+      <p class="corr-sub">CORRELACIONES DE TU PORTAFOLIO · DATOS HISTÓRICOS · ELITE</p>
+    </div>
+
+    <!-- Selector de período -->
+    <div class="corr-section" style="padding:16px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-2);">Portafolio analizado:</span>
+      <span id="corr-symbols-badge" style="font-family:var(--font-mono);font-size:11px;color:var(--gold);">—</span>
+      <button onclick="loadCorrelations()" style="margin-left:auto;padding:7px 16px;background:var(--gold-dim);border:1px solid rgba(196,163,68,.3);border-radius:8px;color:var(--gold);font-family:var(--font-mono);font-size:10px;cursor:pointer;">↺ Recalcular</button>
+    </div>
+
+    <!-- Régimen de mercado + loading -->
+    <div id="corr-regime-row" style="display:none;margin-bottom:12px;">
+      <span id="corr-regime-badge" class="regime-badge">—</span>
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);">Régimen detectado en SPY (últimos 6 meses de retornos históricos)</span>
+    </div>
+    <div id="corr-loading" class="corr-loading" style="display:none;">
+      <div class="spin" style="width:20px;height:20px;border-width:2px;"></div><span>Cargando datos históricos...</span>
+    </div>
+    <div id="corr-empty" class="corr-empty">Agrega activos a tu portafolio para ver las correlaciones.</div>
+
+    <!-- Heatmap -->
+    <div class="corr-section" id="corr-matrix-section" style="display:none;">
+      <div class="corr-section-title">Matriz de Correlación (Pearson · datos mensuales 5 años)</div>
+      <div class="corr-matrix-wrap" id="corr-matrix-wrap"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;">
+        <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);">ESCALA:</span>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <div style="width:80px;height:10px;border-radius:3px;background:linear-gradient(90deg,#F87171,#888,#34D399);"></div>
+          <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);">−1 (inversa) → 0 (sin relación) → +1 (directa)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Beta vs SPY + stats por activo -->
+    <div class="corr-section" id="corr-info-section" style="display:none;">
+      <div class="corr-section-title">Beta vs S&P 500 y Métricas por Activo</div>
+      <div class="corr-info-grid" id="corr-info-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- VISTA COMUNIDAD -->
+<div class="comunidad-full-view" id="comunidadFullView" style="display:none;">
+  <div class="com-container">
+    <div class="com-header">
+      <h1>Comunidad Áureo</h1>
+      <p class="corr-sub">COMPARTE TU ESTRATEGIA · APRENDE DE OTROS INVERSORES</p>
+    </div>
+
+    <!-- Formulario de post -->
+    <div class="com-post-form">
+      <textarea id="com-textarea" placeholder="Comparte tu estrategia, análisis o reflexión sobre los mercados... (mín. 10 caracteres)" maxlength="2000" oninput="updateCharCount()"></textarea>
+      <div class="com-post-actions">
+        <label class="com-share-toggle">
+          <input type="checkbox" id="com-share-portfolio"> Incluir mi portafolio actual
+        </label>
+        <span class="com-char-count" id="com-char-count">0 / 2000</span>
+        <button class="com-post-btn" id="com-post-btn" onclick="submitCommunityPost()">Publicar</button>
+      </div>
+    </div>
+
+    <!-- Feed -->
+    <div id="com-feed" class="com-feed">
+      <div class="corr-loading"><div class="spin" style="width:20px;height:20px;border-width:2px;"></div><span>Cargando publicaciones...</span></div>
+    </div>
+    <button class="com-load-more" id="com-load-more" onclick="loadMorePosts()" style="display:none;">Cargar más publicaciones</button>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════════════════════════════
 // CONFIG
@@ -764,7 +1047,18 @@ if (!token) {
 
 const currentUser = userRaw ? JSON.parse(userRaw) : null;
 if (currentUser) {
-  document.getElementById('user-email').textContent = currentUser.email.split('@')[0];
+  const short = currentUser.email.split('@')[0];
+  const av = short[0].toUpperCase();
+  const el = document.getElementById('hdr-email-short');
+  if (el) el.textContent = short;
+  const avEl = document.getElementById('hdr-avatar');
+  if (avEl) avEl.textContent = av;
+  const ppAv = document.getElementById('pp-avatar');
+  if (ppAv) ppAv.textContent = av;
+  const ppName = document.getElementById('pp-name');
+  if (ppName) ppName.textContent = short;
+  const ppEmail = document.getElementById('pp-email');
+  if (ppEmail) ppEmail.textContent = currentUser.email;
 }
 
 async function api(path, opts = {}) {
@@ -792,10 +1086,54 @@ function logout() {
 async function loadUser() {
   try {
     const usage = await api('/api/user/usage');
-    document.getElementById('user-plan').textContent = (usage.plan || 'starter').toUpperCase();
-    document.getElementById('ai-usage').textContent =
-      `AU·IA: ${usage.used || 0} / ${usage.limit} consultas este mes`;
-  } catch(e) {}
+    const plan = (usage.plan || 'free').toLowerCase();
+    const planLabel = plan === 'elite' ? 'ELITE' : plan === 'pro' ? 'PRO' : 'FREE';
+    const planClass = plan === 'elite' ? 'plan-elite' : plan === 'pro' ? 'plan-pro' : 'plan-free';
+    const ppClass   = plan === 'elite' ? 'pp-plan-elite' : plan === 'pro' ? 'pp-plan-pro' : 'pp-plan-free';
+
+    // Header profile button
+    const hdrPlan = document.getElementById('hdr-plan');
+    if (hdrPlan) { hdrPlan.textContent = planLabel; hdrPlan.className = `profile-plan ${planClass}`; }
+
+    // Profile panel
+    const ppBadge = document.getElementById('pp-plan-badge');
+    if (ppBadge) { ppBadge.textContent = planLabel; ppBadge.className = `pp-plan-badge ${ppClass}`; }
+
+    const ppDesc = document.getElementById('pp-plan-desc');
+    if (ppDesc) ppDesc.textContent = plan === 'elite'
+      ? 'Acceso completo: correlaciones, comunidad, Au·IA ilimitada.'
+      : plan === 'pro'
+        ? 'Au·IA ilimitada, stress testing, exportación PDF.'
+        : 'Acceso completo durante el período de prueba.';
+
+    const limitTxt = usage.limit >= 9999 ? 'Ilimitada' : `${usage.limit} / semana`;
+    const remainTxt = usage.limit >= 9999 ? '∞' : `${usage.remaining}`;
+    const ppAiUsed = document.getElementById('pp-ai-used');
+    const ppAiLim  = document.getElementById('pp-ai-limit');
+    const ppAiRem  = document.getElementById('pp-ai-remaining');
+    if (ppAiUsed) ppAiUsed.textContent = usage.used || 0;
+    if (ppAiLim)  ppAiLim.textContent  = limitTxt;
+    if (ppAiRem)  ppAiRem.textContent  = remainTxt;
+
+    // Dashboard AI usage bar
+    const aiUsageEl = document.getElementById('ai-usage');
+    if (aiUsageEl) aiUsageEl.textContent = usage.limit >= 9999
+      ? 'AU·IA: consultas ilimitadas'
+      : `AU·IA: ${usage.used || 0} / ${usage.limit} consultas esta semana`;
+
+  } catch(e) {
+    console.warn('[loadUser]', e.message);
+  }
+}
+
+function openProfilePanel() {
+  document.getElementById('profilePanel').classList.add('open');
+  document.getElementById('profileOverlay').classList.add('open');
+}
+
+function closeProfilePanel() {
+  document.getElementById('profilePanel').classList.remove('open');
+  document.getElementById('profileOverlay').classList.remove('open');
 }
 
 // ════════════════════════════════════════════════════════
@@ -2386,34 +2724,34 @@ function showView(view) {
   document.querySelectorAll('.nav-pill').forEach(b => {
     if (b.getAttribute('onclick')?.includes(`'${view}'`)) b.classList.add('active');
   });
-  const app = document.querySelector('.app');
-  const newsView = document.getElementById('newsFullView');
-  const assetsView = document.getElementById('assetsFullView');
-  const proyView = document.getElementById('proyeccionesFullView');
+  const app       = document.querySelector('.app');
+  const newsView  = document.getElementById('newsFullView');
+  const assetsView= document.getElementById('assetsFullView');
+  const proyView  = document.getElementById('proyeccionesFullView');
+  const corrView  = document.getElementById('corrFullView');
+  const comView   = document.getElementById('comunidadFullView');
+
+  const hide = [app, newsView, assetsView, proyView, corrView, comView];
+  hide.forEach(el => el && (el.style.display = 'none'));
+
   if (view === 'noticias') {
-    app.style.display = 'none';
     newsView.style.display = 'block';
-    assetsView.style.display = 'none';
-    proyView.style.display = 'none';
     if (!window.newsFullLoaded) { fetchAllNews(); window.newsFullLoaded = true; }
   } else if (view === 'activos') {
-    app.style.display = 'none';
-    newsView.style.display = 'none';
     assetsView.style.display = 'block';
-    proyView.style.display = 'none';
     if (!window.assetsLoaded) { renderAssetsExplorer(); window.assetsLoaded = true; }
     fetchAllPrices();
   } else if (view === 'proyecciones') {
-    app.style.display = 'none';
-    newsView.style.display = 'none';
-    assetsView.style.display = 'none';
     proyView.style.display = 'block';
     renderProyeccionesView();
+  } else if (view === 'correlaciones') {
+    corrView.style.display = 'block';
+    loadCorrelations();
+  } else if (view === 'comunidad') {
+    comView.style.display = 'block';
+    if (!window.comLoaded) { loadCommunityPosts(); window.comLoaded = true; }
   } else {
     app.style.display = 'grid';
-    newsView.style.display = 'none';
-    assetsView.style.display = 'none';
-    proyView.style.display = 'none';
   }
 }
 
@@ -2797,6 +3135,295 @@ async function loadChartData(tf, btn) {
     loading.style.display = 'none';
     errEl.style.display = 'flex';
   }
+}
+
+// ════════════════════════════════════════════════════════
+// CORRELACIONES VIEW
+// ════════════════════════════════════════════════════════
+async function loadCorrelations() {
+  const symbols = [...new Set(S.port.map(a => a.t))];
+
+  const badge = document.getElementById('corr-symbols-badge');
+  const empty = document.getElementById('corr-empty');
+  const loading = document.getElementById('corr-loading');
+  const matrixSec = document.getElementById('corr-matrix-section');
+  const infoSec = document.getElementById('corr-info-section');
+  const regimeRow = document.getElementById('corr-regime-row');
+
+  badge.textContent = symbols.length ? symbols.join(', ') : 'Sin activos';
+
+  if (symbols.length < 2) {
+    empty.style.display = 'block';
+    loading.style.display = 'none';
+    matrixSec.style.display = 'none';
+    infoSec.style.display = 'none';
+    regimeRow.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  loading.style.display = 'flex';
+  matrixSec.style.display = 'none';
+  infoSec.style.display = 'none';
+  regimeRow.style.display = 'none';
+
+  try {
+    const data = await api(`/api/market/correlations?symbols=${symbols.join(',')}`);
+    loading.style.display = 'none';
+
+    if (data.error) {
+      empty.textContent = `Error: ${data.error}`;
+      empty.style.display = 'block';
+      return;
+    }
+
+    // Regime badge
+    const regimeBadge = document.getElementById('corr-regime-badge');
+    const regimeClass = { alcista:'regime-alcista', bajista:'regime-bajista', lateral:'regime-lateral' };
+    const regimeIcon  = { alcista:'↑ ALCISTA', bajista:'↓ BAJISTA', lateral:'→ LATERAL' };
+    regimeBadge.className = `regime-badge ${regimeClass[data.regime] || 'regime-lateral'}`;
+    regimeBadge.textContent = `Mercado ${regimeIcon[data.regime] || data.regime}`;
+    regimeRow.style.display = 'flex';
+
+    // Heatmap matrix
+    renderCorrMatrix(data.symbols, data.matrix);
+    matrixSec.style.display = 'block';
+
+    // Info cards
+    renderCorrInfoCards(data.symbols, data.betas, data.stats);
+    infoSec.style.display = 'block';
+
+  } catch (err) {
+    loading.style.display = 'none';
+    empty.textContent = 'Error al cargar correlaciones. Verifica tu conexión.';
+    empty.style.display = 'block';
+  }
+}
+
+function corrColor(v) {
+  if (v === null || v === undefined) return 'background:#1a1f2e;color:var(--text-3)';
+  if (v >= 1) return 'background:rgba(52,211,153,.8);color:#000';
+  const pos = v > 0;
+  const abs = Math.abs(v);
+  const r = pos ? Math.round(abs * 30 + 10)   : Math.round(abs * 248 + 10);
+  const g = pos ? Math.round(abs * 211 + 44)  : Math.round(abs * 113 + 40);
+  const b = pos ? Math.round(abs * 153 + 102) : Math.round(abs * 113 + 80);
+  const alpha = 0.15 + abs * 0.65;
+  const textCol = abs > 0.5 ? '#000' : 'var(--text)';
+  return `background:rgba(${r},${g},${b},${alpha});color:${textCol}`;
+}
+
+function renderCorrMatrix(symbols, matrix) {
+  const wrap = document.getElementById('corr-matrix-wrap');
+  let html = `<table class="corr-matrix"><thead><tr><th></th>`;
+  symbols.forEach(s => { html += `<th>${s}</th>`; });
+  html += `</tr></thead><tbody>`;
+  symbols.forEach(a => {
+    html += `<tr><th style="text-align:left">${a}</th>`;
+    symbols.forEach(b => {
+      const v = matrix[a]?.[b];
+      const style = corrColor(v);
+      const label = v === null ? '—' : v.toFixed(2);
+      html += `<td style="${style}" title="${a}×${b}: ${label}">${label}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+  wrap.innerHTML = html;
+}
+
+function renderCorrInfoCards(symbols, betas, stats) {
+  const grid = document.getElementById('corr-info-grid');
+  grid.innerHTML = symbols.map(sym => {
+    const b = betas[sym];
+    const s = stats[sym] || {};
+    const betaColor = b === null ? 'var(--text-3)' : b > 1.2 ? 'var(--negative)' : b < 0.6 ? 'var(--positive)' : 'var(--teal)';
+    const betaLabel = b === null ? '—' : b.toFixed(2);
+    const betaDesc  = b === null ? '' : b > 1.2 ? '(alta sensibilidad al mercado)' : b < 0.6 ? '(baja sensibilidad al mercado)' : '(sensibilidad moderada)';
+    return `
+    <div class="corr-info-card">
+      <div class="corr-info-sym">${sym}</div>
+      <div class="corr-info-label">BETA vs SPY</div>
+      <div class="corr-info-val" style="color:${betaColor}">${betaLabel}</div>
+      <div style="font-family:var(--font-mono);font-size:8px;color:var(--text-3);margin-top:2px;">${betaDesc}</div>
+      ${s.mu !== undefined ? `
+        <div class="corr-info-label" style="margin-top:8px;">RETORNO μ / RIESGO σ</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--positive);">${(s.mu*100).toFixed(1)}% / ${(s.sigma*100).toFixed(1)}%</div>
+      ` : ''}
+      ${s.max_drawdown !== undefined ? `
+        <div class="corr-info-label" style="margin-top:6px;">MAX DRAWDOWN</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--negative);">−${(s.max_drawdown*100).toFixed(1)}%</div>
+      ` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════
+// COMUNIDAD VIEW
+// ════════════════════════════════════════════════════════
+let comPage = 1;
+let comTotal = 0;
+const COM_LIMIT = 20;
+
+function updateCharCount() {
+  const len = document.getElementById('com-textarea')?.value.length || 0;
+  const el = document.getElementById('com-char-count');
+  if (el) el.textContent = `${len} / 2000`;
+}
+
+async function loadCommunityPosts(reset = true) {
+  if (reset) { comPage = 1; document.getElementById('com-feed').innerHTML = ''; }
+  const feed = document.getElementById('com-feed');
+  const loadMoreBtn = document.getElementById('com-load-more');
+
+  try {
+    const data = await api(`/api/community/posts?page=${comPage}&limit=${COM_LIMIT}`);
+    comTotal = data.total || 0;
+
+    if (!data.posts || data.posts.length === 0) {
+      if (comPage === 1) {
+        feed.innerHTML = `<div class="corr-empty" style="padding:40px 20px;">
+          Sé el primero en publicar. Comparte tu estrategia con la comunidad.
+        </div>`;
+      }
+      if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+      return;
+    }
+
+    const html = data.posts.map(renderPost).join('');
+    if (reset) {
+      feed.innerHTML = html;
+    } else {
+      feed.insertAdjacentHTML('beforeend', html);
+    }
+
+    const shown = comPage * COM_LIMIT;
+    if (loadMoreBtn) loadMoreBtn.style.display = shown < comTotal ? 'block' : 'none';
+
+  } catch (err) {
+    if (comPage === 1) {
+      feed.innerHTML = `<div class="corr-empty">Error al cargar publicaciones. Verifica que las tablas de comunidad existen en Supabase.</div>`;
+    }
+    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+  }
+}
+
+function renderPost(p) {
+  const isMine = currentUser && p.author_email === currentUser.email;
+  const avatar = (p.author_email || 'U')[0].toUpperCase();
+  const author = p.author_email ? p.author_email.split('@')[0] : 'Usuario';
+  const time   = p.created_at ? calcularTiempo(p.created_at) : '';
+  const ctxHtml = p.portfolio_context?.assets?.length
+    ? `<div class="com-portfolio-ctx">📊 Portafolio compartido: ${p.portfolio_context.assets.map(a => `${a.t} (${a.w}%)`).join(', ')}</div>`
+    : '';
+  const likeIcon = p.liked_by_me ? '♥' : '♡';
+  return `
+  <div class="com-post-card" id="post-${p.id}">
+    <div class="com-post-meta">
+      <div class="com-avatar">${avatar}</div>
+      <div style="flex:1">
+        <div class="com-author">${author}</div>
+        <div class="com-time">${time}</div>
+      </div>
+    </div>
+    ${ctxHtml}
+    <div class="com-content">${escHtml(p.content)}</div>
+    <div class="com-actions">
+      <button class="com-like-btn ${p.liked_by_me ? 'liked' : ''}" onclick="toggleLike('${p.id}',${p.liked_by_me}, this)">
+        ${likeIcon} <span class="like-count">${p.likes || 0}</span>
+      </button>
+      ${isMine ? `<button class="com-del-btn" onclick="deletePost('${p.id}')">Eliminar</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+async function toggleLike(postId, currentlyLiked, btn) {
+  try {
+    const method = currentlyLiked ? 'DELETE' : 'POST';
+    const data = await api(`/api/community/posts/${postId}/like`, { method });
+    const card = document.getElementById(`post-${postId}`);
+    if (!card) return;
+    const likeBtn = card.querySelector('.com-like-btn');
+    if (likeBtn) {
+      likeBtn.classList.toggle('liked', data.liked);
+      likeBtn.querySelector('.like-count').textContent = data.likes || 0;
+      likeBtn.innerHTML = `${data.liked ? '♥' : '♡'} <span class="like-count">${data.likes || 0}</span>`;
+      likeBtn.onclick = () => toggleLike(postId, data.liked, likeBtn);
+    }
+  } catch (err) {
+    console.error('[Community] Like error:', err);
+  }
+}
+
+async function deletePost(postId) {
+  if (!confirm('¿Eliminar esta publicación?')) return;
+  try {
+    await api(`/api/community/posts/${postId}`, { method: 'DELETE' });
+    const card = document.getElementById(`post-${postId}`);
+    if (card) card.remove();
+  } catch (err) {
+    console.error('[Community] Delete error:', err);
+  }
+}
+
+async function submitCommunityPost() {
+  const content = document.getElementById('com-textarea')?.value.trim();
+  const sharePortfolio = document.getElementById('com-share-portfolio')?.checked;
+  const btn = document.getElementById('com-post-btn');
+
+  if (!content || content.length < 10) {
+    alert('El contenido debe tener al menos 10 caracteres.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Publicando...';
+
+  try {
+    const body = {
+      content,
+      portfolio_context: sharePortfolio ? { assets: S.port, mu: getPortParams().mu } : null,
+    };
+    const data = await api('/api/community/posts', { method: 'POST', body: JSON.stringify(body) });
+
+    if (data.error) throw new Error(data.error);
+
+    document.getElementById('com-textarea').value = '';
+    updateCharCount();
+    document.getElementById('com-share-portfolio').checked = false;
+
+    // Prepend new post
+    const feed = document.getElementById('com-feed');
+    feed.insertAdjacentHTML('afterbegin', renderPost(data.post));
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Publicar';
+}
+
+async function loadMorePosts() {
+  comPage++;
+  await loadCommunityPosts(false);
+}
+
+// ════════════════════════════════════════════════════════
+// PDF EXPORT
+// ════════════════════════════════════════════════════════
+function exportPDF() {
+  // Show dashboard view for print
+  const prevView = document.querySelector('.nav-pill.active')?.getAttribute('onclick')?.match(/'(\w+)'/)?.[1] || 'dashboard';
+  showView('dashboard');
+  document.title = `Aureo — Portafolio ${new Date().toLocaleDateString('es-CL')}`;
+  window.print();
+  document.title = 'Áureo — Dashboard';
+  // Restore view
+  setTimeout(() => showView(prevView), 200);
 }
 
 // ════════════════════════════════════════════════════════

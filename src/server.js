@@ -8,6 +8,7 @@ const portfolioRoutes = require('./routes/portfolio');
 const userRoutes = require('./routes/user');
 const marketRoutes = require('./routes/market');
 const newsRoutes = require('./routes/news');
+const communityRoutes = require('./routes/community');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -76,6 +77,7 @@ app.get('/health', (_req, res) => {
       user: '/api/user/*',
       market: '/api/market/*',
       news: '/api/news/*',
+      community: '/api/community/*',
     },
   });
 });
@@ -88,6 +90,7 @@ app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/news', newsRoutes);
+app.use('/api/community', communityRoutes);
 
 // ════════════════════════════════════════════════════════
 // Fallback: servir dashboard para rutas no-API

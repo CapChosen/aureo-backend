@@ -589,6 +589,97 @@ router.get('/historical/:symbol', requireAuth, async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════
+// GET /api/market/correlations?symbols=SPY,QQQ,GLD
+// Dedicated endpoint for the Correlaciones view.
+// Returns: full NxN matrix, beta vs SPY, market regime.
+// ════════════════════════════════════════════════════════
+router.get('/correlations', requireAuth, async (req, res) => {
+  const raw     = (req.query.symbols || '').trim();
+  const symbols = [...new Set(
+    raw.split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
+  )].slice(0, 10);
+
+  if (symbols.length < 2) {
+    return res.status(400).json({ error: 'Se necesitan al menos 2 símbolos (?symbols=A,B,...)' });
+  }
+
+  // Always include SPY for beta/regime calculation
+  const allSyms = symbols.includes('SPY') ? symbols : ['SPY', ...symbols];
+
+  const results = {};
+  const BATCH = 4, DELAY = 1500;
+  for (let i = 0; i < allSyms.length; i += BATCH) {
+    const batch = allSyms.slice(i, i + BATCH);
+    const batchData = await Promise.all(batch.map(s => fetchHistorical(s)));
+    batch.forEach((s, idx) => {
+      if (batchData[idx]) results[s] = batchData[idx];
+    });
+    if (i + BATCH < allSyms.length) await new Promise(r => setTimeout(r, DELAY));
+  }
+
+  // Full NxN correlation matrix (only for the requested symbols)
+  const matrix = {};
+  for (const a of symbols) {
+    matrix[a] = {};
+    for (const b of symbols) {
+      if (a === b) { matrix[a][b] = 1; continue; }
+      const ha = results[a], hb = results[b];
+      if (!ha?.returnsByMonth || !hb?.returnsByMonth) { matrix[a][b] = null; continue; }
+      const common = Object.keys(ha.returnsByMonth).filter(k => hb.returnsByMonth[k] !== undefined).sort();
+      if (common.length < 6) { matrix[a][b] = null; continue; }
+      matrix[a][b] = pearsonCorr(common.map(k => ha.returnsByMonth[k]), common.map(k => hb.returnsByMonth[k]));
+    }
+  }
+
+  // Beta vs SPY for each requested symbol
+  const spyData = results['SPY'];
+  const betas = {};
+  for (const sym of symbols) {
+    const h = results[sym];
+    if (!h?.returnsByMonth || !spyData?.returnsByMonth) { betas[sym] = null; continue; }
+    const common = Object.keys(h.returnsByMonth).filter(k => spyData.returnsByMonth[k] !== undefined).sort();
+    if (common.length < 12) { betas[sym] = null; continue; }
+    const rs  = common.map(k => h.returnsByMonth[k]);
+    const rsp = common.map(k => spyData.returnsByMonth[k]);
+    const n   = rs.length;
+    const msp = rsp.reduce((a,b) => a+b, 0) / n;
+    const ms  = rs.reduce((a,b) => a+b, 0) / n;
+    let cov = 0, varSpy = 0;
+    for (let i = 0; i < n; i++) {
+      cov    += (rsp[i] - msp) * (rs[i] - ms);
+      varSpy += (rsp[i] - msp) ** 2;
+    }
+    betas[sym] = varSpy > 1e-12 ? parseFloat((cov / varSpy).toFixed(3)) : null;
+  }
+
+  // Market regime from SPY recent returns (last 6 months)
+  let regime = 'desconocido';
+  if (spyData?.returnsByMonth) {
+    const recentKeys = Object.keys(spyData.returnsByMonth).sort().slice(-6);
+    const recentAvg  = recentKeys.reduce((s, k) => s + spyData.returnsByMonth[k], 0) / recentKeys.length;
+    regime = recentAvg > 0.005 ? 'alcista' : recentAvg < -0.005 ? 'bajista' : 'lateral';
+  }
+
+  // Stats for each requested symbol
+  const stats = {};
+  for (const sym of symbols) {
+    const h = results[sym];
+    if (!h) continue;
+    stats[sym] = { mu: h.mu, sigma: h.sigma, return_5y: h.return_5y, max_drawdown: h.max_drawdown };
+  }
+
+  res.json({
+    symbols,
+    matrix,
+    betas,
+    stats,
+    regime,
+    spy_included: !!spyData,
+    fetched_at: new Date().toISOString(),
+  });
+});
+
+// ════════════════════════════════════════════════════════
 // BACKGROUND PRICE PRELOADER
 // Fetches all extended symbols sequentially (1 per 2s = 30/min)
 // so we stay under the 60/min Finnhub free-plan limit while

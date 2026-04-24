@@ -70,7 +70,7 @@ Siempre aclara que eres una herramienta educativa, no un asesor CMF regulado.`,
     res.json({
       reply,
       calls_used: req.aiCallsUsed + 1,
-      calls_limit: { starter: 5, pro: 30, family: 9999 }[req.userPlan]
+      calls_limit: req.aiCallsLimit
     });
 
   } catch (error) {

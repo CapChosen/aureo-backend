@@ -18,8 +18,6 @@ router.get('/me', requireAuth, async (req, res) => {
 
 // GET /api/user/usage
 router.get('/usage', requireAuth, async (req, res) => {
-  const limits = { starter: 5, pro: 30, family: 9999 };
-
   const { data, error } = await supabase
     .from('users')
     .select('plan, ai_calls_this_month')
@@ -28,11 +26,16 @@ router.get('/usage', requireAuth, async (req, res) => {
 
   if (error) return res.status(500).json({ error: 'Error al obtener uso' });
 
+  const plan = data.plan || 'starter';
+  // Pro / Elite: ilimitado; Free/Starter: 50/semana (período de prueba)
+  const limit = (plan === 'pro' || plan === 'elite' || plan === 'family') ? 99999 : 50;
+  const used  = data.ai_calls_this_month || 0;
+
   res.json({
-    plan: data.plan,
-    used: data.ai_calls_this_month,
-    limit: limits[data.plan] || 5,
-    remaining: Math.max(0, (limits[data.plan] || 5) - data.ai_calls_this_month)
+    plan,
+    used,
+    limit,
+    remaining: limit >= 9999 ? 99999 : Math.max(0, limit - used),
   });
 });
 
