@@ -1047,8 +1047,13 @@ if (!token) {
 
 const currentUser = userRaw ? JSON.parse(userRaw) : null;
 if (currentUser) {
-  const short = currentUser.email.split('@')[0];
-  const av = short[0].toUpperCase();
+  // Prefer full name from registration metadata, fall back to email prefix
+  const meta  = currentUser.user_metadata || {};
+  const name  = meta.name || currentUser.email.split('@')[0];
+  const short = name.split(' ')[0]; // first name only for header
+  const av    = name[0].toUpperCase();
+  const phone = meta.phone || null;
+
   const el = document.getElementById('hdr-email-short');
   if (el) el.textContent = short;
   const avEl = document.getElementById('hdr-avatar');
@@ -1056,9 +1061,15 @@ if (currentUser) {
   const ppAv = document.getElementById('pp-avatar');
   if (ppAv) ppAv.textContent = av;
   const ppName = document.getElementById('pp-name');
-  if (ppName) ppName.textContent = short;
+  if (ppName) ppName.textContent = name;
   const ppEmail = document.getElementById('pp-email');
   if (ppEmail) ppEmail.textContent = currentUser.email;
+  // Show phone if registered
+  if (phone) {
+    const ppEmailEl = document.getElementById('pp-email');
+    if (ppEmailEl) ppEmailEl.innerHTML =
+      `${currentUser.email}<br><span style="font-size:9px;color:var(--text-3);">${phone}</span>`;
+  }
 }
 
 async function api(path, opts = {}) {
