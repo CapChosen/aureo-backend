@@ -553,11 +553,17 @@ section { padding: 96px 5%; }
 
 .planes-grid {
   display: grid;
-  grid-template-columns: repeat(2,1fr);
-  gap: 24px;
+  grid-template-columns: repeat(3,1fr);
+  gap: 20px;
   margin-top: 52px;
-  max-width: 760px;
 }
+.plan-card.elite { border-color: rgba(196,163,68,0.15); }
+.plan-card.elite::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, rgba(196,163,68,.6), transparent);
+}
+.badge-elite { background: linear-gradient(135deg,rgba(196,163,68,.18),rgba(196,163,68,.06)); color: var(--gold-lt); border: 1px solid rgba(196,163,68,.35); }
 
 .plan-card {
   background: var(--card);
@@ -746,7 +752,7 @@ footer {
   .steps-grid::before { display: none; }
   .quees-inner { grid-template-columns: 1fr; gap: 40px; }
   .quees-visual { display: none; }
-  .planes-grid { grid-template-columns: 1fr; }
+  .planes-grid { grid-template-columns: 1fr; max-width: 480px; }
   .compare-table { font-size: 12px; }
   .compare-table th, .compare-table td { padding: 10px 12px; }
 }
@@ -997,66 +1003,82 @@ footer {
       <table class="compare-table">
         <thead>
           <tr>
-            <th style="width:30%">Característica</th>
+            <th style="width:28%">Característica</th>
             <th>DAP Bancario</th>
             <th>Fintual / Racional</th>
-            <th class="col-aureo">Áureo ✦</th>
+            <th class="col-aureo">Áureo Free</th>
+            <th class="col-aureo" style="background:rgba(196,163,68,.08);">Áureo Elite ✦</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td class="col-feature">Rentabilidad estimada</td>
             <td>0.48%/mes</td>
-            <td>Variable, gestión pasiva</td>
+            <td>Variable</td>
             <td class="col-aureo"><span class="gold-val">Tú decides</span></td>
+            <td class="col-aureo" style="background:rgba(196,163,68,.08);"><span class="gold-val">Tú decides</span></td>
           </tr>
           <tr>
-            <td class="col-feature">Control del portafolio</td>
-            <td>Ninguno</td>
-            <td>Limitado (~4 fondos)</td>
-            <td class="col-aureo"><span class="check">✓</span> Total, +200 activos</td>
+            <td class="col-feature">+200 activos globales</td>
+            <td>No</td>
+            <td>~10 fondos</td>
+            <td class="col-aureo"><span class="check">✓</span></td>
+            <td class="col-aureo" style="background:rgba(196,163,68,.08);"><span class="check">✓</span></td>
           </tr>
           <tr>
             <td class="col-feature">Simulación Monte Carlo</td>
             <td>No</td>
             <td>No</td>
-            <td class="col-aureo"><span class="check">✓</span> 1,000 simulaciones</td>
+            <td class="col-aureo"><span class="check">✓</span> 1,000 sim.</td>
+            <td class="col-aureo" style="background:rgba(196,163,68,.08);"><span class="check">✓</span> 1,000 sim.</td>
           </tr>
           <tr>
-            <td class="col-feature">Activos globales</td>
+            <td class="col-feature">Au·IA — Asistente financiero</td>
             <td>No</td>
-            <td>~10 fondos</td>
-            <td class="col-aureo"><span class="check">✓</span> +200 activos</td>
+            <td>No</td>
+            <td class="col-aureo" style="color:var(--text-2);">1/semana</td>
+            <td class="col-aureo" style="background:rgba(196,163,68,.08);"><span class="check">✓</span> Ilimitado</td>
           </tr>
           <tr>
-            <td class="col-feature">Asistente con IA</td>
-            <td>No</td>
-            <td>No</td>
-            <td class="col-aureo"><span class="check">✓</span> Au·IA incluido</td>
-          </tr>
-          <tr>
-            <td class="col-feature">Noticias de mercado</td>
-            <td>No</td>
-            <td>No</td>
-            <td class="col-aureo"><span class="check">✓</span> Tiempo real</td>
-          </tr>
-          <tr>
-            <td class="col-feature">Gráficos por activo</td>
+            <td class="col-feature">Noticias + gráficos tiempo real</td>
             <td>No</td>
             <td>Básico</td>
-            <td class="col-aureo"><span class="check">✓</span> 1H / D / M / 1A</td>
+            <td class="col-aureo"><span class="check">✓</span></td>
+            <td class="col-aureo" style="background:rgba(196,163,68,.08);"><span class="check">✓</span></td>
           </tr>
           <tr>
-            <td class="col-feature">Costo para el usuario</td>
+            <td class="col-feature">Comunidad de inversores</td>
+            <td>No</td>
+            <td>No</td>
+            <td class="col-aureo" style="color:var(--text-3);">—</td>
+            <td class="col-aureo" style="background:rgba(196,163,68,.08);"><span class="check">✓</span> Grupos privados</td>
+          </tr>
+          <tr>
+            <td class="col-feature">Integración con broker</td>
+            <td>No</td>
+            <td>No</td>
+            <td class="col-aureo" style="color:var(--text-3);">—</td>
+            <td class="col-aureo" style="background:rgba(196,163,68,.08);"><span class="check">✓</span> IB · Schwab · más</td>
+          </tr>
+          <tr>
+            <td class="col-feature">Análisis de correlaciones</td>
+            <td>No</td>
+            <td>No</td>
+            <td class="col-aureo" style="color:var(--text-3);">—</td>
+            <td class="col-aureo" style="background:rgba(196,163,68,.08);"><span class="check">✓</span> Matriz + líderes</td>
+          </tr>
+          <tr>
+            <td class="col-feature">Costo mensual</td>
             <td>Gratis</td>
             <td>0.5–1% anual</td>
-            <td class="col-aureo"><span class="gold-val">Gratis*</span></td>
+            <td class="col-aureo"><span class="gold-val">$0</span></td>
+            <td class="col-aureo" style="background:rgba(196,163,68,.08);"><span class="gold-val">$34.990 CLP</span></td>
           </tr>
         </tbody>
       </table>
     </div>
     <p style="font-family:var(--fm);font-size:9px;color:var(--text-3);margin-top:10px;letter-spacing:.4px;">
-      *Plan base gratuito. Funcionalidades avanzadas disponibles próximamente en planes de pago.
+      Plan Pro ($14.990/mes) también disponible próximamente. Todas las funcionalidades Pro y Elite en desarrollo activo.
     </p>
   </div>
 </section>
@@ -1066,44 +1088,73 @@ footer {
   <div class="section-inner">
     <div class="reveal"><div class="tag">Planes</div></div>
     <h2 class="section-title reveal reveal-delay-1">Empieza <em>gratis</em>,<br>escala cuando quieras</h2>
+    <p class="section-sub reveal reveal-delay-2" style="margin-bottom:0;">Desde el explorador básico hasta herramientas institucionales. Tú decides cuánto quieres crecer.</p>
 
     <div class="planes-grid">
-      <!-- Plan Free -->
+
+      <!-- ── PLAN FREE ───────────────────────────────── -->
       <div class="plan-card featured reveal reveal-delay-1">
         <div class="plan-badge badge-free">Free · Disponible ahora</div>
         <div class="plan-price"><sup>$</sup>0 <span>/mes</span></div>
         <div class="plan-period">GRATIS PARA SIEMPRE</div>
         <hr class="plan-divider">
         <ul class="plan-features">
-          <li>Portafolio personalizado completo</li>
+          <li>Portafolio personalizado</li>
           <li>+200 activos globales</li>
           <li>Simulación Monte Carlo (1,000 escenarios)</li>
           <li>Gráficos por activo (1H / D / M / 1A)</li>
           <li>Noticias de mercado en tiempo real</li>
-          <li>5 consultas a Au·IA por mes</li>
-          <li>Persistencia de portafolio</li>
+          <li>Precios en tiempo real</li>
+          <li style="color:var(--text-3);"><span style="color:var(--text-3);">—</span> 1 consulta Au·IA por semana</li>
+          <li class="disabled">Sin acceso a comunidad</li>
+          <li class="disabled">Sin integración de broker</li>
         </ul>
-        <a href="login.html" class="plan-cta gold">Crear cuenta gratis →</a>
+        <a href="/login" class="plan-cta gold">Crear cuenta gratis →</a>
       </div>
 
-      <!-- Plan Pro -->
+      <!-- ── PLAN PRO ────────────────────────────────── -->
       <div class="plan-card reveal reveal-delay-2">
         <div class="plan-badge badge-soon">Pro · Próximamente</div>
-        <div class="plan-price"><sup>$</sup>9.990 <span>/mes</span></div>
+        <div class="plan-price"><sup>$</sup>14.990 <span>/mes</span></div>
         <div class="plan-period">CLP · PAGO MENSUAL</div>
         <hr class="plan-divider">
         <ul class="plan-features">
           <li>Todo lo del plan Free</li>
-          <li>Au·IA ilimitado</li>
+          <li><strong style="color:var(--gold)">Au·IA ilimitado</strong></li>
           <li>Datos históricos reales (5 años)</li>
-          <li>Escenarios de estrés y correlaciones</li>
+          <li>Escenarios de estrés avanzados</li>
           <li>Múltiples portafolios guardados</li>
-          <li>Exportar reportes PDF</li>
-          <li>Alertas de mercado personalizadas</li>
+          <li>Alertas de mercado por email</li>
+          <li>Exportar reportes en PDF</li>
+          <li class="disabled">Sin acceso a comunidad</li>
+          <li class="disabled">Sin integración de broker</li>
         </ul>
         <div class="plan-cta ghost">Próximamente</div>
       </div>
+
+      <!-- ── PLAN ELITE ──────────────────────────────── -->
+      <div class="plan-card elite reveal reveal-delay-3">
+        <div class="plan-badge badge-elite">Elite · Próximamente</div>
+        <div class="plan-price"><sup>$</sup>34.990 <span>/mes</span></div>
+        <div class="plan-period">CLP · PAGO MENSUAL</div>
+        <hr class="plan-divider">
+        <ul class="plan-features">
+          <li>Todo lo del plan Pro</li>
+          <li><strong style="color:var(--gold-lt)">Grupos de inversión</strong> — comunidad privada con otros inversores, comparte estrategias y análisis</li>
+          <li><strong style="color:var(--gold-lt)">Integración de broker</strong> — conecta Interactive Brokers, Schwab o Fintual para ver tu portafolio real en Áureo</li>
+          <li><strong style="color:var(--gold-lt)">Análisis de correlaciones</strong> — matriz interactiva, activos líderes vs rezagados, sensibilidad cruzada</li>
+          <li>Indicadores líderes: qué sube primero y cuánto arrastra a los demás</li>
+          <li>Detección de régimen de mercado (bull/bear/lateral)</li>
+          <li>Beta dinámica por activo y por sector</li>
+        </ul>
+        <div class="plan-cta ghost">Próximamente</div>
+      </div>
+
     </div>
+
+    <p style="font-family:var(--fm);font-size:9px;color:var(--text-3);margin-top:16px;letter-spacing:.4px;text-align:center;">
+      Los precios están en pesos chilenos (CLP) e incluyen IVA. Planes Pro y Elite en desarrollo activo.
+    </p>
   </div>
 </section>
 

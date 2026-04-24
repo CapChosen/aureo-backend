@@ -95,6 +95,7 @@ app.use('/api/news', newsRoutes);
 app.get('/',          (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'index.html')));
 app.get('/login',     (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'login.html')));
 app.get('/dashboard', (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html')));
+app.get('/app',       (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html')));
 
 // ════════════════════════════════════════════════════════
 // 404
