@@ -557,35 +557,99 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
 .corr-empty{text-align:center;padding:60px 20px;color:var(--text-3);font-size:13px;font-family:var(--font-mono);}
 .corr-loading{display:flex;align-items:center;justify-content:center;gap:12px;padding:40px;color:var(--text-2);font-family:var(--font-mono);font-size:12px;}
 
-/* ── COMUNIDAD VIEW ── */
-.com-post-form{background:var(--card);border:1px solid var(--border-hi);border-radius:var(--r);padding:20px;margin-bottom:20px;}
-.com-post-form textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:var(--font-sans);font-size:13px;padding:12px 14px;outline:none;resize:vertical;min-height:90px;transition:border-color .15s;}
+/* ── COMUNIDAD VIEW V2 ── */
+.com-layout{display:grid;grid-template-columns:240px 1fr;gap:20px;padding:20px;max-width:1400px;margin:0 auto;min-height:100%;}
+@media(max-width:900px){.com-layout{grid-template-columns:1fr;}.com-sidebar{display:none;}}
+.com-sidebar{display:flex;flex-direction:column;gap:0;position:sticky;top:0;max-height:calc(100vh - 86px);overflow-y:auto;padding-bottom:20px;}
+.com-sidebar-hdr{display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:1.5px;text-transform:uppercase;padding:0 0 10px;margin-bottom:4px;border-bottom:1px solid var(--border);}
+.com-broker-btn{background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.2);border-radius:6px;color:var(--teal);font-family:var(--font-mono);font-size:9px;font-weight:700;padding:3px 8px;cursor:pointer;transition:all .15s;}
+.com-broker-btn:hover{background:rgba(45,212,191,.15);}
+.com-group-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .12s;margin-bottom:2px;}
+.com-group-item:hover{background:var(--surface);}
+.com-group-item.active{background:var(--gold-dim);border:1px solid rgba(196,163,68,.2);}
+.com-group-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.com-group-name{font-family:var(--font-sans);font-size:12px;font-weight:500;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.com-group-count{font-family:var(--font-mono);font-size:8px;color:var(--text-3);}
+.com-group-join{background:none;border:1px solid var(--border);border-radius:10px;color:var(--text-2);font-family:var(--font-mono);font-size:8px;padding:2px 8px;cursor:pointer;transition:all .12s;flex-shrink:0;}
+.com-group-join.joined{border-color:rgba(45,212,191,.3);color:var(--teal);}
+.com-group-join:hover{border-color:var(--teal);color:var(--teal);}
+.com-broker-card{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-family:var(--font-mono);font-size:10px;color:var(--text-2);}
+.com-soon-badge{font-size:8px;background:rgba(125,132,148,.1);border:1px solid rgba(125,132,148,.2);color:var(--text-3);padding:1px 6px;border-radius:4px;letter-spacing:.5px;}
+.com-feed-col{display:flex;flex-direction:column;gap:16px;min-width:0;}
+/* Compositor */
+.com-post-form{background:var(--card);border:1px solid var(--border-hi);border-radius:var(--r);padding:18px;}
+.com-type-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.com-type-btn{padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--text-2);font-family:var(--font-mono);font-size:10px;cursor:pointer;transition:all .12s;}
+.com-type-btn.active{background:rgba(45,212,191,.1);border-color:rgba(45,212,191,.3);color:var(--teal);}
+.com-type-btn[data-type="analysis"].active{background:var(--gold-dim);border-color:rgba(196,163,68,.3);color:var(--gold);}
+.com-type-btn[data-type="portfolio"].active{background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.3);color:#60A5FA;}
+.com-type-btn[data-type="alert"].active{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3);color:var(--negative);}
+.com-title-input{width:100%;padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-sans);font-size:13px;outline:none;margin-bottom:10px;transition:border-color .15s;}
+.com-title-input:focus{border-color:var(--gold);}
+.com-tickers-row{margin-bottom:10px;}
+.com-tickers-row input{width:100%;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none;transition:border-color .15s;margin-bottom:6px;}
+.com-tickers-row input:focus{border-color:var(--gold);}
+.com-ticker-chips{display:flex;gap:5px;flex-wrap:wrap;}
+.com-ticker-chip{display:flex;align-items:center;gap:4px;padding:3px 8px;background:var(--gold-dim);border:1px solid rgba(196,163,68,.25);border-radius:4px;font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--gold);}
+.com-ticker-chip button{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:11px;padding:0;line-height:1;}
+.com-post-form textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-sans);font-size:13px;padding:10px 12px;outline:none;resize:vertical;min-height:80px;transition:border-color .15s;}
 .com-post-form textarea:focus{border-color:var(--teal);}
 .com-post-form textarea::placeholder{color:var(--text-3);}
-.com-post-actions{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:10px;}
+.com-post-actions{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px;}
+.com-share-toggle{font-family:var(--font-mono);font-size:9.5px;color:var(--text-2);cursor:pointer;display:flex;align-items:center;gap:6px;}
+.com-share-toggle input{accent-color:var(--teal);}
 .com-char-count{font-family:var(--font-mono);font-size:9px;color:var(--text-3);}
-.com-post-btn{padding:9px 20px;background:linear-gradient(135deg,var(--teal),#1a9e8f);border:none;border-radius:8px;color:#0a0e0e;font-family:var(--font-sans);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+.com-post-btn{padding:8px 18px;background:linear-gradient(135deg,var(--teal),#1a9e8f);border:none;border-radius:8px;color:#0a0e0e;font-family:var(--font-sans);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
 .com-post-btn:hover{box-shadow:0 0 16px rgba(45,212,191,.3);}
 .com-post-btn:disabled{background:var(--surface);color:var(--text-3);cursor:not-allowed;box-shadow:none;}
-.com-share-toggle{font-family:var(--font-mono);font-size:10px;color:var(--text-2);cursor:pointer;display:flex;align-items:center;gap:6px;}
-.com-share-toggle input{accent-color:var(--teal);}
-.com-feed{display:flex;flex-direction:column;gap:14px;}
-.com-post-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;transition:border-color .15s;}
-.com-post-card:hover{border-color:rgba(45,212,191,.2);}
+/* Post cards */
+.com-feed{display:flex;flex-direction:column;gap:12px;}
+.com-post-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;transition:border-color .15s;}
+.com-post-card:hover{border-color:rgba(45,212,191,.15);}
 .com-post-meta{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.com-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--teal),#1a9e8f);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:13px;font-weight:700;color:#0a0e0e;flex-shrink:0;}
+.com-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--teal),#1a9e8f);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:700;color:#0a0e0e;flex-shrink:0;}
 .com-author{font-family:var(--font-mono);font-size:11px;color:var(--gold);}
 .com-time{font-family:var(--font-mono);font-size:9px;color:var(--text-3);}
+.com-type-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-family:var(--font-mono);font-size:8.5px;font-weight:700;letter-spacing:.5px;margin-left:4px;}
+.ctb-analysis{background:var(--gold-dim);border:1px solid rgba(196,163,68,.2);color:var(--gold);}
+.ctb-portfolio{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);color:#60A5FA;}
+.ctb-alert{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--negative);}
+.com-post-title{font-family:var(--font-serif);font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.3;}
+.com-ticker-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
 .com-content{font-size:13px;color:var(--text);line-height:1.65;margin-bottom:12px;}
-.com-portfolio-ctx{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-family:var(--font-mono);font-size:10px;color:var(--text-2);}
-.com-actions{display:flex;align-items:center;gap:14px;}
-.com-like-btn{display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--border);border-radius:20px;color:var(--text-2);font-family:var(--font-mono);font-size:10px;padding:4px 12px;cursor:pointer;transition:all .15s;}
-.com-like-btn.liked{border-color:rgba(248,113,113,.4);color:var(--negative);}
-.com-like-btn:hover{border-color:rgba(248,113,113,.3);color:var(--negative);}
-.com-del-btn{background:none;border:none;color:var(--text-3);font-size:11px;cursor:pointer;font-family:var(--font-mono);padding:4px 8px;}
+.com-portfolio-ctx{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:9px 12px;margin-bottom:10px;font-family:var(--font-mono);font-size:10px;color:var(--text-2);line-height:1.6;}
+/* Reactions */
+.com-reaction-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.com-react-btn{display:flex;align-items:center;gap:4px;padding:4px 11px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-family:var(--font-mono);font-size:10px;color:var(--text-2);cursor:pointer;transition:all .12s;}
+.com-react-btn:hover{border-color:var(--text-2);}
+.com-react-btn.active-bullish{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);color:var(--positive);}
+.com-react-btn.active-bearish{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3);color:var(--negative);}
+.com-react-btn.active-insightful{background:var(--gold-dim);border-color:rgba(196,163,68,.3);color:var(--gold);}
+/* Comment thread */
+.com-comment-toggle{background:none;border:none;color:var(--text-3);font-family:var(--font-mono);font-size:10px;cursor:pointer;padding:4px 8px;transition:color .12s;}
+.com-comment-toggle:hover{color:var(--teal);}
+.com-del-btn{background:none;border:none;color:var(--text-3);font-size:10px;cursor:pointer;font-family:var(--font-mono);padding:4px 6px;transition:color .12s;}
 .com-del-btn:hover{color:var(--negative);}
-.com-load-more{display:block;width:100%;margin-top:16px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);color:var(--text-2);font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all .15s;}
+.com-comment-thread{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
+.com-comment{display:flex;gap:8px;}
+.com-comment-av{width:22px;height:22px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:9px;color:var(--text-2);flex-shrink:0;margin-top:1px;}
+.com-comment-body{flex:1;min-width:0;}
+.com-comment-meta{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
+.com-comment-author{font-family:var(--font-mono);font-size:9.5px;color:var(--teal);}
+.com-comment-time{font-family:var(--font-mono);font-size:8px;color:var(--text-3);}
+.com-comment-text{font-size:12px;color:var(--text);line-height:1.55;}
+.com-comment-like{background:none;border:none;color:var(--text-3);font-family:var(--font-mono);font-size:9px;cursor:pointer;padding:2px 5px;transition:color .12s;}
+.com-comment-like:hover,.com-comment-like.liked{color:var(--negative);}
+.com-comment-input-row{display:flex;gap:8px;margin-top:6px;}
+.com-comment-input-row input{flex:1;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-sans);font-size:12px;outline:none;transition:border-color .12s;}
+.com-comment-input-row input:focus{border-color:var(--teal);}
+.com-comment-input-row button{padding:7px 14px;background:var(--surface);border:1px solid rgba(45,212,191,.3);border-radius:8px;color:var(--teal);font-family:var(--font-mono);font-size:10px;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.com-comment-input-row button:hover{background:rgba(45,212,191,.1);}
+.com-load-more{display:block;width:100%;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);color:var(--text-2);font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all .15s;}
 .com-load-more:hover{border-color:var(--teal);color:var(--teal);}
+/* Broker panel */
+.broker-panel{position:fixed;top:0;right:-400px;bottom:0;width:380px;z-index:201;background:var(--card);border-left:1px solid var(--border-hi);padding:24px 22px;overflow-y:auto;transition:right .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;gap:16px;}
+.broker-panel.open{right:0;}
 
 /* ── PRINT / PDF ── */
 @media print {
@@ -1003,29 +1067,86 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
 
 <!-- VISTA COMUNIDAD -->
 <div class="comunidad-full-view" id="comunidadFullView" style="display:none;">
-  <div class="com-container">
-    <div class="com-header">
-      <h1>Comunidad Áureo</h1>
-      <p class="corr-sub">COMPARTE TU ESTRATEGIA · APRENDE DE OTROS INVERSORES</p>
-    </div>
+  <div class="com-layout">
 
-    <!-- Formulario de post -->
-    <div class="com-post-form">
-      <textarea id="com-textarea" placeholder="Comparte tu estrategia, análisis o reflexión sobre los mercados... (mín. 10 caracteres)" maxlength="2000" oninput="updateCharCount()"></textarea>
-      <div class="com-post-actions">
-        <label class="com-share-toggle">
-          <input type="checkbox" id="com-share-portfolio"> Incluir mi portafolio actual
-        </label>
-        <span class="com-char-count" id="com-char-count">0 / 2000</span>
-        <button class="com-post-btn" id="com-post-btn" onclick="submitCommunityPost()">Publicar</button>
+    <!-- SIDEBAR: Grupos -->
+    <div class="com-sidebar">
+      <div class="com-sidebar-hdr">
+        <span>Grupos</span>
+        <button class="com-broker-btn" onclick="openBrokerPanel()" title="Rendimiento vs Broker">📊 Broker</button>
+      </div>
+      <div id="com-groups-list">
+        <div class="corr-loading" style="padding:20px 0;"><div class="spin" style="width:16px;height:16px;border-width:2px;"></div></div>
+      </div>
+      <div style="margin-top:auto;padding:16px 0 0;border-top:1px solid var(--border);">
+        <div style="font-family:var(--font-mono);font-size:8px;color:var(--text-3);letter-spacing:1px;margin-bottom:8px;">CONECTAR BROKER</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div class="com-broker-card"><span>Fintual</span><span class="com-soon-badge">Próximamente</span></div>
+          <div class="com-broker-card"><span>Interactive Brokers</span><span class="com-soon-badge">Próximamente</span></div>
+          <div class="com-broker-card"><span>Schwab</span><span class="com-soon-badge">Próximamente</span></div>
+        </div>
       </div>
     </div>
 
-    <!-- Feed -->
-    <div id="com-feed" class="com-feed">
-      <div class="corr-loading"><div class="spin" style="width:20px;height:20px;border-width:2px;"></div><span>Cargando publicaciones...</span></div>
+    <!-- FEED: Compositor + Posts -->
+    <div class="com-feed-col">
+      <!-- Compositor de post -->
+      <div class="com-post-form">
+        <div class="com-type-row">
+          <button class="com-type-btn active" data-type="text"      onclick="setPostType('text',this)">💬 General</button>
+          <button class="com-type-btn"        data-type="analysis"  onclick="setPostType('analysis',this)">📈 Análisis</button>
+          <button class="com-type-btn"        data-type="portfolio" onclick="setPostType('portfolio',this)">📊 Portafolio</button>
+          <button class="com-type-btn"        data-type="alert"     onclick="setPostType('alert',this)">🚨 Alerta</button>
+        </div>
+        <input type="text" id="com-title" class="com-title-input hidden" placeholder="Título del análisis (opcional)..." maxlength="200">
+        <div class="com-tickers-row">
+          <input type="text" id="com-tickers-input" placeholder="Añadir tickers: NVDA, SPY, BTC..."
+            onkeydown="addTickerChip(event)" oninput="this.value=this.value.toUpperCase()">
+          <div id="com-ticker-chips"></div>
+        </div>
+        <textarea id="com-textarea" placeholder="Comparte tu estrategia, análisis o reflexión sobre los mercados..."
+          maxlength="2000" oninput="updateCharCount()"></textarea>
+        <div class="com-post-actions">
+          <label class="com-share-toggle">
+            <input type="checkbox" id="com-share-portfolio"> Compartir portafolio actual
+          </label>
+          <span class="com-char-count" id="com-char-count">0 / 2000</span>
+          <button class="com-post-btn" id="com-post-btn" onclick="submitCommunityPost()">Publicar</button>
+        </div>
+      </div>
+
+      <!-- Feed de posts -->
+      <div id="com-feed" class="com-feed">
+        <div class="corr-loading"><div class="spin" style="width:20px;height:20px;border-width:2px;"></div><span>Cargando publicaciones...</span></div>
+      </div>
+      <button class="com-load-more" id="com-load-more" onclick="loadMorePosts()" style="display:none;">Cargar más publicaciones</button>
     </div>
-    <button class="com-load-more" id="com-load-more" onclick="loadMorePosts()" style="display:none;">Cargar más publicaciones</button>
+  </div>
+</div>
+
+<!-- BROKER PANEL (slide-in) -->
+<div class="profile-overlay" id="brokerOverlay" onclick="closeBrokerPanel()"></div>
+<div class="broker-panel" id="brokerPanel">
+  <div class="profile-panel-header">
+    <span class="profile-panel-title" style="color:var(--teal)">Rendimiento Real</span>
+    <button class="pp-close" onclick="closeBrokerPanel()">✕</button>
+  </div>
+  <div class="pp-section">
+    <div class="pp-section-title">Registro mensual</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div class="field" style="margin:0;"><label style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--text-2);display:block;margin-bottom:4px;">Mes</label>
+        <input type="month" id="bp-month" style="width:100%;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none;"></div>
+      <div class="field" style="margin:0;"><label style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--text-2);display:block;margin-bottom:4px;">Valor USD</label>
+        <input type="number" id="bp-value" placeholder="12500" min="0" style="width:100%;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none;"></div>
+    </div>
+    <input type="text" id="bp-label" placeholder="Nombre del broker (ej: Fintual)" maxlength="50"
+      style="width:100%;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none;margin-bottom:8px;">
+    <button class="pp-upgrade" onclick="saveBrokerEntry()" style="padding:9px;font-size:12px;">+ Guardar dato</button>
+  </div>
+  <div class="pp-section" style="flex:1;overflow-y:auto;">
+    <div class="pp-section-title">Comparación: Real vs Áureo P50</div>
+    <div style="position:relative;height:200px;"><canvas id="broker-chart"></canvas></div>
+    <div id="broker-entries-list" style="margin-top:12px;"></div>
   </div>
 </div>
 
@@ -2760,7 +2881,11 @@ function showView(view) {
     loadCorrelations();
   } else if (view === 'comunidad') {
     comView.style.display = 'block';
-    if (!window.comLoaded) { loadCommunityPosts(); window.comLoaded = true; }
+    if (!window.comLoaded) {
+      window.comLoaded = true;
+      loadGroups();
+      loadCommunityPosts(true);
+    }
   } else {
     app.style.display = 'grid';
   }
@@ -3270,157 +3395,475 @@ function renderCorrInfoCards(symbols, betas, stats) {
 }
 
 // ════════════════════════════════════════════════════════
-// COMUNIDAD VIEW
+// COMUNIDAD VIEW V2
 // ════════════════════════════════════════════════════════
-let comPage = 1;
-let comTotal = 0;
+let comPage = 1, comTotal = 0, comActiveGroup = null, comGroups = [];
+let comCurrentType = 'text', comTickers = [];
 const COM_LIMIT = 20;
+const openThreads = new Set();
 
+// ── Helpers ──
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
 function updateCharCount() {
   const len = document.getElementById('com-textarea')?.value.length || 0;
-  const el = document.getElementById('com-char-count');
+  const el  = document.getElementById('com-char-count');
   if (el) el.textContent = `${len} / 2000`;
 }
 
+// ── Post type selector ──
+function setPostType(type, btn) {
+  comCurrentType = type;
+  document.querySelectorAll('.com-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const titleInput = document.getElementById('com-title');
+  if (titleInput) titleInput.classList.toggle('hidden', type === 'text' || type === 'portfolio');
+}
+
+// ── Ticker chips ──
+function addTickerChip(e) {
+  if (e.key !== 'Enter' && e.key !== ',') return;
+  e.preventDefault();
+  const input = document.getElementById('com-tickers-input');
+  const val = input.value.trim().replace(/,/g,'').toUpperCase();
+  if (val && val.length <= 10 && !comTickers.includes(val) && comTickers.length < 8) {
+    comTickers.push(val);
+    renderTickerChips();
+  }
+  input.value = '';
+}
+function removeTickerChip(t) {
+  comTickers = comTickers.filter(x => x !== t);
+  renderTickerChips();
+}
+function renderTickerChips() {
+  const el = document.getElementById('com-ticker-chips');
+  if (!el) return;
+  el.innerHTML = comTickers.map(t =>
+    `<span class="com-ticker-chip">${t}<button onclick="removeTickerChip('${t}')">×</button></span>`
+  ).join('');
+}
+
+// ── Groups ──
+async function loadGroups() {
+  try {
+    const data = await api('/api/community/groups');
+    comGroups = data.groups || [];
+    renderGroupsSidebar();
+  } catch(e) {
+    document.getElementById('com-groups-list').innerHTML =
+      '<div style="font-size:10px;color:var(--text-3);padding:10px;">Error al cargar grupos</div>';
+  }
+}
+
+function renderGroupsSidebar() {
+  const el = document.getElementById('com-groups-list');
+  if (!el) return;
+  const allItem = `
+    <div class="com-group-item ${!comActiveGroup ? 'active' : ''}" onclick="setActiveGroup(null)">
+      <div class="com-group-icon" style="background:rgba(196,163,68,.1);">🌐</div>
+      <span class="com-group-name">Todo</span>
+    </div>`;
+  const groupItems = comGroups.map(g => `
+    <div class="com-group-item ${comActiveGroup === g.id ? 'active' : ''}" onclick="setActiveGroup('${g.id}')">
+      <div class="com-group-icon" style="background:${g.color}22;">${g.icon}</div>
+      <span class="com-group-name">${escHtml(g.name)}</span>
+      <button class="com-group-join ${g.is_member ? 'joined' : ''}"
+        onclick="event.stopPropagation();toggleGroupMembership('${g.id}',${g.is_member},this)">
+        ${g.is_member ? '✓' : '+'}
+      </button>
+    </div>`).join('');
+  el.innerHTML = allItem + groupItems;
+}
+
+async function toggleGroupMembership(groupId, isMember, btn) {
+  try {
+    const method = isMember ? 'DELETE' : 'POST';
+    await api(`/api/community/groups/${groupId}/join`, { method });
+    const g = comGroups.find(x => x.id === groupId);
+    if (g) {
+      g.is_member = !isMember;
+      g.member_count += isMember ? -1 : 1;
+    }
+    renderGroupsSidebar();
+  } catch(e) { console.error('[Groups]', e); }
+}
+
+function setActiveGroup(groupId) {
+  comActiveGroup = groupId;
+  renderGroupsSidebar();
+  loadCommunityPosts(true);
+}
+
+// ── Feed loading ──
 async function loadCommunityPosts(reset = true) {
-  if (reset) { comPage = 1; document.getElementById('com-feed').innerHTML = ''; }
+  if (reset) { comPage = 1; openThreads.clear(); }
   const feed = document.getElementById('com-feed');
-  const loadMoreBtn = document.getElementById('com-load-more');
+  const btn  = document.getElementById('com-load-more');
+  if (reset && feed) feed.innerHTML = '<div class="corr-loading"><div class="spin" style="width:18px;height:18px;border-width:2px;"></div><span>Cargando...</span></div>';
 
   try {
-    const data = await api(`/api/community/posts?page=${comPage}&limit=${COM_LIMIT}`);
+    const qs = `page=${comPage}&limit=${COM_LIMIT}` + (comActiveGroup ? `&group_id=${comActiveGroup}` : '');
+    const data = await api(`/api/community/posts?${qs}`);
     comTotal = data.total || 0;
 
     if (!data.posts || data.posts.length === 0) {
-      if (comPage === 1) {
-        feed.innerHTML = `<div class="corr-empty" style="padding:40px 20px;">
-          Sé el primero en publicar. Comparte tu estrategia con la comunidad.
-        </div>`;
-      }
-      if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+      if (reset && feed) feed.innerHTML = `<div class="corr-empty" style="padding:40px 20px;">Sé el primero en publicar en este grupo.</div>`;
+      if (btn) btn.style.display = 'none';
       return;
     }
 
-    const html = data.posts.map(renderPost).join('');
-    if (reset) {
-      feed.innerHTML = html;
-    } else {
-      feed.insertAdjacentHTML('beforeend', html);
-    }
+    const html = data.posts.map(renderPostCard).join('');
+    if (reset && feed) { feed.innerHTML = html; }
+    else if (feed)      { feed.insertAdjacentHTML('beforeend', html); }
 
-    const shown = comPage * COM_LIMIT;
-    if (loadMoreBtn) loadMoreBtn.style.display = shown < comTotal ? 'block' : 'none';
-
-  } catch (err) {
-    if (comPage === 1) {
-      feed.innerHTML = `<div class="corr-empty">Error al cargar publicaciones. Verifica que las tablas de comunidad existen en Supabase.</div>`;
-    }
-    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+    if (btn) btn.style.display = comPage * COM_LIMIT < comTotal ? 'block' : 'none';
+  } catch(err) {
+    if (reset && feed) feed.innerHTML = `<div class="corr-empty">Error al cargar. Ejecuta el SQL de supabase_community_v2.sql en Supabase.</div>`;
+    if (btn) btn.style.display = 'none';
   }
-}
-
-function renderPost(p) {
-  const isMine = currentUser && p.author_email === currentUser.email;
-  const avatar = (p.author_email || 'U')[0].toUpperCase();
-  const author = p.author_email ? p.author_email.split('@')[0] : 'Usuario';
-  const time   = p.created_at ? calcularTiempo(p.created_at) : '';
-  const ctxHtml = p.portfolio_context?.assets?.length
-    ? `<div class="com-portfolio-ctx">📊 Portafolio compartido: ${p.portfolio_context.assets.map(a => `${a.t} (${a.w}%)`).join(', ')}</div>`
-    : '';
-  const likeIcon = p.liked_by_me ? '♥' : '♡';
-  return `
-  <div class="com-post-card" id="post-${p.id}">
-    <div class="com-post-meta">
-      <div class="com-avatar">${avatar}</div>
-      <div style="flex:1">
-        <div class="com-author">${author}</div>
-        <div class="com-time">${time}</div>
-      </div>
-    </div>
-    ${ctxHtml}
-    <div class="com-content">${escHtml(p.content)}</div>
-    <div class="com-actions">
-      <button class="com-like-btn ${p.liked_by_me ? 'liked' : ''}" onclick="toggleLike('${p.id}',${p.liked_by_me}, this)">
-        ${likeIcon} <span class="like-count">${p.likes || 0}</span>
-      </button>
-      ${isMine ? `<button class="com-del-btn" onclick="deletePost('${p.id}')">Eliminar</button>` : ''}
-    </div>
-  </div>`;
-}
-
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-
-async function toggleLike(postId, currentlyLiked, btn) {
-  try {
-    const method = currentlyLiked ? 'DELETE' : 'POST';
-    const data = await api(`/api/community/posts/${postId}/like`, { method });
-    const card = document.getElementById(`post-${postId}`);
-    if (!card) return;
-    const likeBtn = card.querySelector('.com-like-btn');
-    if (likeBtn) {
-      likeBtn.classList.toggle('liked', data.liked);
-      likeBtn.querySelector('.like-count').textContent = data.likes || 0;
-      likeBtn.innerHTML = `${data.liked ? '♥' : '♡'} <span class="like-count">${data.likes || 0}</span>`;
-      likeBtn.onclick = () => toggleLike(postId, data.liked, likeBtn);
-    }
-  } catch (err) {
-    console.error('[Community] Like error:', err);
-  }
-}
-
-async function deletePost(postId) {
-  if (!confirm('¿Eliminar esta publicación?')) return;
-  try {
-    await api(`/api/community/posts/${postId}`, { method: 'DELETE' });
-    const card = document.getElementById(`post-${postId}`);
-    if (card) card.remove();
-  } catch (err) {
-    console.error('[Community] Delete error:', err);
-  }
-}
-
-async function submitCommunityPost() {
-  const content = document.getElementById('com-textarea')?.value.trim();
-  const sharePortfolio = document.getElementById('com-share-portfolio')?.checked;
-  const btn = document.getElementById('com-post-btn');
-
-  if (!content || content.length < 10) {
-    alert('El contenido debe tener al menos 10 caracteres.');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Publicando...';
-
-  try {
-    const body = {
-      content,
-      portfolio_context: sharePortfolio ? { assets: S.port, mu: getPortParams().mu } : null,
-    };
-    const data = await api('/api/community/posts', { method: 'POST', body: JSON.stringify(body) });
-
-    if (data.error) throw new Error(data.error);
-
-    document.getElementById('com-textarea').value = '';
-    updateCharCount();
-    document.getElementById('com-share-portfolio').checked = false;
-
-    // Prepend new post
-    const feed = document.getElementById('com-feed');
-    feed.insertAdjacentHTML('afterbegin', renderPost(data.post));
-  } catch (err) {
-    alert(`Error: ${err.message}`);
-  }
-
-  btn.disabled = false;
-  btn.textContent = 'Publicar';
 }
 
 async function loadMorePosts() {
   comPage++;
   await loadCommunityPosts(false);
+}
+
+// ── Post card ──
+function renderPostCard(p) {
+  const isMine  = currentUser && p.author_email === currentUser.email;
+  const avatar  = (p.author_email || 'U')[0].toUpperCase();
+  const author  = p.author_email ? p.author_email.split('@')[0] : 'Usuario';
+  const time    = p.created_at ? calcularTiempo(p.created_at) : '';
+  const r       = p.reactions || { bullish:0, bearish:0, insightful:0 };
+  const myR     = p.my_reaction;
+  const typeBadge = p.post_type && p.post_type !== 'text'
+    ? `<span class="com-type-badge ctb-${p.post_type}">${
+        {analysis:'📈 Análisis', portfolio:'📊 Portafolio', alert:'🚨 Alerta'}[p.post_type]
+      }</span>` : '';
+  const titleHtml = p.title ? `<div class="com-post-title">${escHtml(p.title)}</div>` : '';
+  const tickersHtml = p.tickers?.length
+    ? `<div class="com-ticker-row">${p.tickers.map(t => `<span class="news-ticker-badge">${t}</span>`).join('')}</div>` : '';
+  const ctxHtml = p.portfolio_context?.assets?.length
+    ? `<div class="com-portfolio-ctx">📊 <strong>Portafolio compartido:</strong> ${p.portfolio_context.assets.map(a=>`${a.t} (${a.w}%)`).join(' · ')}</div>` : '';
+  const pid = p.id;
+  return `
+  <div class="com-post-card" id="post-${pid}">
+    <div class="com-post-meta">
+      <div class="com-avatar">${avatar}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span class="com-author">${author}</span>${typeBadge}
+        </div>
+        <div class="com-time">${time}</div>
+      </div>
+      ${isMine ? `<button class="com-del-btn" onclick="deletePost('${pid}')">✕</button>` : ''}
+    </div>
+    ${titleHtml}${tickersHtml}${ctxHtml}
+    <div class="com-content">${escHtml(p.content)}</div>
+    <div class="com-reaction-bar">
+      <button class="com-react-btn ${myR==='bullish'?'active-bullish':''}"
+        onclick="reactToPost('${pid}','bullish',this)">🐂 <span>${r.bullish||0}</span></button>
+      <button class="com-react-btn ${myR==='insightful'?'active-insightful':''}"
+        onclick="reactToPost('${pid}','insightful',this)">💡 <span>${r.insightful||0}</span></button>
+      <button class="com-react-btn ${myR==='bearish'?'active-bearish':''}"
+        onclick="reactToPost('${pid}','bearish',this)">🐻 <span>${r.bearish||0}</span></button>
+      <button class="com-comment-toggle" onclick="toggleComments('${pid}')">
+        💬 <span id="cc-${pid}">${p.comment_count||0}</span>
+      </button>
+    </div>
+    <div id="thread-${pid}" style="display:none;"></div>
+  </div>`;
+}
+
+// ── Reactions ──
+async function reactToPost(postId, reaction, btn) {
+  const card = document.getElementById(`post-${postId}`);
+  if (!card) return;
+  const isActive = btn.classList.contains(`active-${reaction}`);
+  try {
+    const method = isActive ? 'DELETE' : 'POST';
+    const data = await api(`/api/community/posts/${postId}/react`, {
+      method,
+      body: JSON.stringify({ reaction })
+    });
+    // Re-render reaction bar
+    const r  = data.reactions || { bullish:0, bearish:0, insightful:0 };
+    const my = data.my_reaction;
+    card.querySelector('.com-reaction-bar').innerHTML = `
+      <button class="com-react-btn ${my==='bullish'?'active-bullish':''}"
+        onclick="reactToPost('${postId}','bullish',this)">🐂 <span>${r.bullish||0}</span></button>
+      <button class="com-react-btn ${my==='insightful'?'active-insightful':''}"
+        onclick="reactToPost('${postId}','insightful',this)">💡 <span>${r.insightful||0}</span></button>
+      <button class="com-react-btn ${my==='bearish'?'active-bearish':''}"
+        onclick="reactToPost('${postId}','bearish',this)">🐻 <span>${r.bearish||0}</span></button>
+      <button class="com-comment-toggle" onclick="toggleComments('${postId}')">
+        💬 <span id="cc-${postId}">${document.getElementById(`cc-${postId}`)?.textContent||0}</span>
+      </button>`;
+  } catch(e) { console.error('[React]', e); }
+}
+
+// ── Comments ──
+function toggleComments(postId) {
+  const el = document.getElementById(`thread-${postId}`);
+  if (!el) return;
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    if (!openThreads.has(postId)) {
+      openThreads.add(postId);
+      loadComments(postId);
+    }
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+async function loadComments(postId) {
+  const el = document.getElementById(`thread-${postId}`);
+  if (!el) return;
+  el.innerHTML = '<div class="com-comment-thread"><div class="corr-loading" style="padding:8px 0;"><div class="spin" style="width:14px;height:14px;border-width:2px;"></div></div></div>';
+  try {
+    const data = await api(`/api/community/posts/${postId}/comments`);
+    renderCommentThread(postId, data.comments || []);
+  } catch(e) {
+    el.innerHTML = '<div class="com-comment-thread" style="font-size:11px;color:var(--text-3);">Error al cargar comentarios.</div>';
+  }
+}
+
+function renderCommentThread(postId, comments) {
+  const el = document.getElementById(`thread-${postId}`);
+  if (!el) return;
+  const commentHtml = comments.map(c => {
+    const av = (c.author_email||'U')[0].toUpperCase();
+    const auth = c.author_email ? c.author_email.split('@')[0] : 'Usuario';
+    const t = c.created_at ? calcularTiempo(c.created_at) : '';
+    return `
+    <div class="com-comment" id="comment-${c.id}">
+      <div class="com-comment-av">${av}</div>
+      <div class="com-comment-body">
+        <div class="com-comment-meta">
+          <span class="com-comment-author">${auth}</span>
+          <span class="com-comment-time">${t}</span>
+          ${c.is_mine ? `<button class="com-comment-like" onclick="deleteComment('${c.id}','${postId}')" style="color:var(--text-3);">✕</button>` : ''}
+        </div>
+        <div class="com-comment-text">${escHtml(c.content)}</div>
+        <button class="com-comment-like ${c.liked_by_me?'liked':''}"
+          onclick="likeComment('${c.id}',${c.liked_by_me},this)">
+          ${c.liked_by_me?'♥':'♡'} ${c.likes_count||0}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="com-comment-thread">
+      ${commentHtml || '<div style="font-size:11px;color:var(--text-3);padding:4px 0;">Sin comentarios aún. Sé el primero.</div>'}
+      <div class="com-comment-input-row">
+        <input type="text" id="ci-${postId}" placeholder="Escribe un comentario..."
+          onkeydown="if(event.key==='Enter') submitComment('${postId}')">
+        <button onclick="submitComment('${postId}')">Comentar</button>
+      </div>
+    </div>`;
+}
+
+async function submitComment(postId) {
+  const input = document.getElementById(`ci-${postId}`);
+  if (!input) return;
+  const content = input.value.trim();
+  if (content.length < 2) return;
+  input.disabled = true;
+  try {
+    const data = await api(`/api/community/posts/${postId}/comments`, {
+      method: 'POST', body: JSON.stringify({ content })
+    });
+    if (data.error) throw new Error(data.error);
+    input.value = '';
+    // Increment comment count badge
+    const cc = document.getElementById(`cc-${postId}`);
+    if (cc) cc.textContent = parseInt(cc.textContent||0) + 1;
+    // Re-load thread
+    await loadComments(postId);
+  } catch(e) { alert(e.message); }
+  finally { if (input) input.disabled = false; }
+}
+
+async function deleteComment(commentId, postId) {
+  if (!confirm('¿Eliminar comentario?')) return;
+  try {
+    await api(`/api/community/comments/${commentId}`, { method: 'DELETE' });
+    document.getElementById(`comment-${commentId}`)?.remove();
+    const cc = document.getElementById(`cc-${postId}`);
+    if (cc) cc.textContent = Math.max(0, parseInt(cc.textContent||0) - 1);
+  } catch(e) { console.error('[Comment delete]', e); }
+}
+
+async function likeComment(commentId, liked, btn) {
+  try {
+    const method = liked ? 'DELETE' : 'POST';
+    const data = await api(`/api/community/comments/${commentId}/like`, { method });
+    btn.className = `com-comment-like ${data.liked?'liked':''}`;
+    btn.textContent = `${data.liked?'♥':'♡'} ${data.likes||0}`;
+    btn.onclick = () => likeComment(commentId, data.liked, btn);
+  } catch(e) { console.error('[Comment like]', e); }
+}
+
+// ── Post submission ──
+async function deletePost(postId) {
+  if (!confirm('¿Eliminar esta publicación?')) return;
+  try {
+    await api(`/api/community/posts/${postId}`, { method: 'DELETE' });
+    document.getElementById(`post-${postId}`)?.remove();
+  } catch(e) { console.error('[Delete post]', e); }
+}
+
+async function submitCommunityPost() {
+  const content = document.getElementById('com-textarea')?.value.trim();
+  const title   = document.getElementById('com-title')?.value.trim() || null;
+  const sharePortfolio = document.getElementById('com-share-portfolio')?.checked;
+  const btn = document.getElementById('com-post-btn');
+  if (!content || content.length < 10) { alert('El contenido debe tener al menos 10 caracteres.'); return; }
+  btn.disabled = true; btn.textContent = 'Publicando...';
+  try {
+    const data = await api('/api/community/posts', {
+      method: 'POST',
+      body: JSON.stringify({
+        content, title,
+        post_type: comCurrentType,
+        tickers: comTickers,
+        group_id: comActiveGroup,
+        portfolio_context: sharePortfolio ? { assets: S.port, mu: getPortParams().mu } : null,
+      })
+    });
+    if (data.error) throw new Error(data.error);
+    document.getElementById('com-textarea').value = '';
+    document.getElementById('com-title').value = '';
+    document.getElementById('com-share-portfolio').checked = false;
+    comTickers = []; renderTickerChips(); updateCharCount();
+    document.getElementById('com-feed').insertAdjacentHTML('afterbegin', renderPostCard(data.post));
+  } catch(e) { alert(`Error: ${e.message}`); }
+  finally { btn.disabled = false; btn.textContent = 'Publicar'; }
+}
+
+// ── Broker panel ──
+let brokerChart = null;
+
+function openBrokerPanel() {
+  document.getElementById('brokerPanel').classList.add('open');
+  document.getElementById('brokerOverlay').classList.add('open');
+  // Set current month as default
+  const now = new Date();
+  const monthVal = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthInput = document.getElementById('bp-month');
+  if (monthInput && !monthInput.value) monthInput.value = monthVal;
+  loadBrokerData();
+}
+
+function closeBrokerPanel() {
+  document.getElementById('brokerPanel').classList.remove('open');
+  document.getElementById('brokerOverlay').classList.remove('open');
+}
+
+async function loadBrokerData() {
+  try {
+    const data = await api('/api/broker/performance');
+    const entries = data.entries || [];
+    renderBrokerEntries(entries);
+    renderBrokerChart(entries);
+  } catch(e) {
+    document.getElementById('broker-entries-list').innerHTML =
+      '<div style="font-size:10px;color:var(--text-3);">Ejecuta el SQL de supabase_community_v2.sql para activar el broker.</div>';
+  }
+}
+
+function renderBrokerEntries(entries) {
+  const el = document.getElementById('broker-entries-list');
+  if (!el) return;
+  if (!entries.length) {
+    el.innerHTML = '<div style="font-size:10px;color:var(--text-3);text-align:center;padding:10px;">Sin datos. Agrega el valor de tu portafolio real cada mes.</div>';
+    return;
+  }
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:10px;margin-top:8px;">
+    ${entries.slice(-12).reverse().map(e => `
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:5px 0;color:var(--text-2);">${e.recorded_month?.slice(0,7)||''}</td>
+      <td style="padding:5px 4px;color:var(--teal);font-weight:700;">$${parseFloat(e.real_value).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</td>
+      <td style="padding:5px 0;color:var(--text-3);">${e.broker_label||''}</td>
+      <td style="padding:5px 0;text-align:right;"><button onclick="deleteBrokerEntry('${e.id}')" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:11px;">✕</button></td>
+    </tr>`).join('')}
+  </table>`;
+}
+
+function renderBrokerChart(entries) {
+  const canvas = document.getElementById('broker-chart');
+  if (!canvas || !entries.length) return;
+  if (brokerChart) { brokerChart.destroy(); brokerChart = null; }
+
+  // Align broker entries with simulation
+  const sorted = [...entries].sort((a,b) => a.recorded_month < b.recorded_month ? -1 : 1);
+  const labels = sorted.map(e => e.recorded_month?.slice(0,7) || '');
+  const realVals = sorted.map(e => parseFloat(e.real_value));
+
+  // Simulation P50 at matching months
+  let simVals = [];
+  if (S.simData && sorted.length >= 2) {
+    const firstDate = new Date(sorted[0].recorded_month);
+    simVals = sorted.map(e => {
+      const d = new Date(e.recorded_month);
+      const monthDiff = (d.getFullYear() - firstDate.getFullYear())*12 + (d.getMonth() - firstDate.getMonth());
+      const m = Math.max(0, Math.min(monthDiff, S.simData.pct.p50.length - 1));
+      // Scale: keep proportion of p50 relative to initial value
+      const scale = realVals[0] / (S.simData.pct.p50[0] || 1);
+      return S.simData.pct.p50[m] * scale;
+    });
+  }
+
+  const ctx = canvas.getContext('2d');
+  brokerChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Real', data: realVals, borderColor: '#2DD4BF', backgroundColor: 'rgba(45,212,191,.1)',
+          tension: .3, pointRadius: 4, borderWidth: 2, fill: false },
+        ...(simVals.length ? [{ label: 'Áureo P50', data: simVals, borderColor: '#C4A344',
+          backgroundColor: 'rgba(196,163,68,.06)', tension: .3, pointRadius: 2,
+          borderWidth: 1.5, borderDash: [4,3], fill: false }] : [])
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+      plugins: { legend: { display: true, labels: { color: '#7D8494', font: { size: 9 } } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: $${c.parsed.y.toLocaleString('en-US',{maximumFractionDigits:0})}` } } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#3A404E', font: { size: 8 }, maxRotation: 45 } },
+        y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#3A404E', font: { size: 8 }, callback: v => '$'+Math.round(v/1000)+'K' } }
+      }
+    }
+  });
+}
+
+async function saveBrokerEntry() {
+  const month = document.getElementById('bp-month')?.value;
+  const value = document.getElementById('bp-value')?.value;
+  const label = document.getElementById('bp-label')?.value || 'Mi Broker';
+  if (!month || !value) { alert('Ingresa el mes y el valor.'); return; }
+  try {
+    await api('/api/broker/performance', {
+      method: 'POST',
+      body: JSON.stringify({ recorded_month: month, real_value: parseFloat(value), broker_label: label })
+    });
+    document.getElementById('bp-value').value = '';
+    await loadBrokerData();
+  } catch(e) { alert('Error al guardar: ' + e.message); }
+}
+
+async function deleteBrokerEntry(id) {
+  if (!confirm('¿Eliminar este dato?')) return;
+  try {
+    await api(`/api/broker/performance/${id}`, { method: 'DELETE' });
+    await loadBrokerData();
+  } catch(e) { console.error(e); }
 }
 
 // ════════════════════════════════════════════════════════

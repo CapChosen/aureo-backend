@@ -9,6 +9,7 @@ const userRoutes = require('./routes/user');
 const marketRoutes = require('./routes/market');
 const newsRoutes = require('./routes/news');
 const communityRoutes = require('./routes/community');
+const brokerRoutes    = require('./routes/broker');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -91,6 +92,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/broker',    brokerRoutes);
 
 // ════════════════════════════════════════════════════════
 // Fallback: servir dashboard para rutas no-API
