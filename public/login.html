@@ -113,6 +113,28 @@ body{
 .live-dot{width:6px;height:6px;background:var(--positive);border-radius:50%;animation:blink 2.2s infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
 .live-txt{font-family:var(--fm);font-size:9px;font-weight:700;color:var(--positive);letter-spacing:2px;text-transform:uppercase;}
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 640px) {
+  body { padding: 16px; justify-content: flex-start; padding-top: 32px; }
+  .logo-wrap { margin-bottom: 1.4rem; }
+  .logo-mark { width: 42px; height: 42px; margin-bottom: 10px; }
+  .logo-mark span { font-size: 22px; }
+  .logo-name { font-size: 22px; letter-spacing: 3px; }
+  .card { padding: 20px 18px 18px; border-radius: 14px; }
+  .field input, .field select { font-size: 16px !important; } /* prevent iOS zoom */
+  .btn { min-height: 48px; font-size: 14px; }
+  .btn-ghost { min-height: 44px; }
+  .tab { min-height: 38px; font-size: 12px; }
+  .phone-row { grid-template-columns: 100px 1fr; }
+}
+
+@media (max-width: 400px) {
+  body { padding: 12px; padding-top: 20px; }
+  .card { padding: 16px 14px; }
+  .logo-name { font-size: 20px; }
+  .logo-tag { font-size: 8px; }
+}
 </style>
 </head>
 <body>

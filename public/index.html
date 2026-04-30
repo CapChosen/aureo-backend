@@ -752,19 +752,61 @@ footer {
   .steps-grid::before { display: none; }
   .quees-inner { grid-template-columns: 1fr; gap: 40px; }
   .quees-visual { display: none; }
-  .planes-grid { grid-template-columns: 1fr; max-width: 480px; }
+  .planes-grid { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; }
   .compare-table { font-size: 12px; }
   .compare-table th, .compare-table td { padding: 10px 12px; }
 }
 
+@media (max-width: 768px) {
+  /* Compare table: horizontal scroll (table IS the element, so we wrap display:block) */
+  .compare-table { font-size: 11px; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+  .compare-table th, .compare-table td { white-space: normal; min-width: 100px; }
+
+  /* Touch targets */
+  .btn-primary, .btn-secondary, .nav-cta, .plan-cta { min-height: 48px; display: flex; align-items: center; justify-content: center; }
+  .nav-links a { min-height: 44px; display: flex; align-items: center; }
+}
+
 @media (max-width: 640px) {
+  /* Navbar */
   .nav-links { display: none; }
+  .nav-cta { display: none; } /* accessible via hamburger menu */
   .nav-hamburger { display: flex; }
-  .hero-title { font-size: 36px; }
-  .hero-actions { flex-direction: column; }
-  .hero-banner { flex-direction: column; text-align: center; }
+
+  /* Hero */
+  .hero-title { font-size: 34px !important; line-height: 1.12; }
+  .hero-sub { font-size: 15px; }
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions a { justify-content: center; }
+  .hero-banner { flex-direction: column; text-align: center; align-items: center; }
+  .banner-vs { text-align: center; }
+
+  /* Sections */
+  section { padding: 56px 5%; }
+  .section-title { font-size: 28px !important; }
+
+  /* Stats grid */
   .quees-stats { grid-template-columns: 1fr 1fr; }
-  .cta-box { padding: 48px 24px; }
+
+  /* Plans: single column */
+  .planes-grid { grid-template-columns: 1fr; }
+
+  /* CTA box */
+  .cta-box { padding: 40px 20px; }
+
+  /* Footer */
+  .footer-top { flex-direction: column; align-items: flex-start; }
+  .footer-links { flex-wrap: wrap; gap: 16px; }
+}
+
+@media (max-width: 480px) {
+  .hero-title { font-size: 28px !important; }
+  .hero-sub { font-size: 14px; }
+  section { padding: 48px 4%; }
+  .navbar { padding: 0 4%; }
+  .problem-card, .step-card { padding: 20px; }
+  .plan-card { padding: 24px; }
+  .compare-table th, .compare-table td { padding: 8px 10px; font-size: 11px; }
 }
 </style>
 </head>
@@ -1206,17 +1248,38 @@ let menuOpen = false;
 function toggleMenu() {
   menuOpen = !menuOpen;
   const links = document.querySelector('.nav-links');
+  const cta   = document.querySelector('.nav-cta');
   if (!links) return;
+  const menuStyle = 'display:flex;flex-direction:column;position:fixed;top:62px;left:0;right:0;background:rgba(6,7,9,0.97);backdrop-filter:blur(16px);padding:24px 6%;gap:20px;border-bottom:1px solid rgba(255,255,255,0.065);z-index:998;';
   if (menuOpen) {
-    links.style.cssText = 'display:flex;flex-direction:column;position:fixed;top:62px;left:0;right:0;background:rgba(6,7,9,0.97);backdrop-filter:blur(16px);padding:24px 6%;gap:20px;border-bottom:1px solid rgba(255,255,255,0.065);';
+    links.style.cssText = menuStyle;
+    // Add CTA to mobile menu (create a temporary item if not already there)
+    if (!links.querySelector('.mobile-cta') && cta) {
+      const li = document.createElement('li');
+      li.className = 'mobile-cta';
+      const a = cta.cloneNode(true);
+      a.style.cssText = 'display:inline-flex;justify-content:center;';
+      li.appendChild(a);
+      links.appendChild(li);
+    }
   } else {
     links.style.cssText = '';
+    const mobileCta = links.querySelector('.mobile-cta');
+    if (mobileCta) mobileCta.remove();
   }
 }
 
 // Close mobile menu on link click
 document.querySelectorAll('.nav-links a').forEach(a => {
-  a.addEventListener('click', () => { menuOpen = false; document.querySelector('.nav-links').style.cssText = ''; });
+  a.addEventListener('click', () => {
+    menuOpen = false;
+    const links = document.querySelector('.nav-links');
+    if (links) {
+      links.style.cssText = '';
+      const mobileCta = links.querySelector('.mobile-cta');
+      if (mobileCta) mobileCta.remove();
+    }
+  });
 });
 </script>
 
