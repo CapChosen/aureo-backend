@@ -2,8 +2,23 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Áureo — Dashboard</title>
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#C4A344">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+
+<!-- iOS full-screen app -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Áureo">
+<link rel="apple-touch-icon" href="/icon.svg">
+
+<!-- Android -->
+<meta name="mobile-web-app-capable" content="yes">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
@@ -824,6 +839,239 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
 /* Broker panel */
 .broker-panel{position:fixed;top:0;right:-400px;bottom:0;width:380px;z-index:201;background:var(--card);border-left:1px solid var(--border-hi);padding:24px 22px;overflow-y:auto;transition:right .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;gap:16px;}
 .broker-panel.open{right:0;}
+
+/* ════════════════════════════════════════════════════════
+   MOBILE APP SHELL
+   Completely separate layout for mobile (<768px).
+   Desktop layout is hidden; mobile shell takes over.
+════════════════════════════════════════════════════════ */
+
+/* Desktop: hide shell */
+.mobile-shell { display: none; }
+
+@media (max-width: 768px) {
+  /* Hide ALL desktop elements */
+  header, .ticker,
+  .app,
+  .proy-full-view, .news-full-view, .assets-full-view,
+  .corr-full-view, .comunidad-full-view { display: none !important; }
+  html, body { overflow: hidden !important; height: 100% !important; }
+
+  /* Full-screen views shown over mobile shell */
+  .m-fullview-open .proy-full-view,
+  .m-fullview-open .news-full-view,
+  .m-fullview-open .assets-full-view,
+  .m-fullview-open .corr-full-view,
+  .m-fullview-open .comunidad-full-view { display: block !important; top: 0 !important; z-index: 500 !important; }
+
+  /* Mobile Shell */
+  .mobile-shell {
+    display: flex !important;
+    flex-direction: column;
+    height: 100dvh; height: 100vh;
+    background: var(--bg);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Mobile Header */
+  .m-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    background: rgba(6,7,9,.96);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .m-header .logo-mark { width: 30px; height: 30px; border-radius: 8px; }
+  .m-header .logo-mark span { font-size: 15px; }
+  .m-header .logo-name { font-size: 17px; letter-spacing: 2.5px; }
+  .m-header-right { display: flex; align-items: center; gap: 10px; }
+  .m-live { display: flex; align-items: center; gap: 4px; }
+  .m-live-dot { width: 5px; height: 5px; background: var(--positive); border-radius: 50%; animation: blink 2.2s infinite; }
+  .m-live-txt { font-family: var(--font-mono); font-size: 8px; font-weight: 700; color: var(--positive); letter-spacing: 1.5px; }
+  .m-avatar-btn { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,var(--gold-lt),#8B6E1A); border: 2px solid rgba(196,163,68,.3); display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-size: 16px; font-weight: 700; color: #0a0800; cursor: pointer; }
+
+  /* Scrollable content area */
+  .m-content { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+  .m-content::-webkit-scrollbar { display: none; }
+
+  /* Screens */
+  .ms-screen { display: none; flex-direction: column; gap: 10px; padding: 12px 14px 100px; }
+  .ms-screen.active { display: flex; }
+  .ms-ia { padding: 0 !important; gap: 0; height: 100%; }
+
+  /* Cards */
+  .m-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .m-card-hero {
+    background: linear-gradient(135deg, rgba(196,163,68,.08) 0%, var(--card) 100%);
+    border-color: rgba(196,163,68,.2);
+    padding: 20px;
+  }
+  .m-section-title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .m-label { font-family: var(--font-mono); font-size: 8px; color: var(--text-3); letter-spacing: 1.5px; text-transform: uppercase; }
+  .m-hero-val { font-family: var(--font-serif); font-size: 22px; font-weight: 600; color: var(--gold); margin-top: 4px; }
+
+  /* Mobile input */
+  .m-input {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 16px; /* prevent iOS zoom */
+    outline: none;
+    transition: border-color .15s;
+  }
+  .m-input:focus { border-color: var(--gold); }
+
+  /* Mobile asset rows */
+  .m-asset-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    min-height: 54px;
+  }
+  .m-asset-sym { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--gold); width: 52px; flex-shrink: 0; }
+  .m-asset-info { flex: 1; min-width: 0; }
+  .m-asset-name { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-asset-w { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); margin-top: 2px; }
+  .m-asset-price { text-align: right; flex-shrink: 0; }
+  .m-asset-price-val { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text); }
+  .m-asset-price-chg { font-family: var(--font-mono); font-size: 10px; margin-top: 2px; }
+  .m-btn-rm { width: 36px; height: 36px; background: transparent; border: none; color: var(--text-3); font-size: 18px; cursor: pointer; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .m-btn-rm:active { background: rgba(248,113,113,.15); color: var(--negative); }
+
+  /* FAB button */
+  .m-fab { width: 48px; height: 48px; background: linear-gradient(135deg,var(--gold),#8B6E1A); border: none; border-radius: 12px; color: #0a0800; font-size: 24px; font-weight: 700; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .m-btn-sm { font-family: var(--font-mono); font-size: 10px; padding: 4px 10px; background: var(--gold-dim); border: 1px solid rgba(196,163,68,.3); border-radius: 8px; color: var(--gold); cursor: pointer; }
+
+  /* Phase rows on mobile */
+  .m-phase-row { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 6px; }
+  .m-phase-label { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--gold); margin-bottom: 6px; }
+  .m-phase-val { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); }
+
+  /* Mobile simulation screen */
+  .m-sim-chart-wrap { height: 240px; position: relative; margin: 0 -16px; }
+  .m-proj-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* IA Chat */
+  .m-ia-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .m-ia-av { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,var(--gold),#8B6E1A); display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-size: 20px; font-weight: 700; color: #0a0800; }
+  .m-chat-messages { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; background: var(--bg); }
+  .m-chat-footer { padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: var(--card); border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
+  .m-chat-input { flex: 1; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; color: var(--text); font-family: var(--font-sans); font-size: 16px; outline: none; }
+  .m-chat-input:focus { border-color: var(--gold); }
+  .m-chat-send { width: 46px; height: 46px; background: linear-gradient(135deg,var(--gold),#8B6E1A); border: none; border-radius: 50%; color: #0a0800; font-size: 18px; font-weight: 700; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+  /* Mobile markets */
+  .m-market-card { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: border-color .15s; }
+  .m-market-card:active { border-color: var(--gold); background: var(--card-hi); }
+  .m-market-sym { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--gold); width: 56px; flex-shrink: 0; }
+  .m-market-info { flex: 1; min-width: 0; }
+  .m-market-name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-market-type { font-family: var(--font-mono); font-size: 9px; color: var(--text-3); margin-top: 2px; }
+  .m-market-price { text-align: right; flex-shrink: 0; }
+  .m-market-pval { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--text); }
+  .m-market-pchg { font-family: var(--font-mono); font-size: 10px; margin-top: 2px; }
+  .m-filter-btn { display: inline-flex; align-items: center; padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; background: transparent; color: var(--text-2); font-family: var(--font-mono); font-size: 10px; cursor: pointer; white-space: nowrap; margin-right: 6px; min-height: 34px; }
+  .m-filter-btn.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+  /* Profile / Más screen */
+  .m-profile-card { text-align: center; padding: 24px; }
+  .m-profile-av { width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg,var(--gold-lt),#8B6E1A); display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-size: 32px; font-weight: 700; color: #0a0800; margin: 0 auto 10px; box-shadow: 0 0 30px rgba(196,163,68,.25); }
+  .m-profile-name { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--text); }
+  .m-profile-email { font-family: var(--font-mono); font-size: 11px; color: var(--text-2); margin-top: 3px; }
+  .m-actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .m-action-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 8px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; transition: all .15s; font-family: var(--font-mono); font-size: 10px; color: var(--text-2); min-height: 76px; }
+  .m-action-btn:active { border-color: var(--gold); background: var(--gold-dim); color: var(--gold); }
+  .m-action-btn span { font-size: 9.5px; text-align: center; }
+
+  /* Add Asset modal */
+  .m-add-modal { position: fixed; inset: 0; z-index: 600; background: rgba(6,7,9,.7); backdrop-filter: blur(6px); display: flex; align-items: flex-end; }
+  .m-add-modal-inner { width: 100%; background: var(--card); border-top: 1px solid var(--border-hi); border-radius: 20px 20px 0 0; padding: 20px 16px; padding-bottom: max(20px, env(safe-area-inset-bottom)); max-height: 85vh; display: flex; flex-direction: column; }
+  .m-add-list-item { display: flex; align-items: center; gap: 10px; padding: 13px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .m-add-list-item:last-child { border-bottom: none; }
+  .m-add-list-item:active { opacity: .7; }
+
+  /* Back button for full views */
+  .m-back-btn { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 14px; z-index: 501; display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: rgba(14,17,24,.9); border: 1px solid var(--border); border-radius: 20px; color: var(--text-2); font-family: var(--font-mono); font-size: 11px; cursor: pointer; backdrop-filter: blur(10px); }
+
+  /* Bottom Navigation */
+  .m-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(14,17,24,.97);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+    z-index: 400;
+    gap: 0;
+  }
+  .m-nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 4px;
+    background: none;
+    border: none;
+    color: var(--text-3);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: .3px;
+    cursor: pointer;
+    transition: color .15s;
+    min-height: 50px;
+  }
+  .m-nav-btn.active { color: var(--gold); }
+  .m-nav-btn svg { stroke: currentColor; }
+  .m-nav-fab {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg,var(--gold),#8B6E1A);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-serif);
+    font-size: 18px; font-weight: 700;
+    color: #0a0800;
+    margin-bottom: 2px;
+    box-shadow: 0 0 20px rgba(196,163,68,.3);
+  }
+  .m-nav-btn.active .m-nav-fab { box-shadow: 0 0 28px rgba(196,163,68,.5); }
+}
 
 /* ── PRINT / PDF ── */
 @media print {
@@ -4055,6 +4303,388 @@ function exportPDF() {
 }
 
 // ════════════════════════════════════════════════════════
+// MOBILE APP SHELL
+// ════════════════════════════════════════════════════════
+const IS_MOBILE = () => window.innerWidth <= 768;
+let _mActiveTab = 'portfolio';
+let mSimChart = null;
+let mMktFilter = 'all';
+
+// ── Tab navigation ──
+function mobileTab(tab) {
+  if (!IS_MOBILE()) return;
+  _mActiveTab = tab;
+  // Update nav buttons
+  document.querySelectorAll('.m-nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`)?.classList.add('active');
+  // Hide all screens
+  document.querySelectorAll('.ms-screen').forEach(s => s.classList.remove('active'));
+  // Show target screen
+  const screen = document.getElementById(`ms-${tab}`);
+  if (screen) {
+    screen.classList.add('active');
+    // Scroll to top
+    document.querySelector('.m-content')?.scrollTo(0, 0);
+  }
+  // Tab-specific actions
+  if (tab === 'portfolio')  renderMobilePortfolio();
+  if (tab === 'simular')    { renderMobileSimChart(); renderMobileSimStats(); }
+  if (tab === 'mercados')   renderMobileMarkets('');
+  if (tab === 'mas')        renderMobileProfile();
+}
+
+// Open full views from mobile (noticias, comunidad, correlaciones, proyecciones)
+function mobileShowView(view) {
+  if (!IS_MOBILE()) { showView(view); return; }
+  // Make full views cover full screen on mobile
+  document.body.classList.add('m-fullview-open');
+  const views = {
+    noticias: 'newsFullView', comunidad: 'comunidadFullView',
+    correlaciones: 'corrFullView', proyecciones: 'proyeccionesFullView',
+    activos: 'assetsFullView'
+  };
+  // Hide all full views first
+  Object.values(views).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'none'; el.style.top = '0'; }
+  });
+  const target = document.getElementById(views[view]);
+  if (target) {
+    target.style.display = 'block';
+    target.style.top = '0';
+    target.style.zIndex = '500';
+  }
+  // Load data if needed
+  if (view === 'noticias'     && !window.newsFullLoaded)      { fetchAllNews(); window.newsFullLoaded = true; }
+  if (view === 'activos'      && !window.assetsLoaded)        { renderAssetsExplorer(); window.assetsLoaded = true; fetchAllPrices(); }
+  if (view === 'comunidad'    && !window.comLoaded)           { window.comLoaded = true; loadGroups(); loadCommunityPosts(true); }
+  if (view === 'correlaciones')                                { loadCorrelations(); }
+  if (view === 'proyecciones')                                 { renderProyeccionesView(); }
+  // Show back button
+  showMobileBackBtn();
+}
+
+function showMobileBackBtn() {
+  let btn = document.getElementById('m-back-btn');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'm-back-btn';
+    btn.className = 'm-back-btn';
+    btn.innerHTML = '← Volver';
+    btn.onclick = closeMobileFullView;
+    document.body.appendChild(btn);
+  }
+  btn.style.display = 'flex';
+}
+
+function closeMobileFullView() {
+  document.body.classList.remove('m-fullview-open');
+  ['newsFullView','comunidadFullView','corrFullView','proyeccionesFullView','assetsFullView'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const btn = document.getElementById('m-back-btn');
+  if (btn) btn.style.display = 'none';
+}
+
+// ── Portfolio screen ──
+function renderMobilePortfolio() {
+  if (!IS_MOBILE()) return;
+  // Asset list
+  const listEl = document.getElementById('m-asset-list');
+  if (listEl) {
+    if (!S.port.length) {
+      listEl.innerHTML = '<div style="text-align:center;color:var(--text-3);font-size:12px;padding:20px;">Sin activos. Agrega uno con el botón +</div>';
+    } else {
+      listEl.innerHTML = S.port.map((a, i) => {
+        const tick = TICKER_DATA.find(t => t.s === a.t);
+        const ext  = ALL_PRICES_DATA[a.t];
+        const liveP = tick ? tick : ext ? { p: ext.price, c: ext.change_pct } : null;
+        const chgColor = liveP?.c >= 0 ? 'var(--positive)' : 'var(--negative)';
+        const priceHtml = liveP
+          ? `<div class="m-asset-price-val">$${liveP.p?.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+             <div class="m-asset-price-chg" style="color:${chgColor}">${liveP.c >= 0?'+':''}${liveP.c?.toFixed(2)}%</div>`
+          : '<div class="m-asset-price-val" style="color:var(--text-3)">—</div>';
+        return `<div class="m-asset-row" style="border-left:3px solid ${COLORS[i%10]}">
+          <span class="m-asset-sym">${a.t}</span>
+          <div class="m-asset-info">
+            <div class="m-asset-name">${DB[a.t]?.name||a.t}</div>
+            <div class="m-asset-w">${a.w}% del portafolio</div>
+          </div>
+          <div class="m-asset-price">${priceHtml}</div>
+          <button class="m-btn-rm" onclick="removeAsset('${a.t}')">×</button>
+        </div>`;
+      }).join('');
+    }
+  }
+  // Alloc bar (reuse existing)
+  const mAllocBar = document.getElementById('m-alloc-bar-m');
+  if (mAllocBar) {
+    const total = S.port.reduce((s,a) => s+a.w, 0);
+    mAllocBar.innerHTML = S.port.map((a,i) => `<div class="alloc-seg" style="width:${a.w}%;background:${COLORS[i%10]}"></div>`).join('');
+    const tot = document.getElementById('m-alloc-total-m');
+    if (tot) {
+      tot.innerHTML = `<span>Asignación</span><span style="color:${Math.abs(total-100)<1?'var(--positive)':'var(--negative)'}">${total.toFixed(0)}%</span>`;
+    }
+  }
+  // Port count
+  const countLbl = document.getElementById('m-port-count-lbl');
+  if (countLbl) countLbl.textContent = `${S.port.length} activo${S.port.length!==1?'s':''}`;
+  // Port meta
+  const metaEl = document.getElementById('m-port-meta');
+  if (metaEl) {
+    const {mu, sig} = getPortParams();
+    const sharpe = ((mu-0.05)/sig).toFixed(2);
+    metaEl.innerHTML = `
+      <div class="pm-box"><div class="pm-label">Retorno μ</div><div class="pm-value pos">${(mu*100).toFixed(1)}%</div></div>
+      <div class="pm-box"><div class="pm-label">Riesgo σ</div><div class="pm-value">${(sig*100).toFixed(1)}%</div></div>
+      <div class="pm-box"><div class="pm-label">Sharpe</div><div class="pm-value ${sharpe>1?'pos':''}">${sharpe}</div></div>
+      <div class="pm-box"><div class="pm-label">Activos</div><div class="pm-value">${S.port.length}</div></div>`;
+  }
+  // Phases
+  const mPhases = document.getElementById('m-phases-list');
+  if (mPhases) {
+    if (!S.phases.length) {
+      mPhases.innerHTML = '<div style="font-size:11px;color:var(--text-3);text-align:center;padding:8px">Sin fases configuradas</div>';
+    } else {
+      mPhases.innerHTML = S.phases.map((p, i) => `
+        <div class="m-phase-row">
+          <div class="m-phase-label">Fase ${i+1} · Año ${Math.ceil(p.start/12)} a ${Math.ceil(p.end/12)}</div>
+          <div class="m-phase-val">$${p.monthly.toLocaleString()}/mes</div>
+        </div>`).join('');
+    }
+  }
+}
+
+// ── Simular screen ──
+function renderMobileSimChart() {
+  if (!IS_MOBILE() || !S.simData) return;
+  const canvas = document.getElementById('mSimChart');
+  if (!canvas) return;
+  if (mSimChart) { mSimChart.destroy(); mSimChart = null; }
+  const {pct, apt, M} = S.simData;
+  const step = Math.max(1, Math.floor(M/40));
+  const labels=[], p10=[], p50=[], p90=[], aptD=[];
+  for (let m=0; m<=M; m+=step) {
+    labels.push(m%12===0 ? `Año ${m/12}` : '');
+    p10.push(pct.p10[m]); p50.push(pct.p50[m]); p90.push(pct.p90[m]); aptD.push(apt[m]);
+  }
+  const ctx = canvas.getContext('2d');
+  mSimChart = new Chart(ctx, {
+    type:'line',
+    data:{ labels, datasets:[
+      {label:'P90', data:p90, borderColor:'rgba(52,211,153,.7)', fill:'+1', backgroundColor:'rgba(52,211,153,.06)', tension:.4, pointRadius:0, borderWidth:1.5},
+      {label:'Mediana', data:p50, borderColor:'#C4A344', fill:false, tension:.4, pointRadius:0, borderWidth:2.5},
+      {label:'P10', data:p10, borderColor:'rgba(248,113,113,.7)', fill:false, tension:.4, pointRadius:0, borderWidth:1.5},
+      {label:'Aportado', data:aptD, borderColor:'rgba(125,132,148,.5)', fill:false, tension:0, pointRadius:0, borderWidth:1.5, borderDash:[4,3]},
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:{duration:200},
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmtShort(c.parsed.y)}`}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.03)'}, ticks:{color:'#3A404E',font:{size:8},maxRotation:0,maxTicksLimit:8}},
+        y:{grid:{color:'rgba(255,255,255,.03)'}, ticks:{color:'#3A404E',font:{size:8},callback:v=>fmtShort(v)}}
+      }
+    }
+  });
+  // Sync horizon slider
+  const mSlider = document.getElementById('m-horizYrs');
+  const mHorizVal = document.getElementById('m-horiz-val');
+  if (mSlider) mSlider.value = document.getElementById('horizYrs').value;
+  if (mHorizVal) mHorizVal.textContent = `${document.getElementById('horizYrs').value} años`;
+}
+
+function renderMobileSimStats() {
+  if (!IS_MOBILE() || !S.simData) return;
+  const el = document.getElementById('m-proj-stats');
+  if (!el) return;
+  const {pct, apt, M} = S.simData;
+  const gain = pct.p50[M]-apt[M];
+  const mult = (pct.p50[M]/apt[M]).toFixed(1);
+  el.innerHTML = `
+    <div class="ps-box"><div class="ps-label">Mediana</div><div class="ps-val" style="color:var(--gold)">${fmtShort(pct.p50[M])}</div></div>
+    <div class="ps-box"><div class="ps-label">P90</div><div class="ps-val" style="color:var(--positive)">${fmtShort(pct.p90[M])}</div></div>
+    <div class="ps-box"><div class="ps-label">Ganancia</div><div class="ps-val" style="color:var(--positive)">+${fmtShort(gain)}</div></div>
+    <div class="ps-box"><div class="ps-label">P10</div><div class="ps-val" style="color:var(--negative)">${fmtShort(pct.p10[M])}</div></div>
+    <div class="ps-box"><div class="ps-label">Aportado</div><div class="ps-val">${fmtShort(apt[M])}</div></div>
+    <div class="ps-box"><div class="ps-label">Multiplicador</div><div class="ps-val" style="color:var(--teal)">${mult}x</div></div>`;
+}
+
+// ── Markets screen ──
+function renderMobileMarkets(query) {
+  const el = document.getElementById('m-markets-list');
+  if (!el) return;
+  const q = (query || document.getElementById('m-market-search')?.value || '').toLowerCase().trim();
+  const intlSyms = new Set(['SAP','NVO','LVMH','OR','NESN','RHHBY','NVS','UL','BP','SHEL','VOW','BMW','BABA','TCEHY','PDD','NIO','SONY']);
+  const entries = Object.entries(DB).filter(([sym, d]) => {
+    if (q && !sym.toLowerCase().includes(q) && !(d.name||'').toLowerCase().includes(q)) return false;
+    if (mMktFilter === 'etf')        return d.type === 'ETF';
+    if (mMktFilter === 'stock-usa')  return d.type === 'Stock' && !intlSyms.has(sym);
+    if (mMktFilter === 'stock-intl') return d.type === 'Stock' && intlSyms.has(sym);
+    if (mMktFilter === 'crypto')     return d.type === 'Crypto';
+    return true;
+  }).slice(0, 50);
+  if (!entries.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text-3);font-size:12px;padding:20px;">Sin resultados</div>';
+    return;
+  }
+  el.innerHTML = entries.map(([sym, d]) => {
+    const tick = TICKER_DATA.find(t => t.s === sym);
+    const ext  = ALL_PRICES_DATA[sym];
+    const liveP = tick ? { p: tick.p, c: tick.c } : ext ? { p: ext.price, c: ext.change_pct } : null;
+    const chgColor = liveP?.c >= 0 ? 'var(--positive)' : 'var(--negative)';
+    const typeLbl  = {ETF:'ETF', Stock:'ACCIÓN', Crypto:'CRYPTO'}[d.type] || d.type;
+    const safeSym  = sym.replace(/'/g,"\\'");
+    const safeName = (d.name||sym).replace(/'/g,"\\'");
+    return `<div class="m-market-card" onclick="openAssetChart('${safeSym}','${safeName}','${encodeURIComponent(d.type||'')}')">
+      <span class="m-market-sym">${sym}</span>
+      <div class="m-market-info">
+        <div class="m-market-name">${d.name||sym}</div>
+        <div class="m-market-type">${typeLbl}</div>
+      </div>
+      <div class="m-market-price">
+        ${liveP ? `<div class="m-market-pval">$${liveP.p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+                   <div class="m-market-pchg" style="color:${chgColor}">${liveP.c>=0?'+':''}${liveP.c.toFixed(2)}%</div>`
+                : '<div class="m-market-pval" style="color:var(--text-3)">—</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setMobileMarketFilter(filter, btn) {
+  mMktFilter = filter;
+  document.querySelectorAll('.m-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderMobileMarkets('');
+}
+
+// ── Profile screen ──
+function renderMobileProfile() {
+  if (!IS_MOBILE()) return;
+  // Sync data from existing profile panel
+  const name  = document.getElementById('pp-name')?.textContent  || '—';
+  const email = document.getElementById('pp-email')?.textContent || '—';
+  const av    = document.getElementById('pp-avatar')?.textContent || '?';
+  const badge = document.getElementById('pp-plan-badge')?.textContent || 'FREE';
+  const badgeClass = document.getElementById('pp-plan-badge')?.className || 'pp-plan-badge pp-plan-free';
+  const aiUsed = document.getElementById('pp-ai-used')?.textContent || '0';
+  const aiLim  = document.getElementById('pp-ai-limit')?.textContent || '—';
+  const mProfAv   = document.getElementById('m-prof-av');
+  const mProfName = document.getElementById('m-prof-name');
+  const mProfEmail = document.getElementById('m-prof-email');
+  const mProfBadge = document.getElementById('m-prof-badge');
+  const mAiUsage  = document.getElementById('m-ai-usage-more');
+  if (mProfAv)    mProfAv.textContent    = av;
+  if (mProfName)  mProfName.textContent  = name;
+  if (mProfEmail) mProfEmail.textContent = email;
+  if (mProfBadge) { mProfBadge.textContent = badge; mProfBadge.className = badgeClass; }
+  if (mAiUsage)   mAiUsage.textContent   = `${aiUsed} usadas · ${aiLim} disponibles`;
+}
+
+// ── IA Chat (mobile) ──
+async function sendMobileChat() {
+  const input = document.getElementById('m-chat-input');
+  const msg   = input?.value?.trim();
+  if (!msg) return;
+  input.value = '';
+  // Forward to desktop chat and mirror messages
+  const mMsgs = document.getElementById('m-chat-msgs');
+  if (mMsgs) {
+    mMsgs.insertAdjacentHTML('beforeend',
+      `<div class="msg-row user"><div class="msg-av user">T</div><div class="msg-bubble user">${escHtml(msg)}</div></div>`);
+    mMsgs.scrollTop = mMsgs.scrollHeight;
+  }
+  // Use existing sendChat logic
+  document.getElementById('chat-input').value = msg;
+  await sendChat();
+  // Mirror AI response
+  const desktopMsgs = document.getElementById('chat-msgs');
+  const lastAI = desktopMsgs?.querySelector('.msg-row:last-child .msg-bubble.ai');
+  if (mMsgs && lastAI) {
+    mMsgs.insertAdjacentHTML('beforeend',
+      `<div class="msg-row"><div class="msg-av ai">Á</div><div class="msg-bubble ai">${lastAI.innerHTML}</div></div>`);
+    mMsgs.scrollTop = mMsgs.scrollHeight;
+  }
+}
+
+// ── Add Asset modal (mobile) ──
+function mOpenAddAsset() {
+  const modal = document.getElementById('mAddModal');
+  if (modal) { modal.style.display = 'flex'; mFilterAssetModal(''); }
+}
+
+function mCloseAddAsset() {
+  const modal = document.getElementById('mAddModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function mFilterAsset(q) {
+  // Also update the desktop select
+  filterAssetSelect(q);
+}
+
+function mFilterAssetModal(q) {
+  const el = document.getElementById('m-add-list');
+  if (!el) return;
+  const query = q.toLowerCase().trim();
+  const matches = Object.entries(DB).filter(([sym, d]) =>
+    !query || sym.toLowerCase().includes(query) || (d.name||'').toLowerCase().includes(query)
+  ).slice(0, 30);
+  el.innerHTML = matches.map(([sym, d]) => {
+    const tick = TICKER_DATA.find(t => t.s === sym);
+    const alreadyIn = S.port.find(a => a.t === sym);
+    return `<div class="m-add-list-item" onclick="mAddAsset('${sym}')">
+      <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--gold);width:54px;">${sym}</span>
+      <span style="flex:1;font-size:12px;color:var(--text-2);">${d.name||sym}</span>
+      ${alreadyIn ? '<span style="font-family:var(--font-mono);font-size:9px;color:var(--teal);">✓</span>'
+                  : (tick ? `<span style="font-family:var(--font-mono);font-size:11px;color:var(--text);">$${tick.p.toFixed(2)}</span>` : '')}
+    </div>`;
+  }).join('');
+}
+
+function mAddAsset(sym) {
+  document.getElementById('asset-select').value = sym;
+  addAsset();
+  mCloseAddAsset();
+  renderMobilePortfolio();
+}
+
+// ── Hook into existing renders to sync mobile ──
+const _origRenderAssets = renderAssets;
+window.renderAssets = function() {
+  _origRenderAssets();
+  if (IS_MOBILE() && _mActiveTab === 'portfolio') renderMobilePortfolio();
+};
+
+const _origRunSim = runSim;
+window.runSim = function() {
+  _origRunSim();
+  if (IS_MOBILE()) {
+    if (_mActiveTab === 'simular') { renderMobileSimChart(); renderMobileSimStats(); }
+  }
+};
+
+// ── Mobile init ──
+function initMobileShell() {
+  if (!IS_MOBILE()) return;
+  // Sync avatar
+  const av = document.getElementById('hdr-avatar')?.textContent || '?';
+  document.querySelectorAll('.m-avatar-btn').forEach(el => el.textContent = av);
+  // Default tab
+  mobileTab('portfolio');
+  // Fetch prices for markets tab
+  fetchAllPrices();
+}
+
+// Detect mobile and init
+window.addEventListener('resize', () => {
+  if (IS_MOBILE() && !document.getElementById('mobileShell').classList.contains('m-inited')) {
+    document.getElementById('mobileShell').classList.add('m-inited');
+    initMobileShell();
+  }
+});
+
+// ════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════
 initSelect();
@@ -4070,9 +4700,219 @@ renderPhases();
 loadUser();
 loadPortfolio().then(() => {
   runSim();
-  scheduleHistoricalFetch(1500); // arranca 1.5s después de cargar portafolio
+  scheduleHistoricalFetch(1500);
+  // Init mobile after data loads
+  if (IS_MOBILE()) initMobileShell();
 });
 fetchNews();
 </script>
+
+<!-- ═══════════════════════════════════════════════════════
+     MOBILE APP SHELL
+     Completely replaces the desktop layout on mobile.
+     Shares all state (S.port, S.simData, etc.) and functions
+     with the desktop — only the presentation layer is different.
+════════════════════════════════════════════════════════ -->
+<div class="mobile-shell" id="mobileShell">
+
+  <!-- Mobile Header -->
+  <div class="m-header">
+    <div class="logo">
+      <div class="logo-mark" style="width:30px;height:30px;border-radius:8px;"><span style="font-size:15px;">Á</span></div>
+      <div class="logo-name" style="font-size:17px;letter-spacing:2.5px;">ÁUR<em>E</em>O</div>
+    </div>
+    <div class="m-header-right">
+      <div class="m-live">
+        <div class="m-live-dot"></div>
+        <span class="m-live-txt">LIVE</span>
+      </div>
+      <button class="m-avatar-btn" id="m-avatar-btn" onclick="mobileTab('mas')">?</button>
+    </div>
+  </div>
+
+  <!-- Scrollable Content -->
+  <div class="m-content" id="mContent">
+
+    <!-- ── SCREEN: Portafolio ── -->
+    <div class="ms-screen active" id="ms-portfolio">
+      <div class="m-card m-card-hero">
+        <div class="m-label">TU PORTAFOLIO</div>
+        <div id="m-port-count-lbl" class="m-hero-val">0 activos</div>
+        <div id="m-alloc-bar-m" class="alloc-bar" style="margin:12px 0 4px;height:6px;border-radius:3px;"></div>
+        <div id="m-alloc-total-m" class="alloc-lbl" style="font-family:var(--font-mono);font-size:9px;display:flex;justify-content:space-between;color:var(--text-2);"></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-section-title">Activos</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <input id="m-asset-search" type="text" class="m-input" placeholder="Buscar activo..." oninput="mFilterAsset(this.value)">
+          <button class="m-fab" onclick="mOpenAddAsset()">+</button>
+        </div>
+        <div id="m-asset-list"></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-section-title">Métricas</div>
+        <div id="m-port-meta" class="port-meta"></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-section-title">Fases de Aportación
+          <button class="m-btn-sm" onclick="addPhase();renderMobilePortfolio()">+ Nueva</button>
+        </div>
+        <div id="m-phases-list"></div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-label" style="margin-bottom:10px;">CAPITAL INICIAL (USD)</div>
+        <input type="number" class="m-input" id="m-init-amount" value="10000" min="100"
+          oninput="document.getElementById('init-amount').value=this.value;runSim();">
+        <div class="save-indicator" style="margin-top:8px;" id="m-save-ind">
+          <div class="save-dot"></div><span>Guardado automáticamente</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: Simular ── -->
+    <div class="ms-screen" id="ms-simular">
+      <div class="m-card">
+        <div class="m-section-title">Proyección Monte Carlo <span style="color:var(--text-3);font-size:8px;letter-spacing:0">1,000 sim.</span></div>
+        <div class="horizon-row" style="margin-bottom:14px;">
+          <label style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);">Horizonte</label>
+          <input type="range" id="m-horizYrs" min="5" max="40" value="20"
+            oninput="document.getElementById('horizYrs').value=this.value;updateHorizon();renderMobileSimChart();renderMobileSimStats();document.getElementById('m-horiz-val').textContent=this.value+' años';">
+          <span class="horizon-val" id="m-horiz-val">20 años</span>
+        </div>
+        <div style="height:240px;position:relative;margin:0 -4px;">
+          <canvas id="mSimChart"></canvas>
+        </div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-section-title">Resultados clave</div>
+        <div id="m-proj-stats" class="m-proj-stats"></div>
+      </div>
+
+      <div class="m-card" style="margin-bottom:16px;">
+        <div class="m-section-title">Comparativa portafolio
+          <button class="m-btn-sm" onclick="mobileShowView('proyecciones')">Ver completo</button>
+        </div>
+        <div id="m-port-compare" style="font-family:var(--font-mono);font-size:10px;color:var(--text-2);line-height:1.9;"></div>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: Au·IA ── -->
+    <div class="ms-screen ms-ia" id="ms-ia">
+      <div class="m-ia-header">
+        <div class="m-ia-av">Á</div>
+        <div>
+          <div style="font-family:var(--font-serif);font-size:18px;font-weight:600;color:var(--gold);">Au·IA</div>
+          <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-3);">ASISTENTE FINANCIERO</div>
+        </div>
+        <div id="m-ai-usage" style="margin-left:auto;font-family:var(--font-mono);font-size:9px;color:var(--text-3);text-align:right;"></div>
+      </div>
+      <div class="m-chat-messages" id="m-chat-msgs">
+        <div class="msg-row">
+          <div class="msg-av ai">Á</div>
+          <div class="msg-bubble ai">Hola, soy Au·IA. Analizo tu portafolio en tiempo real. ¿En qué te ayudo hoy?</div>
+        </div>
+      </div>
+      <div class="m-chat-footer">
+        <input class="m-chat-input" id="m-chat-input" placeholder="Pregunta sobre tu portafolio..."
+          onkeydown="if(event.key==='Enter') sendMobileChat()">
+        <button class="m-chat-send" onclick="sendMobileChat()">↑</button>
+      </div>
+    </div>
+
+    <!-- ── SCREEN: Mercados ── -->
+    <div class="ms-screen" id="ms-mercados">
+      <div class="m-card" style="padding:12px;">
+        <input type="text" class="m-input" id="m-market-search" placeholder="Buscar activo... (ej: NVDA, SPY, Bitcoin)"
+          oninput="renderMobileMarkets(this.value)">
+      </div>
+      <div style="padding:0 14px 8px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;">
+        <button class="m-filter-btn active" onclick="setMobileMarketFilter('all',this)">Todos</button>
+        <button class="m-filter-btn" onclick="setMobileMarketFilter('etf',this)">ETFs</button>
+        <button class="m-filter-btn" onclick="setMobileMarketFilter('stock-usa',this)">Acciones USA</button>
+        <button class="m-filter-btn" onclick="setMobileMarketFilter('stock-intl',this)">Internacional</button>
+        <button class="m-filter-btn" onclick="setMobileMarketFilter('crypto',this)">Crypto</button>
+      </div>
+      <div id="m-markets-list" style="padding:0 14px 16px;display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
+    <!-- ── SCREEN: Perfil / Más ── -->
+    <div class="ms-screen" id="ms-mas">
+      <div class="m-card m-profile-card">
+        <div class="m-profile-av" id="m-prof-av">?</div>
+        <div class="m-profile-name" id="m-prof-name">—</div>
+        <div class="m-profile-email" id="m-prof-email">—</div>
+        <div id="m-prof-badge" class="pp-plan-badge pp-plan-free" style="margin-top:10px;">FREE</div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-section-title">Accesos rápidos</div>
+        <div class="m-actions-grid">
+          <button class="m-action-btn" onclick="mobileShowView('noticias')">📰<span>Noticias</span></button>
+          <button class="m-action-btn" onclick="mobileShowView('comunidad')">◎<span>Comunidad</span></button>
+          <button class="m-action-btn" onclick="mobileShowView('correlaciones')">⬡<span>Correlaciones</span></button>
+          <button class="m-action-btn" onclick="mobileShowView('proyecciones')">📈<span>Proyecciones</span></button>
+          <button class="m-action-btn" onclick="mobileShowView('activos')">🔍<span>Explorador</span></button>
+          <button class="m-action-btn" onclick="openBrokerPanel()">📊<span>Broker</span></button>
+        </div>
+      </div>
+
+      <div class="m-card">
+        <div class="m-section-title">Au·IA esta semana</div>
+        <div id="m-ai-usage-more" style="font-family:var(--font-mono);font-size:11px;color:var(--text-2);">—</div>
+      </div>
+
+      <div class="m-card" style="margin-bottom:100px;">
+        <button onclick="logout()" style="width:100%;min-height:52px;padding:14px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:12px;color:var(--negative);font-family:var(--font-mono);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;">
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /m-content -->
+
+  <!-- Add Asset Bottom Sheet -->
+  <div class="m-add-modal" id="mAddModal" style="display:none;" onclick="if(event.target===this)mCloseAddAsset()">
+    <div class="m-add-modal-inner">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <span style="font-family:var(--font-serif);font-size:20px;font-weight:600;color:var(--gold);">Agregar activo</span>
+        <button onclick="mCloseAddAsset()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text-2);width:34px;height:34px;font-size:16px;cursor:pointer;">✕</button>
+      </div>
+      <input type="text" class="m-input" id="m-add-search" placeholder="Buscar por símbolo o nombre..."
+        oninput="mFilterAssetModal(this.value)" style="margin-bottom:14px;">
+      <div id="m-add-list" style="overflow-y:auto;flex:1;"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="m-nav">
+    <button class="m-nav-btn active" onclick="mobileTab('portfolio')" data-tab="portfolio">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      <span>Portafolio</span>
+    </button>
+    <button class="m-nav-btn" onclick="mobileTab('simular')" data-tab="simular">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Simular</span>
+    </button>
+    <button class="m-nav-btn" onclick="mobileTab('ia')" data-tab="ia">
+      <div class="m-nav-fab">Á</div>
+      <span>Au·IA</span>
+    </button>
+    <button class="m-nav-btn" onclick="mobileTab('mercados')" data-tab="mercados">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Mercados</span>
+    </button>
+    <button class="m-nav-btn" onclick="mobileTab('mas')" data-tab="mas">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span>Perfil</span>
+    </button>
+  </nav>
+
+</div><!-- /mobile-shell -->
+
 </body>
 </html>
