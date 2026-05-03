@@ -412,80 +412,83 @@ function pearsonCorr(a, b) {
   return denom < 1e-12 ? 0 : parseFloat((num/denom).toFixed(4));
 }
 
-// Obtiene datos históricos mensuales usando Yahoo Finance (5 años, gratis, sin key)
-// Reemplaza el endpoint Finnhub /stock/candle que requiere plan pago.
+// Mapea símbolo de la app al formato Stooq (fuente primaria para históricos)
+// Yahoo Finance bloquea requests de servidores cloud; Stooq es más confiable.
+function toStooqSymbol(symbol) {
+  if (symbol === 'BTC-USD') return 'btc.v';
+  if (symbol === 'ETH-USD') return 'eth.v';
+  if (symbol === 'BRK.B')   return 'brk-b.us';
+  // Acciones internacionales con sufijo distinto
+  const intl = {
+    'LVMH':'lvmh.fr','OR':'or.fr','NESN':'nesn.sw',
+    'VOW':'vow3.de','BMW':'bmw.de','SAP':'sap.de',
+  };
+  if (intl[symbol]) return intl[symbol];
+  return symbol.toLowerCase() + '.us';
+}
+
+// Parsea el CSV devuelto por Stooq y extrae closes ordenados
+function parseStooqCSV(csvText) {
+  const lines = csvText.trim().split('\n');
+  if (lines.length < 2) return null;
+  const rows = lines.slice(1)
+    .map(l => { const p = l.split(','); return { date: p[0], close: parseFloat(p[4]) }; })
+    .filter(r => r.date && !isNaN(r.close) && r.close > 0)
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+  return rows.length < 2 ? null : rows;
+}
+
+// Obtiene datos históricos mensuales via Stooq (gratuito, sin key, confiable en servidores)
 async function fetchHistorical(symbol) {
   const cached = historicalCache[symbol];
   if (cached && (Date.now() - cached.timestamp) < HIST_CACHE_TTL) {
     return cached.data;
   }
 
-  const yahooSym = toYahooSymbol(symbol); // BRK.B → BRK-B, etc.
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSym)}?interval=1mo&range=5y`;
+  const stooqSym = toStooqSymbol(symbol);
+  const url = `https://stooq.com/q/d/l/?s=${stooqSym}&i=m`;
 
-  let response;
+  let rows;
   try {
-    response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; AureoBot/1.0)',
-        'Accept': 'application/json',
-      }
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/csv,*/*' },
     });
+    if (!res.ok) {
+      console.warn(`[Hist] Stooq HTTP ${res.status} for ${symbol}`);
+      return null;
+    }
+    rows = parseStooqCSV(await res.text());
   } catch (err) {
     console.error(`[Hist] Network error ${symbol}:`, err.message);
     return null;
   }
 
-  if (!response.ok) {
-    console.warn(`[Hist] Yahoo HTTP ${response.status} for ${symbol}`);
+  if (!rows || rows.length < 12) {
+    console.log(`[Hist] Datos insuficientes Stooq ${symbol}: ${rows?.length ?? 0} pts`);
     return null;
   }
 
-  const body = await response.json();
-  const chart = body?.chart?.result?.[0];
+  const closes = rows.map(r => r.close);
+  const N = closes.length;
 
-  if (!chart || !chart.timestamp || !chart.indicators?.quote?.[0]?.close) {
-    console.log(`[Hist] Sin datos Yahoo para ${symbol}`);
-    return null;
-  }
-
-  const rawCloses = chart.indicators.quote[0].close;
-  const rawTimestamps = chart.timestamp;
-
-  // Filtrar nulos (fines de semana, feriados sin precio)
-  const valid = rawTimestamps.reduce((acc, ts, i) => {
-    if (rawCloses[i] != null) { acc.ts.push(ts); acc.c.push(rawCloses[i]); }
-    return acc;
-  }, { ts: [], c: [] });
-
-  const N = valid.c.length;
-  if (N < 12) {
-    console.log(`[Hist] Datos insuficientes para ${symbol}: ${N} puntos`);
-    return null;
-  }
-
-  // Retornos logarítmicos mensuales
   const returns = [];
   const returnsByMonth = {};
   for (let i = 1; i < N; i++) {
-    const r = Math.log(valid.c[i] / valid.c[i - 1]);
+    const r = Math.log(closes[i] / closes[i - 1]);
     returns.push(r);
-    const d   = new Date(valid.ts[i] * 1000);
-    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
-    returnsByMonth[key] = r;
+    returnsByMonth[rows[i].date.slice(0, 7)] = r;
   }
 
   if (returns.length < 6) return null;
 
   const mean     = returns.reduce((a, b) => a + b, 0) / returns.length;
   const variance = returns.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, returns.length - 1);
-
   const mu        = parseFloat((mean * 12).toFixed(4));
   const sigma     = parseFloat((Math.sqrt(variance) * Math.sqrt(12)).toFixed(4));
-  const return_5y = parseFloat(((valid.c[N - 1] / valid.c[0]) - 1).toFixed(4));
+  const return_5y = parseFloat(((closes[N - 1] / closes[0]) - 1).toFixed(4));
 
-  let maxDD = 0, peak = valid.c[0];
-  for (const c of valid.c) {
+  let maxDD = 0, peak = closes[0];
+  for (const c of closes) {
     if (c > peak) peak = c;
     const dd = (peak - c) / peak;
     if (dd > maxDD) maxDD = dd;
@@ -495,12 +498,12 @@ async function fetchHistorical(symbol) {
     symbol, mu, sigma, return_5y,
     max_drawdown : parseFloat(maxDD.toFixed(4)),
     data_points  : N,
-    period       : `${new Date(valid.ts[0] * 1000).toISOString().slice(0, 7)} – ${new Date(valid.ts[N - 1] * 1000).toISOString().slice(0, 7)}`,
+    period       : `${rows[0].date.slice(0, 7)} – ${rows[N - 1].date.slice(0, 7)}`,
     returnsByMonth,
   };
 
   historicalCache[symbol] = { data: result, timestamp: Date.now() };
-  console.log(`[Hist] ${symbol}: μ=${mu.toFixed(3)} σ=${sigma.toFixed(3)} 5y=${(return_5y * 100).toFixed(1)}% pts=${N}`);
+  console.log(`[Hist] ${symbol} (Stooq): μ=${mu.toFixed(3)} σ=${sigma.toFixed(3)} 5y=${(return_5y * 100).toFixed(1)}% pts=${N}`);
   return result;
 }
 
@@ -738,21 +741,9 @@ router.get('/allprices', (_req, res) => {
 
 // ════════════════════════════════════════════════════════
 // GET /api/market/candle/:symbol?tf=D
-// Uses Yahoo Finance — free, no key, supports all symbols
-// including crypto (BTC-USD, ETH-USD) natively.
-// Finnhub /stock/candle requires a paid plan, so we avoid it.
-// tf: 1H (1h candles, 5 days), D (daily, 1 year),
-//     M (monthly, 5 years), Y (monthly, max)
+// Uses Stooq — free, no key, reliable from cloud servers.
+// tf: 1H → daily last 30d, D → daily 1y, M/Y → monthly 5y
 // ════════════════════════════════════════════════════════
-
-// Some symbols differ between our DB and Yahoo Finance
-const YAHOO_SYMBOL_MAP = {
-  'BRK.B': 'BRK-B',
-};
-
-function toYahooSymbol(sym) {
-  return YAHOO_SYMBOL_MAP[sym] || sym;
-}
 
 router.get('/candle/:symbol', async (req, res) => {
   const raw      = req.params.symbol.toUpperCase();
@@ -764,75 +755,75 @@ router.get('/candle/:symbol', async (req, res) => {
     return res.json({ ...cached.data, cached: true });
   }
 
-  // Map tf → Yahoo Finance interval + range
-  let interval, range;
+  const now = new Date();
+  const fmt = d => d.toISOString().slice(0, 10).replace(/-/g, '');
+
+  let stooqInterval, fromDate;
   switch (tf) {
-    case '1H': interval = '1h';  range = '5d';  break; // 5 days, hourly candles
-    case 'M':  interval = '1mo'; range = '5y';  break; // 5 years, monthly candles
-    case 'Y':  interval = '1mo'; range = 'max'; break; // max history, monthly candles
-    default:   interval = '1d';  range = '1y';  break; // 1 year, daily candles
+    case '1H': stooqInterval = 'd'; fromDate = new Date(now - 30  * 86400000); break;
+    case 'M':  stooqInterval = 'm'; fromDate = new Date(now - 5   * 365 * 86400000); break;
+    case 'Y':  stooqInterval = 'm'; fromDate = new Date(now - 10  * 365 * 86400000); break;
+    default:   stooqInterval = 'd'; fromDate = new Date(now - 365 * 86400000); break;
   }
 
-  const yahooSym = toYahooSymbol(raw);
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSym)}?interval=${interval}&range=${range}`;
+  const stooqSym = toStooqSymbol(raw);
+  const url = `https://stooq.com/q/d/l/?s=${stooqSym}&i=${stooqInterval}&d1=${fmt(fromDate)}&d2=${fmt(now)}`;
 
   try {
     const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; AureoBot/1.0)',
-        'Accept': 'application/json',
-      }
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AureoBot/1.0)' }
     });
 
     if (!response.ok) {
-      console.warn(`[Candle] Yahoo HTTP ${response.status} for ${raw}`);
+      console.warn(`[Candle] Stooq HTTP ${response.status} for ${raw} (${stooqSym})`);
       return res.status(404).json({ error: `Sin datos para ${raw}` });
     }
 
-    const body = await response.json();
-    const result = body?.chart?.result?.[0];
+    const csvText = await response.text();
+    const lines = csvText.trim().split('\n');
 
-    if (!result || !result.timestamp || !result.indicators?.quote?.[0]?.close) {
-      console.warn(`[Candle] Yahoo: no data for ${raw} tf=${tf}`);
+    if (lines.length < 2) {
+      console.warn(`[Candle] Stooq: no rows for ${raw} tf=${tf}`);
       return res.status(404).json({ error: `Sin datos de velas para ${raw}` });
     }
 
-    const q      = result.indicators.quote[0];
-    const closes = q.close;
-    const timestamps = result.timestamp;
+    const rows = lines.slice(1)
+      .map(l => {
+        const p = l.split(',');
+        return {
+          date:   p[0]?.trim(),
+          open:   parseFloat(p[1]),
+          high:   parseFloat(p[2]),
+          low:    parseFloat(p[3]),
+          close:  parseFloat(p[4]),
+          volume: parseFloat(p[5]) || 0,
+        };
+      })
+      .filter(r => r.date && !isNaN(r.close) && r.close > 0)
+      .sort((a, b) => (a.date < b.date ? -1 : 1));
 
-    // Filter out null values (market closures etc.)
-    const filtered = timestamps.reduce((acc, ts, i) => {
-      if (closes[i] != null) {
-        acc.t.push(ts);
-        acc.o.push(q.open[i]   ?? closes[i]);
-        acc.h.push(q.high[i]   ?? closes[i]);
-        acc.l.push(q.low[i]    ?? closes[i]);
-        acc.c.push(closes[i]);
-        acc.v.push(q.volume[i] ?? 0);
-      }
-      return acc;
-    }, { t:[], o:[], h:[], l:[], c:[], v:[] });
-
-    if (filtered.c.length === 0) {
+    if (rows.length === 0) {
       return res.status(404).json({ error: `Sin datos de velas para ${raw}` });
     }
+
+    // Convert date strings to Unix timestamps (seconds)
+    const toTs = d => Math.floor(new Date(d).getTime() / 1000);
 
     const out = {
       symbol:     raw,
       tf,
-      timestamps: filtered.t,
-      open:       filtered.o,
-      high:       filtered.h,
-      low:        filtered.l,
-      close:      filtered.c,
-      volume:     filtered.v,
-      points:     filtered.c.length,
-      currency:   result.meta?.currency || 'USD',
+      timestamps: rows.map(r => toTs(r.date)),
+      open:       rows.map(r => r.open),
+      high:       rows.map(r => r.high),
+      low:        rows.map(r => r.low),
+      close:      rows.map(r => r.close),
+      volume:     rows.map(r => r.volume),
+      points:     rows.length,
+      currency:   'USD',
     };
 
     candleCache[cacheKey] = { data: out, ts: Date.now() };
-    console.log(`[Candle] ${raw} tf=${tf}: ${out.points} candles (Yahoo)`);
+    console.log(`[Candle] ${raw} tf=${tf}: ${out.points} candles (Stooq)`);
     res.json({ ...out, cached: false });
 
   } catch (err) {

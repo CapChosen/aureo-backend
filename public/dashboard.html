@@ -857,12 +857,16 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
   .corr-full-view, .comunidad-full-view { display: none !important; }
   html, body { overflow: hidden !important; height: 100% !important; }
 
-  /* Full-screen views shown over mobile shell */
-  .m-fullview-open .proy-full-view,
-  .m-fullview-open .news-full-view,
-  .m-fullview-open .assets-full-view,
-  .m-fullview-open .corr-full-view,
-  .m-fullview-open .comunidad-full-view { display: block !important; top: 0 !important; z-index: 500 !important; }
+  /* Only the view with .m-fv-active is shown — class toggling beats !important inline styles */
+  .m-fv-active {
+    display: block !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    position: fixed !important;
+    z-index: 500 !important;
+  }
 
   /* Mobile Shell */
   .mobile-shell {
@@ -2204,7 +2208,7 @@ async function fetchAllPrices() {
       allPricesFetched = true;
       console.log(`[AllPrices] ${data.count} precios cargados (preload_complete=${data.preload_complete})`);
       // Refresh asset grid if open
-      if (document.getElementById('assetsFullView')?.style.display !== 'none') {
+      if (((el) => el?.classList.contains('m-fv-active') || el?.style.display === 'block')(document.getElementById('assetsFullView'))) {
         filterAssetsView();
       }
     }
@@ -2253,7 +2257,7 @@ function buildTicker() {
   ).join('');
   document.getElementById('ticker-track').innerHTML = items;
   // FIX 3: Refresh asset explorer prices if open
-  if (document.getElementById('assetsFullView')?.style.display !== 'none') {
+  if (((el) => el?.classList.contains('m-fv-active') || el?.style.display === 'block')(document.getElementById('assetsFullView'))) {
     filterAssetsView();
   }
 }
@@ -3525,7 +3529,7 @@ async function fetchHistoricalData() {
     updatePortMeta();
     runSim();
     // Refrescar el explorador si está abierto
-    if (document.getElementById('assetsFullView')?.style.display !== 'none') {
+    if (((el) => el?.classList.contains('m-fv-active') || el?.style.display === 'block')(document.getElementById('assetsFullView'))) {
       filterAssetsView();
     }
   }
@@ -4336,31 +4340,21 @@ function mobileTab(tab) {
 // Open full views from mobile (noticias, comunidad, correlaciones, proyecciones)
 function mobileShowView(view) {
   if (!IS_MOBILE()) { showView(view); return; }
-  // Make full views cover full screen on mobile
-  document.body.classList.add('m-fullview-open');
-  const views = {
+  const viewMap = {
     noticias: 'newsFullView', comunidad: 'comunidadFullView',
     correlaciones: 'corrFullView', proyecciones: 'proyeccionesFullView',
     activos: 'assetsFullView'
   };
-  // Hide all full views first
-  Object.values(views).forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.style.display = 'none'; el.style.top = '0'; }
-  });
-  const target = document.getElementById(views[view]);
-  if (target) {
-    target.style.display = 'block';
-    target.style.top = '0';
-    target.style.zIndex = '500';
-  }
+  // Remove active class from all full views, then activate the target
+  Object.values(viewMap).forEach(id => document.getElementById(id)?.classList.remove('m-fv-active'));
+  document.getElementById(viewMap[view])?.classList.add('m-fv-active');
+  document.body.classList.add('m-fullview-open');
   // Load data if needed
   if (view === 'noticias'     && !window.newsFullLoaded)      { fetchAllNews(); window.newsFullLoaded = true; }
   if (view === 'activos'      && !window.assetsLoaded)        { renderAssetsExplorer(); window.assetsLoaded = true; fetchAllPrices(); }
   if (view === 'comunidad'    && !window.comLoaded)           { window.comLoaded = true; loadGroups(); loadCommunityPosts(true); }
   if (view === 'correlaciones')                                { loadCorrelations(); }
   if (view === 'proyecciones')                                 { renderProyeccionesView(); }
-  // Show back button
   showMobileBackBtn();
 }
 
@@ -4379,10 +4373,8 @@ function showMobileBackBtn() {
 
 function closeMobileFullView() {
   document.body.classList.remove('m-fullview-open');
-  ['newsFullView','comunidadFullView','corrFullView','proyeccionesFullView','assetsFullView'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
+  ['newsFullView','comunidadFullView','corrFullView','proyeccionesFullView','assetsFullView']
+    .forEach(id => document.getElementById(id)?.classList.remove('m-fv-active'));
   const btn = document.getElementById('m-back-btn');
   if (btn) btn.style.display = 'none';
 }
