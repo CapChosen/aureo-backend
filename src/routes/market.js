@@ -427,44 +427,116 @@ function toStooqSymbol(symbol) {
   return symbol.toLowerCase() + '.us';
 }
 
-// Parsea el CSV devuelto por Stooq y extrae closes ordenados
+// ────────────────────────────────────────────────────────
+// Alpha Vantage helpers — cloud-friendly, free API key
+// Env var: ALPHA_VANTAGE_KEY
+// ────────────────────────────────────────────────────────
+function isCrypto(symbol) { return symbol === 'BTC-USD' || symbol === 'ETH-USD'; }
+
+async function avMonthlyRows(symbol) {
+  const key = process.env.ALPHA_VANTAGE_KEY;
+  if (!key) return null;
+
+  let url, seriesKey, closeField;
+  if (isCrypto(symbol)) {
+    const cs = symbol.split('-')[0];
+    url        = `https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_MONTHLY&symbol=${cs}&market=USD&apikey=${key}`;
+    seriesKey  = 'Time Series (Digital Currency Monthly)';
+    closeField = '4a. close (USD)';
+  } else {
+    url        = `https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol=${encodeURIComponent(symbol)}&apikey=${key}`;
+    seriesKey  = 'Monthly Adjusted Time Series';
+    closeField = '5. adjusted close';
+  }
+
+  try {
+    const res  = await fetch(url, { headers: { 'User-Agent': 'AureoApp/1.0' } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.Note || data.Information) { console.warn(`[AV] rate-limit ${symbol}`); return null; }
+    const series = data[seriesKey];
+    if (!series) return null;
+    return Object.entries(series)
+      .map(([date, d]) => ({ date, close: parseFloat(d[closeField]) }))
+      .filter(r => !isNaN(r.close) && r.close > 0)
+      .sort((a, b) => (a.date < b.date ? -1 : 1));
+  } catch (e) {
+    console.error(`[AV] monthly ${symbol}:`, e.message);
+    return null;
+  }
+}
+
+async function avDailyRows(symbol) {
+  const key = process.env.ALPHA_VANTAGE_KEY;
+  if (!key) return null;
+
+  let url, seriesKey, isCr = isCrypto(symbol);
+  if (isCr) {
+    const cs = symbol.split('-')[0];
+    url       = `https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=${cs}&market=USD&apikey=${key}`;
+    seriesKey = 'Time Series (Digital Currency Daily)';
+  } else {
+    url       = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${encodeURIComponent(symbol)}&outputsize=compact&apikey=${key}`;
+    seriesKey = 'Time Series (Daily)';
+  }
+
+  try {
+    const res  = await fetch(url, { headers: { 'User-Agent': 'AureoApp/1.0' } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.Note || data.Information) { console.warn(`[AV] rate-limit ${symbol}`); return null; }
+    const series = data[seriesKey];
+    if (!series) return null;
+
+    return Object.entries(series)
+      .map(([date, d]) => ({
+        date,
+        open:   parseFloat(isCr ? d['1a. open (USD)']  : d['1. open']),
+        high:   parseFloat(isCr ? d['2a. high (USD)']  : d['2. high']),
+        low:    parseFloat(isCr ? d['3a. low (USD)']   : d['3. low']),
+        close:  parseFloat(isCr ? d['4a. close (USD)'] : d['5. adjusted close']),
+        volume: parseFloat(isCr ? d['5. volume']       : d['6. volume']) || 0,
+      }))
+      .filter(r => r.close > 0)
+      .sort((a, b) => (a.date < b.date ? -1 : 1));
+  } catch (e) {
+    console.error(`[AV] daily ${symbol}:`, e.message);
+    return null;
+  }
+}
+
+// Parsea el CSV devuelto por Stooq (fallback)
 function parseStooqCSV(csvText) {
   const lines = csvText.trim().split('\n');
   if (lines.length < 2) return null;
   const rows = lines.slice(1)
-    .map(l => { const p = l.split(','); return { date: p[0], close: parseFloat(p[4]) }; })
+    .map(l => { const p = l.split(','); return { date: p[0]?.trim(), close: parseFloat(p[4]) }; })
     .filter(r => r.date && !isNaN(r.close) && r.close > 0)
     .sort((a, b) => (a.date < b.date ? -1 : 1));
   return rows.length < 2 ? null : rows;
 }
 
-// Obtiene datos históricos mensuales via Stooq (gratuito, sin key, confiable en servidores)
+async function stooqMonthlyRows(symbol) {
+  try {
+    const url = `https://stooq.com/q/d/l/?s=${toStooqSymbol(symbol)}&i=m`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/csv,*/*' }, signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return null;
+    return parseStooqCSV(await res.text());
+  } catch { return null; }
+}
+
+// Obtiene datos históricos mensuales — Alpha Vantage primero, Stooq como fallback
 async function fetchHistorical(symbol) {
   const cached = historicalCache[symbol];
   if (cached && (Date.now() - cached.timestamp) < HIST_CACHE_TTL) {
     return cached.data;
   }
 
-  const stooqSym = toStooqSymbol(symbol);
-  const url = `https://stooq.com/q/d/l/?s=${stooqSym}&i=m`;
-
-  let rows;
-  try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/csv,*/*' },
-    });
-    if (!res.ok) {
-      console.warn(`[Hist] Stooq HTTP ${res.status} for ${symbol}`);
-      return null;
-    }
-    rows = parseStooqCSV(await res.text());
-  } catch (err) {
-    console.error(`[Hist] Network error ${symbol}:`, err.message);
-    return null;
-  }
+  let rows = await avMonthlyRows(symbol);
+  if (!rows) rows = await stooqMonthlyRows(symbol);
 
   if (!rows || rows.length < 12) {
-    console.log(`[Hist] Datos insuficientes Stooq ${symbol}: ${rows?.length ?? 0} pts`);
+    console.log(`[Hist] Sin datos ${symbol}: ${rows?.length ?? 0} pts`);
     return null;
   }
 
@@ -503,7 +575,7 @@ async function fetchHistorical(symbol) {
   };
 
   historicalCache[symbol] = { data: result, timestamp: Date.now() };
-  console.log(`[Hist] ${symbol} (Stooq): μ=${mu.toFixed(3)} σ=${sigma.toFixed(3)} 5y=${(return_5y * 100).toFixed(1)}% pts=${N}`);
+  console.log(`[Hist] ${symbol}: μ=${mu.toFixed(3)} σ=${sigma.toFixed(3)} 5y=${(return_5y * 100).toFixed(1)}% pts=${N}`);
   return result;
 }
 
@@ -755,75 +827,66 @@ router.get('/candle/:symbol', async (req, res) => {
     return res.json({ ...cached.data, cached: true });
   }
 
-  const now = new Date();
-  const fmt = d => d.toISOString().slice(0, 10).replace(/-/g, '');
-
-  let stooqInterval, fromDate;
-  switch (tf) {
-    case '1H': stooqInterval = 'd'; fromDate = new Date(now - 30  * 86400000); break;
-    case 'M':  stooqInterval = 'm'; fromDate = new Date(now - 5   * 365 * 86400000); break;
-    case 'Y':  stooqInterval = 'm'; fromDate = new Date(now - 10  * 365 * 86400000); break;
-    default:   stooqInterval = 'd'; fromDate = new Date(now - 365 * 86400000); break;
-  }
-
-  const stooqSym = toStooqSymbol(raw);
-  const url = `https://stooq.com/q/d/l/?s=${stooqSym}&i=${stooqInterval}&d1=${fmt(fromDate)}&d2=${fmt(now)}`;
-
   try {
-    const response = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AureoBot/1.0)' }
-    });
+    // Use monthly data for M/Y views, daily for D/1H
+    const useMonthly = (tf === 'M' || tf === 'Y');
+    let rows = useMonthly ? await avMonthlyRows(raw) : await avDailyRows(raw);
 
-    if (!response.ok) {
-      console.warn(`[Candle] Stooq HTTP ${response.status} for ${raw} (${stooqSym})`);
-      return res.status(404).json({ error: `Sin datos para ${raw}` });
+    // Fallback: Stooq (may work sporadically)
+    if (!rows) {
+      const now = new Date();
+      const fmt = d => d.toISOString().slice(0, 10).replace(/-/g, '');
+      const si   = useMonthly ? 'm' : 'd';
+      const from = useMonthly ? new Date(now - 10 * 365 * 86400000) : new Date(now - 365 * 86400000);
+      try {
+        const stooqUrl = `https://stooq.com/q/d/l/?s=${toStooqSymbol(raw)}&i=${si}&d1=${fmt(from)}&d2=${fmt(now)}`;
+        const sr = await fetch(stooqUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) });
+        if (sr.ok) {
+          const csv = await sr.text();
+          const lines = csv.trim().split('\n');
+          if (lines.length >= 2) {
+            rows = lines.slice(1).map(l => {
+              const p = l.split(',');
+              return { date: p[0]?.trim(), open: parseFloat(p[1]), high: parseFloat(p[2]), low: parseFloat(p[3]), close: parseFloat(p[4]), volume: parseFloat(p[5]) || 0 };
+            }).filter(r => r.date && r.close > 0).sort((a, b) => a.date < b.date ? -1 : 1);
+          }
+        }
+      } catch { /* Stooq blocked, no fallback available */ }
     }
 
-    const csvText = await response.text();
-    const lines = csvText.trim().split('\n');
+    // For 1H tf filter to last 30 days of daily data, for D filter to last 365 days
+    if (rows && tf === '1H') {
+      const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+      rows = rows.filter(r => r.date >= cutoff);
+    } else if (rows && tf === 'D') {
+      const cutoff = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
+      rows = rows.filter(r => r.date >= cutoff);
+    } else if (rows && tf === 'M') {
+      const cutoff = new Date(Date.now() - 5 * 365 * 86400000).toISOString().slice(0, 10);
+      rows = rows.filter(r => r.date >= cutoff);
+    }
 
-    if (lines.length < 2) {
-      console.warn(`[Candle] Stooq: no rows for ${raw} tf=${tf}`);
+    if (!rows || rows.length === 0) {
+      console.warn(`[Candle] No data for ${raw} tf=${tf}`);
       return res.status(404).json({ error: `Sin datos de velas para ${raw}` });
     }
 
-    const rows = lines.slice(1)
-      .map(l => {
-        const p = l.split(',');
-        return {
-          date:   p[0]?.trim(),
-          open:   parseFloat(p[1]),
-          high:   parseFloat(p[2]),
-          low:    parseFloat(p[3]),
-          close:  parseFloat(p[4]),
-          volume: parseFloat(p[5]) || 0,
-        };
-      })
-      .filter(r => r.date && !isNaN(r.close) && r.close > 0)
-      .sort((a, b) => (a.date < b.date ? -1 : 1));
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: `Sin datos de velas para ${raw}` });
-    }
-
-    // Convert date strings to Unix timestamps (seconds)
     const toTs = d => Math.floor(new Date(d).getTime() / 1000);
-
     const out = {
       symbol:     raw,
       tf,
       timestamps: rows.map(r => toTs(r.date)),
-      open:       rows.map(r => r.open),
-      high:       rows.map(r => r.high),
-      low:        rows.map(r => r.low),
+      open:       rows.map(r => r.open  ?? r.close),
+      high:       rows.map(r => r.high  ?? r.close),
+      low:        rows.map(r => r.low   ?? r.close),
       close:      rows.map(r => r.close),
-      volume:     rows.map(r => r.volume),
+      volume:     rows.map(r => r.volume ?? 0),
       points:     rows.length,
       currency:   'USD',
     };
 
     candleCache[cacheKey] = { data: out, ts: Date.now() };
-    console.log(`[Candle] ${raw} tf=${tf}: ${out.points} candles (Stooq)`);
+    console.log(`[Candle] ${raw} tf=${tf}: ${out.points} candles (AV)`);
     res.json({ ...out, cached: false });
 
   } catch (err) {
