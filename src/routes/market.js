@@ -428,100 +428,84 @@ function toStooqSymbol(symbol) {
 }
 
 // ────────────────────────────────────────────────────────
-// Alpha Vantage helpers — cloud-friendly, free API key
-// Env var: ALPHA_VANTAGE_KEY
-// Free plan: 25 req/day, 5 req/min → serialize with 13s gap
-// NOTE: _ADJUSTED endpoints removed from free plan (Jun 2023)
+// Twelve Data — cloud-friendly, unified endpoint for stocks+crypto
+// Env var: TWELVE_DATA_KEY  (get free key at twelvedata.com)
+// Free: 800 calls/day, 8 calls/min → 7.5s between calls
+// Basic ($8/mo): 120 calls/min → remove delay, instant correlations
 // ────────────────────────────────────────────────────────
 function isCrypto(symbol) { return symbol === 'BTC-USD' || symbol === 'ETH-USD'; }
 
-// Rate limiter: ensures max 5 AV calls/min regardless of concurrency
-let _avNextTs = 0;
-const AV_INTERVAL = 13000; // 13s between calls ≈ 4.6 calls/min (safely under limit)
+// Map internal symbol → Twelve Data symbol
+function toTdSymbol(symbol) {
+  if (symbol === 'BTC-USD') return 'BTC/USD';
+  if (symbol === 'ETH-USD') return 'ETH/USD';
+  return symbol;
+}
 
-async function avGet(url) {
-  const now = Date.now();
-  if (now < _avNextTs) await new Promise(r => setTimeout(r, _avNextTs - now));
-  _avNextTs = Math.max(_avNextTs, Date.now()) + AV_INTERVAL;
+// Rate limiter: max 8 TD calls/min (free plan). Set TD_PREMIUM=1 in Railway to skip delay.
+let _tdNextTs = 0;
+const TD_INTERVAL = process.env.TD_PREMIUM ? 200 : 8000;
+
+async function tdGet(url) {
+  if (!process.env.TD_PREMIUM) {
+    const now = Date.now();
+    if (now < _tdNextTs) await new Promise(r => setTimeout(r, _tdNextTs - now));
+    _tdNextTs = Math.max(_tdNextTs, Date.now()) + TD_INTERVAL;
+  }
   return fetch(url, { headers: { 'User-Agent': 'AureoApp/1.0' } });
 }
 
 async function avMonthlyRows(symbol) {
-  const key = process.env.ALPHA_VANTAGE_KEY;
+  const key = process.env.TWELVE_DATA_KEY;
   if (!key) return null;
 
-  let url, seriesKey, closeField;
-  if (isCrypto(symbol)) {
-    const cs = symbol.split('-')[0];
-    url        = `https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_MONTHLY&symbol=${cs}&market=USD&apikey=${key}`;
-    seriesKey  = 'Time Series (Digital Currency Monthly)';
-    closeField = '4a. close (USD)';
-  } else {
-    // Use non-adjusted endpoint — _ADJUSTED is premium-only since Jun 2023
-    url        = `https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol=${encodeURIComponent(symbol)}&apikey=${key}`;
-    seriesKey  = 'Monthly Time Series';
-    closeField = '4. close';
-  }
-
+  const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(toTdSymbol(symbol))}&interval=1month&outputsize=120&apikey=${key}`;
   try {
-    const res  = await avGet(url);
+    const res  = await tdGet(url);
     if (!res.ok) return null;
     const data = await res.json();
-    if (data.Note || data.Information) {
-      console.warn(`[AV] blocked for ${symbol}:`, data.Note || data.Information);
+    if (data.status === 'error' || data.code) {
+      console.warn(`[TD] monthly ${symbol}:`, data.message);
       return null;
     }
-    const series = data[seriesKey];
-    if (!series) { console.warn(`[AV] no series key "${seriesKey}" for ${symbol}. Keys:`, Object.keys(data)); return null; }
-    return Object.entries(series)
-      .map(([date, d]) => ({ date, close: parseFloat(d[closeField]) }))
+    if (!data.values?.length) return null;
+    return data.values
+      .map(d => ({ date: d.datetime, close: parseFloat(d.close) }))
       .filter(r => !isNaN(r.close) && r.close > 0)
       .sort((a, b) => (a.date < b.date ? -1 : 1));
   } catch (e) {
-    console.error(`[AV] monthly ${symbol}:`, e.message);
+    console.error(`[TD] monthly ${symbol}:`, e.message);
     return null;
   }
 }
 
 async function avDailyRows(symbol) {
-  const key = process.env.ALPHA_VANTAGE_KEY;
+  const key = process.env.TWELVE_DATA_KEY;
   if (!key) return null;
 
-  let url, seriesKey, isCr = isCrypto(symbol);
-  if (isCr) {
-    const cs = symbol.split('-')[0];
-    url       = `https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=${cs}&market=USD&apikey=${key}`;
-    seriesKey = 'Time Series (Digital Currency Daily)';
-  } else {
-    // Use non-adjusted endpoint — _ADJUSTED is premium-only since Jun 2023
-    url       = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(symbol)}&outputsize=compact&apikey=${key}`;
-    seriesKey = 'Time Series (Daily)';
-  }
-
+  const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(toTdSymbol(symbol))}&interval=1day&outputsize=365&apikey=${key}`;
   try {
-    const res  = await avGet(url);
+    const res  = await tdGet(url);
     if (!res.ok) return null;
     const data = await res.json();
-    if (data.Note || data.Information) {
-      console.warn(`[AV] blocked for ${symbol}:`, data.Note || data.Information);
+    if (data.status === 'error' || data.code) {
+      console.warn(`[TD] daily ${symbol}:`, data.message);
       return null;
     }
-    const series = data[seriesKey];
-    if (!series) { console.warn(`[AV] no series key "${seriesKey}" for ${symbol}. Keys:`, Object.keys(data)); return null; }
-
-    return Object.entries(series)
-      .map(([date, d]) => ({
-        date,
-        open:   parseFloat(isCr ? d['1a. open (USD)']  : d['1. open']),
-        high:   parseFloat(isCr ? d['2a. high (USD)']  : d['2. high']),
-        low:    parseFloat(isCr ? d['3a. low (USD)']   : d['3. low']),
-        close:  parseFloat(isCr ? d['4a. close (USD)'] : d['4. close']),
-        volume: parseFloat(isCr ? d['5. volume']       : d['5. volume']) || 0,
+    if (!data.values?.length) return null;
+    return data.values
+      .map(d => ({
+        date:   d.datetime,
+        open:   parseFloat(d.open),
+        high:   parseFloat(d.high),
+        low:    parseFloat(d.low),
+        close:  parseFloat(d.close),
+        volume: parseFloat(d.volume) || 0,
       }))
       .filter(r => r.close > 0)
       .sort((a, b) => (a.date < b.date ? -1 : 1));
   } catch (e) {
-    console.error(`[AV] daily ${symbol}:`, e.message);
+    console.error(`[TD] daily ${symbol}:`, e.message);
     return null;
   }
 }
