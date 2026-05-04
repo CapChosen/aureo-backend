@@ -430,8 +430,21 @@ function toStooqSymbol(symbol) {
 // ────────────────────────────────────────────────────────
 // Alpha Vantage helpers — cloud-friendly, free API key
 // Env var: ALPHA_VANTAGE_KEY
+// Free plan: 25 req/day, 5 req/min → serialize with 13s gap
+// NOTE: _ADJUSTED endpoints removed from free plan (Jun 2023)
 // ────────────────────────────────────────────────────────
 function isCrypto(symbol) { return symbol === 'BTC-USD' || symbol === 'ETH-USD'; }
+
+// Rate limiter: ensures max 5 AV calls/min regardless of concurrency
+let _avNextTs = 0;
+const AV_INTERVAL = 13000; // 13s between calls ≈ 4.6 calls/min (safely under limit)
+
+async function avGet(url) {
+  const now = Date.now();
+  if (now < _avNextTs) await new Promise(r => setTimeout(r, _avNextTs - now));
+  _avNextTs = Math.max(_avNextTs, Date.now()) + AV_INTERVAL;
+  return fetch(url, { headers: { 'User-Agent': 'AureoApp/1.0' } });
+}
 
 async function avMonthlyRows(symbol) {
   const key = process.env.ALPHA_VANTAGE_KEY;
@@ -444,18 +457,22 @@ async function avMonthlyRows(symbol) {
     seriesKey  = 'Time Series (Digital Currency Monthly)';
     closeField = '4a. close (USD)';
   } else {
-    url        = `https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol=${encodeURIComponent(symbol)}&apikey=${key}`;
-    seriesKey  = 'Monthly Adjusted Time Series';
-    closeField = '5. adjusted close';
+    // Use non-adjusted endpoint — _ADJUSTED is premium-only since Jun 2023
+    url        = `https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol=${encodeURIComponent(symbol)}&apikey=${key}`;
+    seriesKey  = 'Monthly Time Series';
+    closeField = '4. close';
   }
 
   try {
-    const res  = await fetch(url, { headers: { 'User-Agent': 'AureoApp/1.0' } });
+    const res  = await avGet(url);
     if (!res.ok) return null;
     const data = await res.json();
-    if (data.Note || data.Information) { console.warn(`[AV] rate-limit ${symbol}`); return null; }
+    if (data.Note || data.Information) {
+      console.warn(`[AV] blocked for ${symbol}:`, data.Note || data.Information);
+      return null;
+    }
     const series = data[seriesKey];
-    if (!series) return null;
+    if (!series) { console.warn(`[AV] no series key "${seriesKey}" for ${symbol}. Keys:`, Object.keys(data)); return null; }
     return Object.entries(series)
       .map(([date, d]) => ({ date, close: parseFloat(d[closeField]) }))
       .filter(r => !isNaN(r.close) && r.close > 0)
@@ -476,17 +493,21 @@ async function avDailyRows(symbol) {
     url       = `https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_DAILY&symbol=${cs}&market=USD&apikey=${key}`;
     seriesKey = 'Time Series (Digital Currency Daily)';
   } else {
-    url       = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${encodeURIComponent(symbol)}&outputsize=compact&apikey=${key}`;
+    // Use non-adjusted endpoint — _ADJUSTED is premium-only since Jun 2023
+    url       = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(symbol)}&outputsize=compact&apikey=${key}`;
     seriesKey = 'Time Series (Daily)';
   }
 
   try {
-    const res  = await fetch(url, { headers: { 'User-Agent': 'AureoApp/1.0' } });
+    const res  = await avGet(url);
     if (!res.ok) return null;
     const data = await res.json();
-    if (data.Note || data.Information) { console.warn(`[AV] rate-limit ${symbol}`); return null; }
+    if (data.Note || data.Information) {
+      console.warn(`[AV] blocked for ${symbol}:`, data.Note || data.Information);
+      return null;
+    }
     const series = data[seriesKey];
-    if (!series) return null;
+    if (!series) { console.warn(`[AV] no series key "${seriesKey}" for ${symbol}. Keys:`, Object.keys(data)); return null; }
 
     return Object.entries(series)
       .map(([date, d]) => ({
@@ -494,8 +515,8 @@ async function avDailyRows(symbol) {
         open:   parseFloat(isCr ? d['1a. open (USD)']  : d['1. open']),
         high:   parseFloat(isCr ? d['2a. high (USD)']  : d['2. high']),
         low:    parseFloat(isCr ? d['3a. low (USD)']   : d['3. low']),
-        close:  parseFloat(isCr ? d['4a. close (USD)'] : d['5. adjusted close']),
-        volume: parseFloat(isCr ? d['5. volume']       : d['6. volume']) || 0,
+        close:  parseFloat(isCr ? d['4a. close (USD)'] : d['4. close']),
+        volume: parseFloat(isCr ? d['5. volume']       : d['5. volume']) || 0,
       }))
       .filter(r => r.close > 0)
       .sort((a, b) => (a.date < b.date ? -1 : 1));
@@ -595,8 +616,9 @@ router.get('/historical/batch', requireAuth, async (req, res) => {
   }
 
   const results = {};
-  // Yahoo Finance no tiene rate-limit documentado → paralelo puro
-  const batchData = await Promise.all(symbols.map(s => fetchHistorical(s)));
+  // Sequential — AV rate limit is 5/min; avGet() serializes internally
+  const batchData = [];
+  for (const s of symbols) batchData.push(await fetchHistorical(s));
   symbols.forEach((s, idx) => {
     const d = batchData[idx];
     if (d) {
@@ -680,9 +702,8 @@ router.get('/correlations', requireAuth, async (req, res) => {
   const allSyms = symbols.includes('SPY') ? symbols : ['SPY', ...symbols];
 
   const results = {};
-  // Yahoo Finance: paralelo puro, sin delays
-  const fetched = await Promise.all(allSyms.map(s => fetchHistorical(s)));
-  allSyms.forEach((s, i) => { if (fetched[i]) results[s] = fetched[i]; });
+  // Sequential — AV rate limit is 5/min; avGet() serializes internally
+  for (const s of allSyms) { const h = await fetchHistorical(s); if (h) results[s] = h; }
 
   // Full NxN correlation matrix (only for the requested symbols)
   const matrix = {};
