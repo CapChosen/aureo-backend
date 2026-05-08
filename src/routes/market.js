@@ -936,6 +936,33 @@ router.get('/candle/:symbol', async (req, res) => {
   }
 });
 
+// ════════════════════════════════════════════════════════
+// GET /api/market/test-td — diagnóstico Twelve Data (sin auth)
+// ════════════════════════════════════════════════════════
+router.get('/test-td', async (_req, res) => {
+  const key = process.env.TWELVE_DATA_KEY;
+  if (!key) return res.json({ ok: false, error: 'TWELVE_DATA_KEY no está en las variables de entorno' });
+
+  try {
+    const url = `https://api.twelvedata.com/time_series?symbol=SPY&interval=1day&outputsize=5&apikey=${key}`;
+    const r    = await fetch(url, { headers: { 'User-Agent': 'AureoTest/1.0' } });
+    const data = await r.json();
+
+    if (data.status === 'error' || data.code) {
+      return res.json({ ok: false, td_error: data.message || data.code, raw: data });
+    }
+    const pts = data.values?.length ?? 0;
+    return res.json({
+      ok:      pts > 0,
+      points:  pts,
+      sample:  data.values?.[0],
+      key_prefix: key.slice(0, 6) + '...',
+    });
+  } catch (e) {
+    return res.json({ ok: false, error: e.message });
+  }
+});
+
 module.exports = router;
 // Exportar para uso en cachedMetrics.js (fallback on-demand)
 module.exports.fetchHistorical = fetchHistorical;
