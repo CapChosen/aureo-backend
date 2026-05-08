@@ -1,4 +1,5 @@
-const express = require('express');
+const express  = require('express');
+const supabase  = require('../lib/supabase');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -530,14 +531,31 @@ async function stooqMonthlyRows(symbol) {
   } catch { return null; }
 }
 
-// Obtiene datos históricos mensuales — Alpha Vantage primero, Stooq como fallback
+// Obtiene datos históricos mensuales — Supabase cache → TD → Stooq
 async function fetchHistorical(symbol) {
   const cached = historicalCache[symbol];
   if (cached && (Date.now() - cached.timestamp) < HIST_CACHE_TTL) {
     return cached.data;
   }
 
-  let rows = await avMonthlyRows(symbol);
+  // 1. Supabase asset_price_history (rápido, sin rate limit — llenado por job nocturno)
+  let rows = null;
+  try {
+    const { data: dbRows } = await supabase
+      .from('asset_price_history')
+      .select('date, close')
+      .eq('symbol', symbol)
+      .order('date', { ascending: true })
+      .limit(120);
+    if (dbRows?.length >= 12) {
+      rows = dbRows.map(r => ({ date: r.date, close: parseFloat(r.close) }));
+      console.log(`[Hist] ${symbol}: ${rows.length} pts (Supabase cache)`);
+    }
+  } catch { /* ignorar error de DB, continuar con APIs externas */ }
+
+  // 2. Twelve Data (rate-limited, 8/min free)
+  if (!rows) rows = await avMonthlyRows(symbol);
+  // 3. Stooq (fallback)
   if (!rows) rows = await stooqMonthlyRows(symbol);
 
   if (!rows || rows.length < 12) {
@@ -833,11 +851,33 @@ router.get('/candle/:symbol', async (req, res) => {
   }
 
   try {
-    // Use monthly data for M/Y views, daily for D/1H
     const useMonthly = (tf === 'M' || tf === 'Y');
-    let rows = useMonthly ? await avMonthlyRows(raw) : await avDailyRows(raw);
+    let rows = null;
+    let source = '?';
 
-    // Fallback: Stooq (may work sporadically)
+    // 1. Supabase asset_price_history (sin rate limit — mejor fuente si el job corrió)
+    try {
+      const cutoffDb = new Date(Date.now() - (useMonthly ? 10 : 2) * 365 * 86400000)
+        .toISOString().slice(0, 10);
+      const { data: dbRows } = await supabase
+        .from('asset_price_history')
+        .select('date, close')
+        .eq('symbol', raw)
+        .gte('date', cutoffDb)
+        .order('date', { ascending: true });
+      if (dbRows?.length >= 5) {
+        rows   = dbRows.map(r => ({ date: r.date, close: parseFloat(r.close) }));
+        source = 'Supabase';
+      }
+    } catch { /* ignorar */ }
+
+    // 2. Twelve Data (rate-limited)
+    if (!rows) {
+      rows   = useMonthly ? await avMonthlyRows(raw) : await avDailyRows(raw);
+      source = 'TwelveData';
+    }
+
+    // 3. Stooq (fallback esporádico)
     if (!rows) {
       const now = new Date();
       const fmt = d => d.toISOString().slice(0, 10).replace(/-/g, '');
@@ -847,27 +887,23 @@ router.get('/candle/:symbol', async (req, res) => {
         const stooqUrl = `https://stooq.com/q/d/l/?s=${toStooqSymbol(raw)}&i=${si}&d1=${fmt(from)}&d2=${fmt(now)}`;
         const sr = await fetch(stooqUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) });
         if (sr.ok) {
-          const csv = await sr.text();
-          const lines = csv.trim().split('\n');
+          const lines = (await sr.text()).trim().split('\n');
           if (lines.length >= 2) {
             rows = lines.slice(1).map(l => {
               const p = l.split(',');
               return { date: p[0]?.trim(), open: parseFloat(p[1]), high: parseFloat(p[2]), low: parseFloat(p[3]), close: parseFloat(p[4]), volume: parseFloat(p[5]) || 0 };
             }).filter(r => r.date && r.close > 0).sort((a, b) => a.date < b.date ? -1 : 1);
+            source = 'Stooq';
           }
         }
-      } catch { /* Stooq blocked, no fallback available */ }
+      } catch { /* Stooq blocked */ }
     }
 
-    // For 1H tf filter to last 30 days of daily data, for D filter to last 365 days
-    if (rows && tf === '1H') {
-      const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-      rows = rows.filter(r => r.date >= cutoff);
-    } else if (rows && tf === 'D') {
-      const cutoff = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
-      rows = rows.filter(r => r.date >= cutoff);
-    } else if (rows && tf === 'M') {
-      const cutoff = new Date(Date.now() - 5 * 365 * 86400000).toISOString().slice(0, 10);
+    // Filtrar al rango del timeframe
+    if (rows) {
+      const cutoffs = { '1H': 30, 'D': 365, 'M': 5 * 365, 'Y': 10 * 365 };
+      const days = cutoffs[tf] ?? 365;
+      const cutoff = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
       rows = rows.filter(r => r.date >= cutoff);
     }
 
@@ -891,7 +927,7 @@ router.get('/candle/:symbol', async (req, res) => {
     };
 
     candleCache[cacheKey] = { data: out, ts: Date.now() };
-    console.log(`[Candle] ${raw} tf=${tf}: ${out.points} candles (AV)`);
+    console.log(`[Candle] ${raw} tf=${tf}: ${out.points} pts (${source})`);
     res.json({ ...out, cached: false });
 
   } catch (err) {

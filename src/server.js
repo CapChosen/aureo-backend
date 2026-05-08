@@ -105,17 +105,42 @@ app.use('/api',           cachedMetricsRoutes);
 // ════════════════════════════════════════════════════════
 app.get('/api/cache/status', async (_req, res) => {
   const supabase = require('./lib/supabase');
-  const [{ count: symbolsCached }, { count: corrPairs }] = await Promise.all([
+  const [{ count: symbolsCached }, { count: corrPairs }, { count: priceRows }] = await Promise.all([
     supabase.from('asset_metrics_cache').select('*', { count: 'exact', head: true }),
     supabase.from('correlation_cache').select('*', { count: 'exact', head: true }),
+    supabase.from('asset_price_history').select('*', { count: 'exact', head: true }),
   ]);
   const { lastJobRun, lastJobStats } = getLastRun();
   res.json({
     symbols_cached:    symbolsCached ?? 0,
     correlation_pairs: corrPairs    ?? 0,
+    price_history_rows: priceRows   ?? 0,
     last_job_run:      lastJobRun,
     last_job_stats:    lastJobStats,
     ws_connected:      realtimePrices.connected,
+    td_key_set:        !!process.env.TWELVE_DATA_KEY,
+  });
+});
+
+// ════════════════════════════════════════════════════════
+// Trigger manual del job nocturno (sin auth — solo debug)
+// POST /api/cache/run-job
+// ════════════════════════════════════════════════════════
+let _jobRunning = false;
+app.post('/api/cache/run-job', (req, res) => {
+  if (_jobRunning) {
+    return res.json({ status: 'already_running', message: 'Job ya en ejecución. Verificar progreso en /api/cache/status' });
+  }
+  _jobRunning = true;
+  const startedAt = new Date().toISOString();
+  runNightlyRefresh()
+    .then(() => { _jobRunning = false; })
+    .catch(err => { console.error('[ManualJob] Error:', err.message); _jobRunning = false; });
+  res.json({
+    status:    'started',
+    message:   'Job iniciado en background. Verificar progreso en /api/cache/status',
+    started_at: startedAt,
+    note:      process.env.TWELVE_DATA_KEY ? 'TWELVE_DATA_KEY detectada' : 'TWELVE_DATA_KEY no encontrada — job fallará',
   });
 });
 

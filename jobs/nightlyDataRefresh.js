@@ -90,17 +90,32 @@ function betaVsSpy(assetReturns, spyReturns) {
   return varSpy > 1e-12 ? parseFloat((cov / varSpy).toFixed(4)) : null;
 }
 
+// ── Rate limiter Twelve Data (free: 8/min, premium: sin límite) ──
+let _tdNext = 0;
+const TD_INTERVAL = process.env.TD_PREMIUM ? 500 : 8000; // 8s → 7.5 calls/min
+
+async function tdFetch(url) {
+  const now = Date.now();
+  if (now < _tdNext) {
+    const wait = _tdNext - now;
+    process.stdout.write(`\r[Nightly] Esperando rate limit TD (${(wait/1000).toFixed(1)}s)...   `);
+    await new Promise(r => setTimeout(r, wait));
+  }
+  _tdNext = Math.max(_tdNext, Date.now()) + TD_INTERVAL;
+  return fetch(url, { headers: { 'User-Agent': 'AureoJob/1.0' } });
+}
+
 // ── Fetch datos históricos mensuales ────────────────────
 async function fetchFinnhub(symbol) {
+  if (!FINNHUB_KEY) return null;
   const to   = Math.floor(Date.now() / 1000);
   const from = to - 5 * 365 * 24 * 3600;
   const fSym = FINNHUB_MAP[symbol] || symbol;
   const url  = `https://finnhub.io/api/v1/stock/candle?symbol=${encodeURIComponent(fSym)}&resolution=M&from=${from}&to=${to}&token=${FINNHUB_KEY}`;
   try {
-    const res  = await fetch(url);
+    const res  = await fetch(url, { headers: { 'User-Agent': 'AureoJob/1.0' } });
     const data = await res.json();
     if (data.s !== 'ok' || !data.c?.length) return null;
-    // Combinar timestamps con closes para upsert en price_history
     return data.c.map((close, i) => ({
       date:  new Date(data.t[i] * 1000).toISOString().slice(0, 10),
       close: parseFloat(close),
@@ -113,14 +128,21 @@ async function fetchTwelveData(symbol) {
   const tdSym = TD_MAP[symbol] || symbol;
   const url   = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(tdSym)}&interval=1month&outputsize=120&apikey=${TD_KEY}`;
   try {
-    const res  = await fetch(url);
+    const res  = await tdFetch(url); // rate-limited
     const data = await res.json();
-    if (data.status === 'error' || !data.values?.length) return null;
+    if (data.status === 'error' || data.code === 429) {
+      console.warn(`\n[Nightly] TD rate limit hit for ${symbol}:`, data.message);
+      return null;
+    }
+    if (!data.values?.length) return null;
     return data.values
       .map(d => ({ date: d.datetime, close: parseFloat(d.close) }))
       .filter(r => r.close > 0)
       .sort((a, b) => a.date < b.date ? -1 : 1);
-  } catch { return null; }
+  } catch (e) {
+    console.warn(`\n[Nightly] TD fetch error ${symbol}:`, e.message);
+    return null;
+  }
 }
 
 async function fetchMonthly(symbol) {
@@ -183,23 +205,22 @@ async function runNightlyRefresh() {
   const historical = {}; // symbol → [{ date, close }]
   let ok = 0, fail = 0;
 
-  const BATCH = 8, DELAY = 1200;
+  // Secuencial — el rate limiter de tdFetch garantiza ≤8 llamadas/min a TD
+  for (let i = 0; i < SYMBOLS.length; i++) {
+    const sym  = SYMBOLS[i];
+    const rows = await fetchMonthly(sym);
 
-  for (let i = 0; i < SYMBOLS.length; i += BATCH) {
-    const batch = SYMBOLS.slice(i, i + BATCH);
-
-    await Promise.all(batch.map(async sym => {
-      const rows = await fetchMonthly(sym);
-      if (!rows) { fail++; return; }
+    if (!rows) {
+      fail++;
+    } else {
       historical[sym] = rows;
       await upsertPriceHistory(sym, rows);
       ok++;
-    }));
-
-    if ((i / BATCH) % 2 === 1 || i + BATCH >= SYMBOLS.length) {
-      console.log(`[Nightly] Progreso: ${Math.min(i + BATCH, SYMBOLS.length)}/${SYMBOLS.length} — OK: ${ok}, Err: ${fail}`);
     }
-    if (i + BATCH < SYMBOLS.length) await new Promise(r => setTimeout(r, DELAY));
+
+    if ((i + 1) % 10 === 0 || i + 1 === SYMBOLS.length) {
+      console.log(`\n[Nightly] ${i + 1}/${SYMBOLS.length} — OK: ${ok}, Err: ${fail}`);
+    }
   }
 
   // ── Calcular métricas ──────────────────────────────────
