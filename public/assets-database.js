@@ -328,5 +328,6 @@ const ASSETS_DB = {
 // Total: 250+ activos listados arriba
 // Puedes extender a 500+ siguiendo el mismo patrón
 
-// NO usar export - dejar ASSETS_DB como variable global
+// Exportar en entornos Node.js (jobs, tests) sin romper el browser
+if (typeof module !== 'undefined' && module.exports) module.exports = ASSETS_DB;
 // Se carga automáticamente cuando se incluye el script en dashboard.html

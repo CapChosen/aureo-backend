@@ -901,3 +901,5 @@ router.get('/candle/:symbol', async (req, res) => {
 });
 
 module.exports = router;
+// Exportar para uso en cachedMetrics.js (fallback on-demand)
+module.exports.fetchHistorical = fetchHistorical;

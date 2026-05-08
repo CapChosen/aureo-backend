@@ -3,13 +3,18 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
-const aiRoutes = require('./routes/ai');
-const portfolioRoutes = require('./routes/portfolio');
-const userRoutes = require('./routes/user');
-const marketRoutes = require('./routes/market');
-const newsRoutes = require('./routes/news');
-const communityRoutes = require('./routes/community');
-const brokerRoutes    = require('./routes/broker');
+const aiRoutes           = require('./routes/ai');
+const portfolioRoutes    = require('./routes/portfolio');
+const userRoutes         = require('./routes/user');
+const marketRoutes       = require('./routes/market');
+const newsRoutes         = require('./routes/news');
+const communityRoutes    = require('./routes/community');
+const brokerRoutes       = require('./routes/broker');
+const cachedMetricsRoutes = require('./routes/cachedMetrics');
+
+const cron               = require('node-cron');
+const { runNightlyRefresh, getLastRun } = require('../jobs/nightlyDataRefresh');
+const realtimePrices     = require('./services/realtimePrices');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -93,6 +98,26 @@ app.use('/api/market', marketRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/broker',    brokerRoutes);
+app.use('/api',           cachedMetricsRoutes);
+
+// ════════════════════════════════════════════════════════
+// Cache status (sin auth — monitoreo operacional)
+// ════════════════════════════════════════════════════════
+app.get('/api/cache/status', async (_req, res) => {
+  const supabase = require('./lib/supabase');
+  const [{ count: symbolsCached }, { count: corrPairs }] = await Promise.all([
+    supabase.from('asset_metrics_cache').select('*', { count: 'exact', head: true }),
+    supabase.from('correlation_cache').select('*', { count: 'exact', head: true }),
+  ]);
+  const { lastJobRun, lastJobStats } = getLastRun();
+  res.json({
+    symbols_cached:    symbolsCached ?? 0,
+    correlation_pairs: corrPairs    ?? 0,
+    last_job_run:      lastJobRun,
+    last_job_stats:    lastJobStats,
+    ws_connected:      realtimePrices.connected,
+  });
+});
 
 // ════════════════════════════════════════════════════════
 // Fallback: servir dashboard para rutas no-API
@@ -126,6 +151,18 @@ app.listen(PORT, () => {
     console.log(`  ✦ Dashboard  : http://localhost:${PORT}`);
     console.log(`  ✦ Health     : http://localhost:${PORT}/health`);
     console.log(`  ✦ Market API : http://localhost:${PORT}/api/market/ticker`);
+    console.log(`  ✦ Cache stat : http://localhost:${PORT}/api/cache/status`);
   }
+  console.log('');
+
+  // ── Servicio WebSocket de precios en tiempo real ──────
+  realtimePrices.connect();
+
+  // ── Job nocturno: 5 AM UTC (= 2 AM Santiago) ─────────
+  cron.schedule('0 5 * * *', () => {
+    console.log('[Cron] Ejecutando nightlyDataRefresh...');
+    runNightlyRefresh().catch(err => console.error('[Cron] Error:', err.message));
+  });
+  console.log('  ✦ Cron job   : nightly refresh activo (05:00 UTC)');
   console.log('');
 });
