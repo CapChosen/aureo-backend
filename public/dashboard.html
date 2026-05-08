@@ -3614,6 +3614,7 @@ async function loadChartData(tf, btn) {
     if (!res.ok || !data.close || data.close.length === 0) {
       loading.style.display = 'none';
       errEl.style.display = 'flex';
+      errEl.textContent = `Sin datos (HTTP ${res.status} · close:${data.close?.length ?? 'null'} · pts:${data.points ?? '?'})`;
       return;
     }
 
@@ -3696,6 +3697,7 @@ async function loadChartData(tf, btn) {
     console.error('[Chart]', err);
     loading.style.display = 'none';
     errEl.style.display = 'flex';
+    errEl.textContent = 'JS Error: ' + err.message;
   }
 }
 
