@@ -511,6 +511,24 @@ async function avDailyRows(symbol) {
   }
 }
 
+// Weekly rows para el timeframe Semanal
+async function avWeeklyRows(symbol) {
+  const key = process.env.TWELVE_DATA_KEY;
+  if (!key) return null;
+  const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(toTdSymbol(symbol))}&interval=1week&outputsize=260&apikey=${key}`;
+  try {
+    const res  = await tdGet(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.status === 'error' || data.code) { console.warn(`[TD] weekly ${symbol}:`, data.message); return null; }
+    if (!data.values?.length) return null;
+    return data.values
+      .map(d => ({ date: d.datetime, open: parseFloat(d.open), high: parseFloat(d.high), low: parseFloat(d.low), close: parseFloat(d.close), volume: parseFloat(d.volume) || 0 }))
+      .filter(r => r.close > 0)
+      .sort((a, b) => (a.date < b.date ? -1 : 1));
+  } catch (e) { console.error(`[TD] weekly ${symbol}:`, e.message); return null; }
+}
+
 // Parsea el CSV devuelto por Stooq (fallback)
 function parseStooqCSV(csvText) {
   const lines = csvText.trim().split('\n');
@@ -851,14 +869,15 @@ router.get('/candle/:symbol', async (req, res) => {
   }
 
   try {
-    const useMonthly = (tf === 'M' || tf === 'Y');
-    let rows = null;
-    let source = '?';
+    // tf: D=diario 1y, S=semanal 2y, M=mensual 3y, 1A=mensual 1y, 5A=mensual 5y
+    const isMonthly = ['M', '1A', '5A', 'Y'].includes(tf);
+    const isWeekly  = tf === 'S';
+    let rows = null, source = '?';
 
-    // 1. Supabase asset_price_history (sin rate limit — mejor fuente si el job corrió)
+    // Rango para la consulta Supabase (monthly data only in DB)
+    const dbDays = isMonthly ? 10 * 365 : 2 * 365;
     try {
-      const cutoffDb = new Date(Date.now() - (useMonthly ? 10 : 2) * 365 * 86400000)
-        .toISOString().slice(0, 10);
+      const cutoffDb = new Date(Date.now() - dbDays * 86400000).toISOString().slice(0, 10);
       const { data: dbRows } = await supabase
         .from('asset_price_history')
         .select('date, close')
@@ -871,39 +890,39 @@ router.get('/candle/:symbol', async (req, res) => {
       }
     } catch { /* ignorar */ }
 
-    // 2. Twelve Data (rate-limited)
+    // Twelve Data: elegir resolución correcta
     if (!rows) {
-      rows   = useMonthly ? await avMonthlyRows(raw) : await avDailyRows(raw);
-      source = 'TwelveData';
+      if (isWeekly)       rows = await avWeeklyRows(raw);
+      else if (isMonthly) rows = await avMonthlyRows(raw);
+      else                rows = await avDailyRows(raw);
+      if (rows) source = 'TwelveData';
     }
 
-    // 3. Stooq (fallback esporádico)
+    // Stooq fallback (mensual/diario)
     if (!rows) {
       const now = new Date();
       const fmt = d => d.toISOString().slice(0, 10).replace(/-/g, '');
-      const si   = useMonthly ? 'm' : 'd';
-      const from = useMonthly ? new Date(now - 10 * 365 * 86400000) : new Date(now - 365 * 86400000);
+      const si  = isMonthly ? 'm' : 'd';
+      const from = new Date(now - (isMonthly ? 10 : 2) * 365 * 86400000);
       try {
-        const stooqUrl = `https://stooq.com/q/d/l/?s=${toStooqSymbol(raw)}&i=${si}&d1=${fmt(from)}&d2=${fmt(now)}`;
-        const sr = await fetch(stooqUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) });
+        const sr = await fetch(`https://stooq.com/q/d/l/?s=${toStooqSymbol(raw)}&i=${si}&d1=${fmt(from)}&d2=${fmt(now)}`,
+          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) });
         if (sr.ok) {
           const lines = (await sr.text()).trim().split('\n');
           if (lines.length >= 2) {
-            rows = lines.slice(1).map(l => {
-              const p = l.split(',');
-              return { date: p[0]?.trim(), open: parseFloat(p[1]), high: parseFloat(p[2]), low: parseFloat(p[3]), close: parseFloat(p[4]), volume: parseFloat(p[5]) || 0 };
+            rows = lines.slice(1).map(l => { const p = l.split(',');
+              return { date: p[0]?.trim(), open: parseFloat(p[1]), high: parseFloat(p[2]), low: parseFloat(p[3]), close: parseFloat(p[4]), volume: parseFloat(p[5])||0 };
             }).filter(r => r.date && r.close > 0).sort((a, b) => a.date < b.date ? -1 : 1);
             source = 'Stooq';
           }
         }
-      } catch { /* Stooq blocked */ }
+      } catch { /* blocked */ }
     }
 
-    // Filtrar al rango del timeframe
+    // Filtrar al rango exacto del timeframe
     if (rows) {
-      const cutoffs = { '1H': 30, 'D': 365, 'M': 5 * 365, 'Y': 10 * 365 };
-      const days = cutoffs[tf] ?? 365;
-      const cutoff = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+      const DAYS = { 'D': 365, 'S': 2*365, 'M': 3*365, '1A': 365, '5A': 5*365, 'Y': 10*365 };
+      const cutoff = new Date(Date.now() - (DAYS[tf] ?? 365) * 86400000).toISOString().slice(0, 10);
       rows = rows.filter(r => r.date >= cutoff);
     }
 
