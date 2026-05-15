@@ -24,12 +24,12 @@
 
 <style>
 :root {
-  --bg:#070809; --surface:#0c0e13; --card:#101318; --card-hi:#161b22;
+  --bg:#06080f; --surface:#0b0e17; --card:#0f1219; --card-hi:#141820;
   --border:rgba(255,255,255,0.07); --border-hi:rgba(196,163,68,0.22);
   --gold:#C4A344; --gold-lt:#D4B05A; --gold-dim:rgba(196,163,68,0.09); --gold-glow:rgba(196,163,68,0.18);
   --slate:#7A8899; --slate-dim:rgba(122,136,153,0.10);
   --positive:#3DB87A; --negative:#D96B6B; --blue:#5B8DB8; --amber:#9D8B6E; --orange:#C4844A;
-  --text:#DDD9CF; --text-2:#72798A; --text-3:#363C49;
+  --text:#DDD9CF; --text-2:#8A94A8; --text-3:#545E73;
   --font-serif:'Cormorant Garamond',Georgia,serif;
   --font-sans:'DM Sans',sans-serif;
   --font-mono:'JetBrains Mono',monospace;
@@ -49,7 +49,7 @@ body{
 /* HEADER */
 header{
   height:54px;display:flex;align-items:center;justify-content:space-between;
-  padding:0 18px;background:rgba(6,7,9,.94);border-bottom:1px solid var(--border);
+  padding:0 18px;background:rgba(5,7,13,.94);border-bottom:1px solid var(--border);
   backdrop-filter:blur(16px);position:relative;z-index:50;flex-shrink:0;gap:12px;
 }
 .logo{display:flex;align-items:center;gap:11px;flex-shrink:0;}
@@ -272,6 +272,10 @@ header{
   color:var(--text);font-family:var(--font-mono);font-size:10px;padding:4px 6px;outline:none;
 }
 .p-field input:focus{border-color:var(--gold);}
+/* Hide number spinners for cleaner phase inputs */
+.p-field input[type=number]::-webkit-inner-spin-button,
+.p-field input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.p-field input[type=number]{-moz-appearance:textfield;appearance:textfield;}
 .btn-phase{
   font-size:10px;padding:5px 10px;background:transparent;border:1px solid var(--border);
   border-radius:var(--rs);color:var(--text-2);cursor:pointer;font-family:var(--font-mono);
@@ -2842,10 +2846,16 @@ function renderPhases() {
             style="cursor:not-allowed;opacity:0.45;background:var(--bg);">
         </div>
         <div class="p-field"><label>MES FIN</label>
-          <input type="number" value="${p.end}" min="1" oninput="updatePhaseEnd(${p.id},this.value)">
+          <input type="number" value="${p.end}" min="1"
+            onchange="updatePhaseEnd(${p.id},this.value)"
+            onblur="updatePhaseEnd(${p.id},this.value)"
+            onkeydown="if(event.key==='Enter'){this.blur();}">
         </div>
         <div class="p-field"><label>$/MES</label>
-          <input type="number" value="${p.monthly}" min="0" oninput="updatePhaseMonthly(${p.id},this.value)">
+          <input type="number" value="${p.monthly}" min="0"
+            onchange="updatePhaseMonthly(${p.id},this.value)"
+            onblur="updatePhaseMonthly(${p.id},this.value)"
+            onkeydown="if(event.key==='Enter'){this.blur();}">
         </div>
       </div>
     </div>`;
