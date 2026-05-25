@@ -226,14 +226,22 @@ body{
   <!-- VIEW 3: VERIFICAR EMAIL (post-registro) -->
   <div id="v-verify" class="hidden">
     <div class="big-icon">📬</div>
-    <div class="big-title">Verifica tu correo</div>
+    <div class="big-title">Revisa tu correo</div>
     <div class="big-sub">
       Enviamos un enlace de confirmación a<br>
       <strong id="verify-email-lbl">tu email</strong><br><br>
-      Revisa tu bandeja de entrada (y spam) y haz clic en el enlace para activar tu cuenta.
+      <span style="color:var(--text);font-size:11px;line-height:2;">
+        1. Abre tu correo electrónico<br>
+        2. Busca un mensaje de <strong>noreply@mail.app.supabase.io</strong><br>
+        3. <strong style="color:var(--gold)">Revisa también la carpeta SPAM / Correo no deseado</strong><br>
+        4. Haz clic en «Confirmar cuenta»
+      </span>
     </div>
-    <button class="btn" id="btn-resend" onclick="resendVerification()">Reenviar correo de verificación</button>
+    <button class="btn" id="btn-resend" onclick="resendVerification()">Reenviar correo</button>
     <div id="resend-msg" class="msg hidden mt-8"></div>
+    <div id="resend-countdown" style="display:none;font-family:var(--fm);font-size:9px;color:var(--text-3);text-align:center;margin-top:6px;">
+      Podrás reenviar en <span id="countdown-sec">60</span>s
+    </div>
     <div class="mt-12 text-center">
       <button class="link-btn" onclick="showView('v-login')">← Volver al inicio de sesión</button>
     </div>
@@ -469,22 +477,43 @@ async function doRegister() {
   }
 }
 
-// ── REENVIAR VERIFICACIÓN ──
+// ── REENVIAR VERIFICACIÓN (con cooldown 60s para no saturar el rate limit) ──
+var _resendTimer = null;
 async function resendVerification() {
   var email = window._verifyEmail || '';
   if (!email) { showMsg('resend-msg','No se encontró el correo. Vuelve a registrarte.','error'); return; }
   hideMsg('resend-msg');
   var btn = document.getElementById('btn-resend');
+  var countdown = document.getElementById('resend-countdown');
+  var countSec  = document.getElementById('countdown-sec');
   btn.disabled = true; btn.textContent = 'Enviando...';
   try {
     var res = await sb.auth.resend({ type: 'signup', email: email, options: { emailRedirectTo: REDIRECT_URL } });
     if (res.error) throw new Error(res.error.message);
-    showMsg('resend-msg','Correo reenviado. Revisa tu bandeja de entrada y spam.','ok');
+    showMsg('resend-msg','✓ Correo enviado. Revisa bandeja de entrada y la carpeta SPAM.','ok');
+    // Cooldown 60s
+    var secs = 60;
+    if (countSec) countSec.textContent = secs;
+    if (countdown) countdown.style.display = 'block';
+    _resendTimer = setInterval(function() {
+      secs--;
+      if (countSec) countSec.textContent = secs;
+      if (secs <= 0) {
+        clearInterval(_resendTimer);
+        btn.disabled = false; btn.textContent = 'Reenviar correo';
+        if (countdown) countdown.style.display = 'none';
+      }
+    }, 1000);
+    return; // no ejecutar finally
   } catch(e) {
-    showMsg('resend-msg', e.message, 'error');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Reenviar correo de verificación';
+    var errMsg = e.message || '';
+    if (errMsg.includes('rate') || errMsg.includes('limit') || errMsg.includes('over_email')) {
+      showMsg('resend-msg','⚠ Límite de envíos alcanzado. Espera unos minutos e intenta de nuevo, o revisa la carpeta SPAM.','error');
+    } else {
+      showMsg('resend-msg', errMsg || 'Error al reenviar. Intenta de nuevo.', 'error');
+    }
   }
+  btn.disabled = false; btn.textContent = 'Reenviar correo';
 }
 
 // ── RECUPERAR CONTRASEÑA ──
@@ -542,7 +571,7 @@ async function doNewPassword() {
     await sb.auth.signOut();
     setTimeout(function() { showView('v-login'); }, 1800);
   } catch(e) {
-    showMsg('np-msg', e.message, 'error');
+    showMsg('np-msg', e.message, 'errwor');
   } finally {
     btn.disabled = false; btn.textContent = 'Guardar nueva contraseña';
   }
