@@ -320,6 +320,23 @@ body{
     </div>
   </div>
 
+  <!-- VIEW 8: CUENTA CREADA (sin verificación de email) -->
+  <div id="v-signup-success" class="hidden">
+    <div class="big-icon">🎉</div>
+    <div class="big-title" style="color:var(--positive)">¡Cuenta creada!</div>
+    <div class="big-sub">
+      Tu cuenta en Áureo ha sido creada exitosamente.<br><br>
+      <span id="signup-success-email" style="color:var(--text);font-weight:600;"></span><br><br>
+      Redirigiendo al inicio de sesión...
+    </div>
+    <div style="text-align:center;margin-top:12px;">
+      <div style="display:inline-flex;align-items:center;gap:8px;">
+        <div style="width:7px;height:7px;background:var(--positive);border-radius:50%;animation:blink 1s infinite;"></div>
+        <span style="font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:1px;">REDIRIGIENDO</span>
+      </div>
+    </div>
+  </div>
+
   <div class="divider"><span>·</span></div>
   <div class="footer">
     Al continuar aceptas los <a href="#">Términos de uso</a> de Áureo.<br>
@@ -345,7 +362,7 @@ var recoveryEmail = '';
 
 // ── Vistas ──
 function showView(id) {
-  ['v-login','v-register','v-verify','v-recover','v-recovery-sent','v-new-pass','v-confirmed'].forEach(function(v) {
+  ['v-login','v-register','v-verify','v-recover','v-recovery-sent','v-new-pass','v-confirmed','v-signup-success'].forEach(function(v) {
     var el = document.getElementById(v);
     if (el) el.classList.add('hidden');
   });
@@ -455,7 +472,7 @@ async function doRegister() {
       email: email,
       password: pass,
       options: {
-        emailRedirectTo: REDIRECT_URL,  // enlace apunta al host actual, no a localhost
+        emailRedirectTo: REDIRECT_URL,
         data: {
           name: name || email.split('@')[0],
           phone: phone ? (code + phone.replace(/\s/g,'')) : null,
@@ -467,9 +484,26 @@ async function doRegister() {
     if (res.data.user && res.data.user.identities && res.data.user.identities.length === 0) {
       throw new Error('Este correo ya tiene una cuenta registrada. Inicia sesión.');
     }
-    window._verifyEmail = email;
-    document.getElementById('verify-email-lbl').textContent = email;
-    showView('v-verify');
+
+    if (res.data.session) {
+      // ── Sin verificación de email (desactivada en Supabase) ──
+      // Mostrar pantalla de éxito y redirigir al login en 2.5s
+      var lbl = document.getElementById('signup-success-email');
+      if (lbl) lbl.textContent = email;
+      showView('v-signup-success');
+      setTimeout(function() {
+        // Pre-llenar el email en el login para facilitar el acceso
+        showView('v-login');
+        var loginEmail = document.getElementById('l-email');
+        if (loginEmail) { loginEmail.value = email; }
+        document.getElementById('l-pass').focus();
+      }, 2500);
+    } else {
+      // ── Con verificación de email activa ──
+      window._verifyEmail = email;
+      document.getElementById('verify-email-lbl').textContent = email;
+      showView('v-verify');
+    }
   } catch(e) {
     showMsg('reg-msg', e.message, 'error');
   } finally {
