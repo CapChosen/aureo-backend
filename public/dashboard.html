@@ -301,6 +301,82 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
 .ps-label{font-family:var(--font-mono);font-size:8px;color:var(--text-2);letter-spacing:1px;margin-bottom:4px;}
 .ps-val{font-family:var(--font-mono);font-size:12px;font-weight:700;}
 
+/* STRESS CONSTRUCTOR */
+.stress-card{position:relative;overflow:hidden;}
+.stress-gate{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background:rgba(6,8,15,.90);backdrop-filter:blur(5px);
+  border-radius:var(--r);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:11px;text-align:center;
+  padding:24px;z-index:5;
+}
+.stress-gate-icon{font-size:26px;}
+.stress-gate-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text);text-transform:uppercase;}
+.stress-gate-desc{font-size:11px;color:var(--text-3);max-width:230px;line-height:1.65;}
+.stress-gate-btn{
+  background:var(--gold-dim);border:1px solid rgba(196,163,68,.35);color:var(--gold);
+  font-size:9px;font-family:var(--font-mono);letter-spacing:.8px;
+  padding:6px 16px;border-radius:20px;cursor:pointer;transition:all .15s;
+}
+.stress-gate-btn:hover{background:var(--gold-glow);}
+.stress-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px;min-height:0;}
+.stress-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:3px 9px 3px 10px;cursor:pointer;transition:all .15s;
+  font-family:var(--font-mono);font-size:9px;color:var(--text-2);letter-spacing:.3px;
+}
+.stress-chip.active{background:rgba(248,113,113,.09);border-color:rgba(248,113,113,.45);color:#F87171;}
+.stress-chip-x{color:var(--text-3);font-size:10px;line-height:1;padding:0 1px;margin-left:1px;}
+.stress-chip-x:hover{color:var(--negative);}
+.stress-input,.stress-select{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--rs);color:var(--text);font-family:var(--font-mono);
+  font-size:11px;padding:6px 9px;outline:none;margin-bottom:7px;
+}
+.stress-select{cursor:pointer;}
+.stress-input:focus,.stress-select:focus{border-color:rgba(196,163,68,.28);}
+.stress-param{margin-bottom:9px;}
+.stress-plabel{
+  display:flex;justify-content:space-between;
+  font-family:var(--font-mono);font-size:8.5px;color:var(--text-2);
+  letter-spacing:.4px;margin-bottom:3px;
+}
+.stress-plabel em{color:var(--gold);font-style:normal;font-weight:700;}
+.stress-actions{display:flex;gap:5px;margin-top:6px;}
+.stress-btn-sim{
+  flex:2;background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.3);
+  color:#F87171;font-family:var(--font-mono);font-size:9px;letter-spacing:.4px;
+  padding:6px 8px;border-radius:var(--rs);cursor:pointer;transition:all .15s;
+}
+.stress-btn-sim:hover{background:rgba(248,113,113,.16);}
+.stress-btn-sim:disabled{opacity:.5;cursor:default;}
+.stress-btn-save{
+  flex:2;background:var(--gold-dim);border:1px solid rgba(196,163,68,.28);color:var(--gold);
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.4px;
+  padding:6px 8px;border-radius:var(--rs);cursor:pointer;transition:all .15s;
+}
+.stress-btn-save:hover{background:var(--gold-glow);}
+.stress-btn-clear{
+  flex:1;background:transparent;border:1px solid var(--border);color:var(--text-3);
+  font-family:var(--font-mono);font-size:9px;
+  padding:6px 8px;border-radius:var(--rs);cursor:pointer;transition:all .15s;
+}
+.stress-btn-clear:hover{color:var(--text-2);}
+.stress-metrics-wrap{margin-top:11px;padding-top:11px;border-top:1px solid var(--border);}
+.stress-mtitle{font-family:var(--font-mono);font-size:8px;letter-spacing:1.5px;color:var(--text-3);margin-bottom:7px;text-transform:uppercase;}
+.stress-mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.stress-mbox{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:7px 8px;}
+.stress-mbox-lbl{font-family:var(--font-mono);font-size:7.5px;color:var(--text-3);letter-spacing:.6px;margin-bottom:3px;text-transform:uppercase;}
+.stress-mbox-base{font-family:var(--font-mono);font-size:9.5px;color:var(--gold);font-weight:700;}
+.stress-mbox-stress{font-family:var(--font-mono);font-size:9.5px;color:#F87171;font-weight:700;}
+.stress-mbox-diff{font-family:var(--font-mono);font-size:7.5px;color:var(--text-3);margin-top:1px;}
+.stress-sectors{margin-top:2px;}
+.stress-sec-label{font-family:var(--font-mono);font-size:8.5px;color:var(--text-2);letter-spacing:.4px;margin-bottom:5px;}
+.stress-sec-list{display:flex;flex-direction:column;gap:4px;max-height:110px;overflow-y:auto;padding-right:2px;}
+.stress-sec-item{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9px;color:var(--text-2);cursor:pointer;padding:1px 0;}
+.stress-sec-item input[type=checkbox]{accent-color:var(--gold);cursor:pointer;flex-shrink:0;}
+
 /* AI */
 .ai-btn{
   width:100%;padding:9px;background:linear-gradient(135deg,var(--gold) 0%,#8B6E1A 100%);
@@ -1258,6 +1334,45 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
       <div class="chart-wrap"><canvas id="simChart"></canvas></div>
       <div class="proj-stats" id="proj-stats"></div>
     </div>
+
+    <!-- CONSTRUCTOR DE ESCENARIOS DE STRESS TESTING -->
+    <div class="card stress-card" id="stress-card">
+      <!-- Gate: visible only for FREE plan users -->
+      <div id="stress-gate" class="stress-gate" style="display:none;">
+        <div class="stress-gate-icon">🔒</div>
+        <div class="stress-gate-title">Constructor de Escenarios</div>
+        <div class="stress-gate-desc">Simula cómo distintos shocks económicos afectarían a tu portafolio. Disponible en Plan Pro.</div>
+        <button class="stress-gate-btn" onclick="openProfilePanel()">Upgrade a Pro →</button>
+      </div>
+      <!-- Content: shown for Pro / Elite -->
+      <div id="stress-content">
+        <div class="ctitle">Constructor de Escenarios <span class="tag">PRO</span></div>
+        <!-- Saved scenario chips -->
+        <div class="stress-chips" id="stress-chips"></div>
+        <!-- Scenario name -->
+        <input type="text" id="stress-name" class="stress-input" placeholder="Nombre del escenario...">
+        <!-- Shock type selector -->
+        <select id="stress-type" class="stress-select" onchange="onStressTypeChange()">
+          <option value="crash_mercado">💥 Crash de Mercado</option>
+          <option value="recesion">📉 Recesión</option>
+          <option value="inflacion_alta">🔥 Inflación Alta</option>
+          <option value="subida_tasas">📈 Subida de Tasas</option>
+          <option value="recuperacion_bull">🚀 Mercado Bull</option>
+          <option value="crisis_regional">🌍 Crisis Regional</option>
+        </select>
+        <!-- Dynamic params -->
+        <div id="stress-params"></div>
+        <!-- Action buttons -->
+        <div class="stress-actions">
+          <button class="stress-btn-sim" onclick="applyStress()">▶ Simular</button>
+          <button class="stress-btn-save" onclick="saveStress()">💾 Guardar</button>
+          <button class="stress-btn-clear" onclick="clearStressOverlay()">✕ Limpiar</button>
+        </div>
+        <!-- Comparison metrics (shown after simulation) -->
+        <div id="stress-metrics" style="display:none;"></div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="ctitle">Au·IA — Asistente financiero</div>
       <div class="chat-messages" id="chat-msgs">
@@ -1653,6 +1768,8 @@ async function loadUser() {
   try {
     const usage = await api('/api/user/usage');
     const plan = (usage.plan || 'free').toLowerCase();
+    S.userPlan = plan;
+    initStressGate();
     const planLabel = plan === 'elite' ? 'ELITE' : plan === 'pro' ? 'PRO' : 'FREE';
     const planClass = plan === 'elite' ? 'plan-elite' : plan === 'pro' ? 'plan-pro' : 'plan-free';
     const ppClass   = plan === 'elite' ? 'pp-plan-elite' : plan === 'pro' ? 'pp-plan-pro' : 'pp-plan-free';
@@ -2419,6 +2536,11 @@ let S = {
   realData:     {},   // { SYM: { mu, sigma, return_5y, max_drawdown, ... } }
   correlations: {},   // { 'SPY-QQQ': 0.92, ... }
   histLoading:  false,
+  // Stress Testing
+  userPlan: 'free',
+  stressScenarios: [],          // [{id, name, config, result, active}]
+  stressCurrentResult: null,    // {p10, p50, p90, M} from last run
+  stressCurrentConfig: null,    // config used for last run
 };
 
 // ════════════════════════════════════════════════════════
@@ -2955,19 +3077,28 @@ function renderSimChart(M) {
     labels.push(m%12===0 ? `Año ${m/12}` : '');
     p10.push(pct.p10[m]); p50.push(pct.p50[m]); p90.push(pct.p90[m]); aptD.push(apt[m]);
   }
+  const datasets = [
+    {label:'P90', data:S.bands.p90?p90:[], borderColor:'rgba(52,211,153,.7)', backgroundColor:'rgba(52,211,153,.06)', fill:'+1', tension:.4, pointRadius:0, borderWidth:1.5},
+    {label:'Mediana', data:S.bands.p50?p50:[], borderColor:'#C4A344', backgroundColor:'rgba(196,163,68,.08)', fill:false, tension:.4, pointRadius:0, borderWidth:2.5},
+    {label:'P10', data:S.bands.p10?p10:[], borderColor:'rgba(248,113,113,.7)', backgroundColor:'rgba(248,113,113,.06)', fill:false, tension:.4, pointRadius:0, borderWidth:1.5},
+    {label:'Aportado', data:S.bands.apt?aptD:[], borderColor:'rgba(125,132,148,.5)', fill:false, tension:0, pointRadius:0, borderWidth:1.5, borderDash:[4,3]},
+  ];
+  // Stress overlay — dashed lines on top of base simulation
+  if (S.stressCurrentResult) {
+    const sd = S.stressCurrentResult;
+    const sp10=[], sp50=[], sp90=[];
+    for (let m=0; m<=M; m+=step) { sp10.push(sd.p10[m]); sp50.push(sd.p50[m]); sp90.push(sd.p90[m]); }
+    datasets.push(
+      {label:'Stress P90', data:sp90, borderColor:'rgba(251,146,60,.70)', fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[5,4]},
+      {label:'Stress Med', data:sp50, borderColor:'rgba(248,90,90,.95)',  fill:false, tension:.4, pointRadius:0, borderWidth:2.5, borderDash:[5,4]},
+      {label:'Stress P10', data:sp10, borderColor:'rgba(200,55,55,.65)',  fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[5,4]},
+    );
+  }
   if (S.simChart) S.simChart.destroy();
   const ctx = document.getElementById('simChart').getContext('2d');
   S.simChart = new Chart(ctx, {
     type:'line',
-    data:{
-      labels,
-      datasets:[
-        {label:'P90', data:S.bands.p90?p90:[], borderColor:'rgba(52,211,153,.7)', backgroundColor:'rgba(52,211,153,.06)', fill:'+1', tension:.4, pointRadius:0, borderWidth:1.5},
-        {label:'Mediana', data:S.bands.p50?p50:[], borderColor:'#C4A344', backgroundColor:'rgba(196,163,68,.08)', fill:false, tension:.4, pointRadius:0, borderWidth:2.5},
-        {label:'P10', data:S.bands.p10?p10:[], borderColor:'rgba(248,113,113,.7)', backgroundColor:'rgba(248,113,113,.06)', fill:false, tension:.4, pointRadius:0, borderWidth:1.5},
-        {label:'Aportado', data:S.bands.apt?aptD:[], borderColor:'rgba(125,132,148,.5)', fill:false, tension:0, pointRadius:0, borderWidth:1.5, borderDash:[4,3]},
-      ]
-    },
+    data:{labels, datasets},
     options:{
       responsive:true, maintainAspectRatio:false, animation:{duration:300},
       plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmtShort(c.parsed.y)}`}}},
@@ -3251,6 +3382,361 @@ function renderStressScenarios() {
       <span class="stress-val" style="color:${diffColor}">${fmtShort(finalVal)}</span>
     `;
   });
+}
+
+// ════════════════════════════════════════════════════════
+// STRESS TESTING — CONSTRUCTOR PERSONALIZADO
+// ════════════════════════════════════════════════════════
+
+const STRESS_SECTOR_NAMES = {
+  'etf-amplio':        'ETFs Amplio Mercado',
+  'etf-sectorial':     'ETFs Sectoriales',
+  'etf-renta-fija':    'ETFs Renta Fija',
+  'etf-internacional': 'ETFs Internacionales',
+  'etf-tematico':      'ETFs Temáticos',
+  'stock-tech':        'Acciones Tecnología',
+  'stock-consumo':     'Consumo / Retail',
+  'stock-salud':       'Salud / Farma',
+  'stock-finanzas':    'Finanzas / Bancos',
+  'stock-energia':     'Energía / Industria',
+  'stock-intl':        'Acciones Internacionales',
+};
+
+function initStressGate() {
+  const gate = document.getElementById('stress-gate');
+  if (!gate) return;
+  const isPro = S.userPlan === 'pro' || S.userPlan === 'elite';
+  gate.style.display = isPro ? 'none' : 'flex';
+  onStressTypeChange();
+  renderStressChips();
+}
+
+function onStressTypeChange() {
+  const typeEl = document.getElementById('stress-type');
+  if (!typeEl) return;
+  const type = typeEl.value;
+  const H = parseInt(document.getElementById('horizYrs')?.value) || 20;
+  const maxYear = Math.max(1, Math.min(H - 1, 10));
+
+  const isBull = type === 'recuperacion_bull';
+  const hasSectors = type === 'crisis_regional';
+
+  const intensityLabel = isBull ? 'Intensidad del alza' : 'Intensidad del shock';
+  const intensityMin   = isBull ? 5 : -80;
+  const intensityMax   = isBull ? 80 : -5;
+  const intensityDef   = isBull ? 30 : -40;
+  const intensityFmt   = v => isBull ? `+${v}%` : `${v}%`;
+
+  let html = `
+    <div class="stress-param">
+      <div class="stress-plabel">${intensityLabel} <em id="sv-intensity">${intensityFmt(intensityDef)}</em></div>
+      <input type="range" id="sp-intensity" min="${intensityMin}" max="${intensityMax}" value="${intensityDef}" step="5"
+        oninput="document.getElementById('sv-intensity').textContent='${isBull ? '+' : ''}'+this.value+'%'">
+    </div>
+    <div class="stress-param">
+      <div class="stress-plabel">Inicio del shock (año) <em id="sv-year">Año 2</em></div>
+      <input type="range" id="sp-year" min="1" max="${maxYear}" value="${Math.min(2,maxYear)}" step="1"
+        oninput="document.getElementById('sv-year').textContent='Año '+this.value">
+    </div>
+    <div class="stress-param">
+      <div class="stress-plabel">Duración <em id="sv-dur">12 meses</em></div>
+      <input type="range" id="sp-dur" min="1" max="36" value="12" step="1"
+        oninput="document.getElementById('sv-dur').textContent=this.value+' meses'">
+    </div>
+    <div class="stress-param">
+      <div class="stress-plabel">Velocidad de recuperación <em></em></div>
+      <select id="sp-recovery" class="stress-select" style="margin-bottom:0">
+        <option value="medium">Media</option>
+        <option value="fast">Rápida</option>
+        <option value="slow">Lenta</option>
+      </select>
+    </div>`;
+
+  if (hasSectors) {
+    const allSectors = Object.keys(STRESS_SECTOR_NAMES);
+    const portfolioSectors = allSectors.filter(s =>
+      ASSET_GROUPS[s] && S.port.some(a => ASSET_GROUPS[s].includes(a.t))
+    );
+    const displaySectors = portfolioSectors.length ? portfolioSectors : allSectors.slice(0, 7);
+    html += `
+    <div class="stress-sectors">
+      <div class="stress-sec-label">Sectores afectados (de tu portafolio):</div>
+      <div class="stress-sec-list">
+        ${displaySectors.map(s => `
+          <label class="stress-sec-item">
+            <input type="checkbox" class="stress-sector-cb" value="${s}" checked>
+            ${STRESS_SECTOR_NAMES[s]}
+          </label>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('stress-params').innerHTML = html;
+}
+
+function getStressConfig() {
+  const typeEl  = document.getElementById('stress-type');
+  const nameEl  = document.getElementById('stress-name');
+  const type    = typeEl?.value || 'crash_mercado';
+  const rawName = nameEl?.value.trim();
+  const typeName = typeEl ? typeEl.options[typeEl.selectedIndex]?.text.replace(/^.{2}\s/, '') : type;
+  const name    = rawName || typeName || 'Escenario';
+
+  const intensity     = parseFloat(document.getElementById('sp-intensity')?.value || -40) / 100;
+  const yearStart     = parseInt(document.getElementById('sp-year')?.value || 2);
+  const durationMonths = parseInt(document.getElementById('sp-dur')?.value || 12);
+  const recoverySpeed = document.getElementById('sp-recovery')?.value || 'medium';
+
+  let affectedSectors = [];
+  if (type === 'crisis_regional') {
+    document.querySelectorAll('.stress-sector-cb:checked').forEach(cb => affectedSectors.push(cb.value));
+    if (!affectedSectors.length) affectedSectors = Object.keys(STRESS_SECTOR_NAMES);
+  }
+
+  return {type, intensity, yearStart, durationMonths, recoverySpeed, affectedSectors, name};
+}
+
+function getPortfolioSectorExposure(affectedSectors) {
+  if (!S.port.length || !affectedSectors.length) return 0.30;
+  const totalW = S.port.reduce((s, a) => s + (a.w || 0), 0);
+  if (!totalW) return 0.30;
+  let affW = 0;
+  for (const asset of S.port) {
+    for (const sector of affectedSectors) {
+      if (ASSET_GROUPS[sector]?.includes(asset.t)) { affW += (asset.w || 0); break; }
+    }
+  }
+  return Math.min(1.0, affW / totalW);
+}
+
+function runCustomStressSim(config) {
+  if (!S.simData) return null;
+  const {mu: baseMu, sig} = getPortParams();
+  const M = S.simData.M;
+  const init = parseFloat(document.getElementById('init-amount').value) || 10000;
+  const RUNS = 500;
+
+  const mStart = config.yearStart * 12;
+  const mEnd   = mStart + config.durationMonths;
+  const intensity = config.intensity; // e.g. -0.40 or +0.30
+
+  const sectorExp = config.type === 'crisis_regional'
+    ? getPortfolioSectorExposure(config.affectedSectors) : 1.0;
+
+  const recBoost = config.recoverySpeed === 'fast' ? 2.8
+    : config.recoverySpeed === 'slow' ? 0.7 : 1.6;
+  const recDur = config.recoverySpeed === 'fast'
+    ? Math.ceil(config.durationMonths * 0.6)
+    : config.recoverySpeed === 'slow'
+    ? config.durationMonths * 2
+    : config.durationMonths;
+
+  const paths = [];
+  for (let r = 0; r < RUNS; r++) {
+    let v = init;
+    const path = [v];
+    for (let m = 1; m <= M; m++) {
+      const phase   = S.phases.find(p => m >= p.start && m <= p.end);
+      const monthly = phase ? phase.monthly : 0;
+      let mu = baseMu;
+      let skip = false;
+
+      switch (config.type) {
+        case 'crash_mercado':
+          if (m === mStart) {
+            v = Math.max(0, v * (1 + intensity));
+            path.push(v); skip = true;
+          } else if (m > mStart && m <= mStart + recDur) {
+            mu = baseMu * recBoost;
+          }
+          break;
+
+        case 'recesion': {
+          if (m >= mStart && m <= mEnd) {
+            mu = baseMu * (1 + intensity);
+          } else if (m > mEnd && m <= mEnd + recDur) {
+            const frac = (m - mEnd) / recDur;
+            mu = baseMu * (1 + intensity * (1 - frac));
+          }
+          break;
+        }
+
+        case 'inflacion_alta':
+          if (m >= mStart && m <= mEnd) {
+            mu = baseMu + intensity * 0.10;
+          } else if (m > mEnd && m <= mEnd + recDur) {
+            const frac = (m - mEnd) / recDur;
+            mu = baseMu + intensity * 0.10 * (1 - frac);
+          }
+          break;
+
+        case 'subida_tasas':
+          if (m === mStart) {
+            v = Math.max(0, v * (1 + intensity * 0.45));
+            path.push(v); skip = true;
+          } else if (m > mStart && m <= mEnd) {
+            mu = baseMu + intensity * 0.20 / 12;
+          }
+          break;
+
+        case 'recuperacion_bull':
+          if (m >= mStart && m <= mEnd) {
+            mu = baseMu + Math.abs(intensity) * 1.8;
+          } else if (m > mEnd && m <= mEnd + recDur) {
+            const frac = (m - mEnd) / recDur;
+            mu = baseMu + Math.abs(intensity) * 1.8 * (1 - frac);
+          }
+          break;
+
+        case 'crisis_regional':
+          if (m === mStart) {
+            v = Math.max(0, v * (1 + intensity * sectorExp));
+            path.push(v); skip = true;
+          } else if (m > mStart && m <= mEnd) {
+            mu = baseMu * (1 + intensity * sectorExp * 0.55);
+          } else if (m > mEnd && m <= mEnd + recDur) {
+            const frac = (m - mEnd) / recDur;
+            mu = baseMu * (1 + intensity * sectorExp * 0.55 * (1 - frac));
+          }
+          break;
+      }
+
+      if (!skip) {
+        v = v * (1 + (mu / 12) + (sig / Math.sqrt(12)) * randn()) + monthly;
+        path.push(Math.max(0, v));
+      }
+    }
+    paths.push(path);
+  }
+
+  const p10 = [], p50 = [], p90 = [];
+  for (let m = 0; m <= M; m++) {
+    const vals = paths.map(p => p[m]).sort((a, b) => a - b);
+    p10.push(vals[Math.floor(RUNS * 0.10)]);
+    p50.push(vals[Math.floor(RUNS * 0.50)]);
+    p90.push(vals[Math.floor(RUNS * 0.90)]);
+  }
+  return {p10, p50, p90, M};
+}
+
+function applyStress() {
+  if (!S.simData) { return; }
+  const config = getStressConfig();
+  const btn = document.querySelector('.stress-btn-sim');
+  if (btn) { btn.textContent = '⏳ Simulando...'; btn.disabled = true; }
+  setTimeout(() => {
+    const result = runCustomStressSim(config);
+    if (result) {
+      S.stressCurrentResult = result;
+      S.stressCurrentConfig = config;
+      renderSimChart(S.simData.M);
+      renderStressMetrics(result);
+    }
+    if (btn) { btn.textContent = '▶ Simular'; btn.disabled = false; }
+  }, 20);
+}
+
+function clearStressOverlay() {
+  S.stressCurrentResult = null;
+  S.stressCurrentConfig = null;
+  S.stressScenarios.forEach(sc => { sc.active = false; });
+  renderStressChips();
+  if (S.simData) renderSimChart(S.simData.M);
+  const el = document.getElementById('stress-metrics');
+  if (el) el.style.display = 'none';
+}
+
+function saveStress() {
+  if (!S.stressCurrentResult) { applyStress(); return; }
+  if (S.stressScenarios.length >= 3) {
+    // Replace oldest
+    S.stressScenarios.shift();
+  }
+  const config = S.stressCurrentConfig || getStressConfig();
+  S.stressScenarios.forEach(sc => { sc.active = false; });
+  S.stressScenarios.push({
+    id: Date.now(),
+    name: config.name,
+    config,
+    result: S.stressCurrentResult,
+    active: true,
+  });
+  renderStressChips();
+}
+
+function deleteStressScenario(id, evt) {
+  if (evt) { evt.stopPropagation(); evt.preventDefault(); }
+  const wasActive = S.stressScenarios.find(sc => sc.id === id)?.active;
+  S.stressScenarios = S.stressScenarios.filter(sc => sc.id !== id);
+  if (wasActive) {
+    S.stressCurrentResult = null;
+    S.stressCurrentConfig = null;
+    if (S.simData) renderSimChart(S.simData.M);
+    const el = document.getElementById('stress-metrics');
+    if (el) el.style.display = 'none';
+  }
+  renderStressChips();
+}
+
+function toggleStressScenario(id) {
+  const sc = S.stressScenarios.find(s => s.id === id);
+  if (!sc) return;
+  const wasActive = sc.active;
+  S.stressScenarios.forEach(s => { s.active = false; });
+  sc.active = !wasActive;
+  if (sc.active) {
+    S.stressCurrentResult = sc.result;
+    S.stressCurrentConfig = sc.config;
+    renderStressMetrics(sc.result);
+  } else {
+    S.stressCurrentResult = null;
+    S.stressCurrentConfig = null;
+    const el = document.getElementById('stress-metrics');
+    if (el) el.style.display = 'none';
+  }
+  if (S.simData) renderSimChart(S.simData.M);
+  renderStressChips();
+}
+
+function renderStressChips() {
+  const el = document.getElementById('stress-chips');
+  if (!el) return;
+  if (!S.stressScenarios.length) { el.innerHTML = ''; return; }
+  el.innerHTML = S.stressScenarios.map(sc => `
+    <div class="stress-chip${sc.active ? ' active' : ''}" onclick="toggleStressScenario(${sc.id})">
+      ${sc.name}
+      <span class="stress-chip-x" onclick="deleteStressScenario(${sc.id},event)">✕</span>
+    </div>`).join('');
+}
+
+function renderStressMetrics(result) {
+  const el = document.getElementById('stress-metrics');
+  if (!el || !S.simData) return;
+  const {pct, M} = S.simData;
+  const metrics = [
+    {label:'Mediana Final', base: pct.p50[M], stress: result.p50[M]},
+    {label:'Escenario P90', base: pct.p90[M], stress: result.p90[M]},
+    {label:'Escenario P10', base: pct.p10[M], stress: result.p10[M]},
+  ];
+  el.innerHTML = `
+    <div class="stress-metrics-wrap">
+      <div class="stress-mtitle">Base vs Estrés</div>
+      <div class="stress-mgrid">
+        ${metrics.map(m => {
+          const diff = m.stress - m.base;
+          const pctD = m.base ? ((diff / m.base) * 100).toFixed(1) : '0.0';
+          const diffColor = diff >= 0 ? 'var(--positive)' : 'var(--negative)';
+          const sign = diff >= 0 ? '+' : '';
+          return `<div class="stress-mbox">
+            <div class="stress-mbox-lbl">${m.label}</div>
+            <div class="stress-mbox-base">${fmtShort(m.base)}</div>
+            <div class="stress-mbox-stress">${fmtShort(m.stress)}</div>
+            <div class="stress-mbox-diff" style="color:${diffColor}">${sign}${pctD}%</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  el.style.display = 'block';
 }
 
 // ════════════════════════════════════════════════════════
