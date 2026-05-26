@@ -302,7 +302,9 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
 .ps-val{font-family:var(--font-mono);font-size:12px;font-weight:700;}
 
 /* STRESS CONSTRUCTOR */
-.stress-card{position:relative;overflow:hidden;}
+.stress-constructor-layout{display:grid;grid-template-columns:320px 1fr;gap:24px;align-items:start;}
+.stress-preview-wrap{position:relative;height:200px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;}
+@media(max-width:900px){.stress-constructor-layout{grid-template-columns:1fr !important;}}
 .stress-gate{
   position:absolute;top:0;left:0;right:0;bottom:0;
   background:rgba(6,8,15,.90);backdrop-filter:blur(5px);
@@ -1335,44 +1337,6 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
       <div class="proj-stats" id="proj-stats"></div>
     </div>
 
-    <!-- CONSTRUCTOR DE ESCENARIOS DE STRESS TESTING -->
-    <div class="card stress-card" id="stress-card">
-      <!-- Gate: visible only for FREE plan users -->
-      <div id="stress-gate" class="stress-gate" style="display:none;">
-        <div class="stress-gate-icon">🔒</div>
-        <div class="stress-gate-title">Constructor de Escenarios</div>
-        <div class="stress-gate-desc">Simula cómo distintos shocks económicos afectarían a tu portafolio. Disponible en Plan Pro.</div>
-        <button class="stress-gate-btn" onclick="openProfilePanel()">Upgrade a Pro →</button>
-      </div>
-      <!-- Content: shown for Pro / Elite -->
-      <div id="stress-content">
-        <div class="ctitle">Constructor de Escenarios <span class="tag">PRO</span></div>
-        <!-- Saved scenario chips -->
-        <div class="stress-chips" id="stress-chips"></div>
-        <!-- Scenario name -->
-        <input type="text" id="stress-name" class="stress-input" placeholder="Nombre del escenario...">
-        <!-- Shock type selector -->
-        <select id="stress-type" class="stress-select" onchange="onStressTypeChange()">
-          <option value="crash_mercado">💥 Crash de Mercado</option>
-          <option value="recesion">📉 Recesión</option>
-          <option value="inflacion_alta">🔥 Inflación Alta</option>
-          <option value="subida_tasas">📈 Subida de Tasas</option>
-          <option value="recuperacion_bull">🚀 Mercado Bull</option>
-          <option value="crisis_regional">🌍 Crisis Regional</option>
-        </select>
-        <!-- Dynamic params -->
-        <div id="stress-params"></div>
-        <!-- Action buttons -->
-        <div class="stress-actions">
-          <button class="stress-btn-sim" onclick="applyStress()">▶ Simular</button>
-          <button class="stress-btn-save" onclick="saveStress()">💾 Guardar</button>
-          <button class="stress-btn-clear" onclick="clearStressOverlay()">✕ Limpiar</button>
-        </div>
-        <!-- Comparison metrics (shown after simulation) -->
-        <div id="stress-metrics" style="display:none;"></div>
-      </div>
-    </div>
-
     <div class="card">
       <div class="ctitle">Au·IA — Asistente financiero</div>
       <div class="chat-messages" id="chat-msgs">
@@ -1564,6 +1528,49 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
         </div>
       </div>
     </div>
+
+    <!-- Sección 5: Constructor Personalizado -->
+    <div class="proy-section" id="stress-constructor-proy">
+      <div id="stress-gate" class="stress-gate" style="display:none;">
+        <div class="stress-gate-icon">🔒</div>
+        <div class="stress-gate-title">Constructor de Escenarios</div>
+        <div class="stress-gate-desc">Disponible en Plan Pro.</div>
+        <button class="stress-gate-btn" onclick="openProfilePanel()">Upgrade a Pro →</button>
+      </div>
+      <div id="stress-content">
+        <div class="proy-section-title">Constructor de Escenarios</div>
+        <!-- Saved scenario chips -->
+        <div class="stress-chips" id="stress-chips"></div>
+        <div class="stress-constructor-layout">
+          <!-- LEFT: Form -->
+          <div>
+            <input type="text" id="stress-name" class="stress-input" placeholder="Nombre del escenario...">
+            <select id="stress-type" class="stress-select" onchange="onStressTypeChange()">
+              <option value="crash_mercado">💥 Crash de Mercado</option>
+              <option value="recesion">📉 Recesión</option>
+              <option value="inflacion_alta">🔥 Inflación Alta</option>
+              <option value="subida_tasas">📈 Subida de Tasas</option>
+              <option value="recuperacion_bull">🚀 Mercado Bull</option>
+              <option value="crisis_regional">🌍 Crisis Regional</option>
+            </select>
+            <div id="stress-params"></div>
+            <div class="stress-actions">
+              <button class="stress-btn-sim" onclick="applyStress()">▶ Simular</button>
+              <button class="stress-btn-save" onclick="saveStress()">💾 Guardar</button>
+              <button class="stress-btn-clear" onclick="clearStressOverlay()">✕ Limpiar</button>
+            </div>
+          </div>
+          <!-- RIGHT: Preview chart + metrics -->
+          <div>
+            <div class="stress-preview-wrap" id="stress-preview-wrap" style="display:none;">
+              <canvas id="stressPreviewChart"></canvas>
+            </div>
+            <div id="stress-metrics" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -3168,6 +3175,11 @@ function renderProyeccionesView() {
   renderHistogramChart(finalVals, apt[M]);
   renderPortPieChart(pct, apt, M);
   renderStressScenarios();
+  // Re-init stress constructor params (in case horizonte changed)
+  onStressTypeChange();
+  renderStressChips();
+  // Restore active stress preview if any
+  if (S.stressCurrentResult) renderStressPreviewChart(S.stressCurrentResult);
 }
 
 // ── Sección 1: Gráfico grande P10/P25/P50/P75/P90 ──
@@ -3403,10 +3415,9 @@ const STRESS_SECTOR_NAMES = {
 };
 
 function initStressGate() {
+  // Gate disabled — constructor available to all users during testing
   const gate = document.getElementById('stress-gate');
-  if (!gate) return;
-  const isPro = S.userPlan === 'pro' || S.userPlan === 'elite';
-  gate.style.display = isPro ? 'none' : 'flex';
+  if (gate) gate.style.display = 'none';
   onStressTypeChange();
   renderStressChips();
 }
@@ -3631,9 +3642,52 @@ function applyStress() {
       S.stressCurrentConfig = config;
       renderSimChart(S.simData.M);
       renderStressMetrics(result);
+      renderStressPreviewChart(result);
     }
     if (btn) { btn.textContent = '▶ Simular'; btn.disabled = false; }
   }, 20);
+}
+
+function renderStressPreviewChart(result) {
+  const wrap = document.getElementById('stress-preview-wrap');
+  const canvas = document.getElementById('stressPreviewChart');
+  if (!wrap || !canvas || !S.simData) return;
+  wrap.style.display = 'block';
+  const {pct, M} = S.simData;
+  const step = Math.max(1, Math.floor(M / 60));
+  const labels = [], base50 = [], sp10 = [], sp50 = [], sp90 = [];
+  for (let m = 0; m <= M; m += step) {
+    labels.push(m % 12 === 0 ? `Año ${m/12}` : '');
+    base50.push(pct.p50[m]);
+    sp10.push(result.p10[m]);
+    sp50.push(result.p50[m]);
+    sp90.push(result.p90[m]);
+  }
+  if (PROY_CHARTS.stressPreview) { try { PROY_CHARTS.stressPreview.destroy(); } catch(e){} }
+  const ctx = canvas.getContext('2d');
+  PROY_CHARTS.stressPreview = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {label:'Base (Mediana)', data:base50, borderColor:'#C4A344', fill:false, tension:.4, pointRadius:0, borderWidth:2},
+        {label:'Stress P90',   data:sp90,   borderColor:'rgba(251,146,60,.75)', fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[5,4]},
+        {label:'Stress Med',   data:sp50,   borderColor:'rgba(248,90,90,.95)',  fill:false, tension:.4, pointRadius:0, borderWidth:2.5, borderDash:[5,4]},
+        {label:'Stress P10',   data:sp10,   borderColor:'rgba(200,55,55,.65)',  fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[5,4]},
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, animation:{duration:300},
+      plugins:{
+        legend:{display:true, position:'top', labels:{color:'#7D8494', font:{size:9}, usePointStyle:true, boxWidth:8}},
+        tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmtShort(c.parsed.y)}`}}
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.03)'}, ticks:{color:'#3A404E', font:{size:9}, maxRotation:0}},
+        y:{grid:{color:'rgba(255,255,255,.03)'}, ticks:{color:'#3A404E', font:{size:9}, callback:v=>fmtShort(v)}}
+      }
+    }
+  });
 }
 
 function clearStressOverlay() {
