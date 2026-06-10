@@ -11,6 +11,8 @@ const newsRoutes         = require('./routes/news');
 const communityRoutes    = require('./routes/community');
 const brokerRoutes       = require('./routes/broker');
 const cachedMetricsRoutes = require('./routes/cachedMetrics');
+const earlyAccessRoutes  = require('./routes/earlyAccess');
+const supabase           = require('./lib/supabase');
 
 const cron               = require('node-cron');
 const { runNightlyRefresh, getLastRun } = require('../jobs/nightlyDataRefresh');
@@ -98,6 +100,7 @@ app.use('/api/market', marketRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/broker',    brokerRoutes);
+app.use('/api/early-access', earlyAccessRoutes);
 app.use('/api',           cachedMetricsRoutes);
 
 // ════════════════════════════════════════════════════════
@@ -188,6 +191,17 @@ app.listen(PORT, () => {
     console.log('[Cron] Ejecutando nightlyDataRefresh...');
     runNightlyRefresh().catch(err => console.error('[Cron] Error:', err.message));
   });
+
+  // ── Job diario: revertir premium expirado a free (6 AM UTC) ──
+  cron.schedule('0 6 * * *', async () => {
+    const { error } = await supabase
+      .from('users')
+      .update({ plan: 'free', premium_expires_at: null })
+      .lt('premium_expires_at', new Date().toISOString())
+      .not('premium_expires_at', 'is', null);
+    if (error) console.error('[Cron] Error revertiendo premium expirado:', error.message);
+  });
+
   console.log('  ✦ Cron job   : nightly refresh activo (05:00 UTC)');
   console.log('');
 });

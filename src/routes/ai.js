@@ -1,7 +1,7 @@
 const express = require('express');
 const Anthropic = require('@anthropic-ai/sdk');
 const supabase = require('../lib/supabase');
-const { requireAuth, checkAILimit } = require('../middleware/auth');
+const { requireAuth, checkAILimit, incrementAIUsage } = require('../middleware/auth');
 
 const router = express.Router();
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -61,16 +61,13 @@ Siempre aclara que eres una herramienta educativa, no un asesor CMF regulado.`,
       content: reply
     });
 
-    // Incrementar contador de consultas
-    await supabase
-      .from('users')
-      .update({ ai_calls_this_month: req.aiCallsUsed + 1 })
-      .eq('id', req.user.id);
+    // Increment AI usage counter
+    await incrementAIUsage(req.user.id, req.aiCallsUsed);
 
     res.json({
       reply,
-      calls_used: req.aiCallsUsed + 1,
-      calls_limit: req.aiCallsLimit
+      calls_used:  req.aiCallsUsed + 1,
+      calls_limit: req.aiCallsLimit,
     });
 
   } catch (error) {

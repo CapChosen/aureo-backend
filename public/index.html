@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Áureo — Inteligencia Financiera para Chile</title>
 <meta name="description" content="Simula portafolios de inversión, proyecta tu futuro financiero con Monte Carlo y explora +200 activos globales. Herramienta educativa gratuita.">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:        #060709;
@@ -22,7 +22,7 @@
   --text-2:    #7D8494;
   --text-3:    #3A404E;
   --fs: 'Cormorant Garamond', serif;
-  --fn: 'DM Sans', sans-serif;
+  --fn: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --fm: 'JetBrains Mono', monospace;
   --radius: 14px;
 }
@@ -742,6 +742,56 @@ footer {
   letter-spacing: 1px;
 }
 
+/* ── SECTION — EARLY ACCESS ─────────────────────────── */
+.s-early { background: var(--surface); }
+.ea-wrap { max-width: 560px; margin: 0 auto; text-align: center; }
+.ea-counter {
+  margin: 0 auto 12px;
+  display: inline-flex; align-items: baseline; gap: 6px;
+}
+.ea-num {
+  font-family: var(--fm); font-size: 36px; font-weight: 700; color: var(--gold); line-height: 1;
+}
+.ea-denom {
+  font-family: var(--fm); font-size: 14px; color: var(--text-3); letter-spacing: .5px;
+}
+.ea-bar-track {
+  height: 2px; background: var(--border); border-radius: 2px;
+  overflow: hidden; margin: 0 auto 32px; max-width: 320px;
+}
+.ea-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #C4A344, #DFC06A);
+  border-radius: 2px; transition: width .8s ease;
+}
+.ea-form {
+  display: flex; flex-direction: column; gap: 8px;
+  max-width: 380px; margin: 0 auto;
+}
+.ea-input {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 11px 15px; font-family: var(--fn); font-size: 14px;
+  color: var(--text); outline: none; transition: border-color .15s;
+}
+.ea-input:focus { border-color: rgba(196,163,68,.4); }
+.ea-input::placeholder { color: var(--text-3); }
+.ea-submit {
+  padding: 13px 28px;
+  background: linear-gradient(135deg,#C4A344 0%,#8B6E1A 100%);
+  color: #0a0800; font-family: var(--fn); font-size: 14px; font-weight: 700;
+  border: none; border-radius: 8px; cursor: pointer; transition: all .15s;
+  letter-spacing: .2px;
+}
+.ea-submit:hover { box-shadow: 0 0 24px rgba(196,163,68,.35); }
+.ea-submit:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.ea-msg {
+  font-family: var(--fm); font-size: 10px; letter-spacing: .5px;
+  margin-top: 10px; min-height: 18px; line-height: 1.5;
+}
+.ea-msg.success { color: #34D399; }
+.ea-msg.error   { color: #F87171; }
+.ea-msg.info    { color: var(--text-3); }
+
 /* ── RESPONSIVE ─────────────────────────────────────── */
 @media (max-width: 900px) {
   section { padding: 72px 6%; }
@@ -823,6 +873,7 @@ footer {
     <li><a href="#como-funciona">Cómo funciona</a></li>
     <li><a href="#ventajas">Ventajas</a></li>
     <li><a href="#planes">Planes</a></li>
+    <li><a href="#early-access" style="color:var(--gold)">Acceso anticipado</a></li>
   </ul>
   <a href="login.html" class="nav-cta">Comenzar gratis →</a>
   <div class="nav-hamburger" onclick="toggleMenu()">
@@ -929,17 +980,30 @@ footer {
 
     <div class="problem-grid">
       <div class="problem-card reveal reveal-delay-1">
-        <div class="problem-icon">📉</div>
+        <div class="problem-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(196,163,68,.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/>
+          </svg>
+        </div>
         <div class="problem-title">Los DAP ofrecen tasas cada vez más bajas</div>
         <div class="problem-desc">El Banco Central ha bajado la tasa de política monetaria. Los depósitos a plazo ya no protegen tu capital del todo frente a la inflación real.</div>
       </div>
       <div class="problem-card reveal reveal-delay-2">
-        <div class="problem-icon">❓</div>
+        <div class="problem-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(196,163,68,.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
         <div class="problem-title">Invertir parece complejo y riesgoso</div>
         <div class="problem-desc">La jerga financiera, los brokers con comisiones altas y la falta de información hacen que muchos chilenos eviten los mercados internacionales.</div>
       </div>
       <div class="problem-card reveal reveal-delay-3">
-        <div class="problem-icon">🧩</div>
+        <div class="problem-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(196,163,68,.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+        </div>
         <div class="problem-title">No sabes cómo armar un portafolio</div>
         <div class="problem-desc">Diversificar entre ETFs, acciones y activos alternativos requiere conocimiento y herramientas que hasta ahora solo tenían los profesionales.</div>
       </div>
@@ -1200,6 +1264,44 @@ footer {
   </div>
 </section>
 
+<!-- ══ EARLY ACCESS ══════════════════════════════════════ -->
+<section class="s-early" id="early-access">
+  <div class="section-inner">
+    <div class="ea-wrap">
+      <div class="reveal"><div class="tag">Acceso anticipado</div></div>
+      <h2 class="section-title reveal reveal-delay-1">Los primeros 100 usuarios<br>obtienen <em>Premium gratis</em></h2>
+      <p class="section-sub reveal reveal-delay-2" style="margin: 0 auto 28px; text-align:center;">
+        Regístrate ahora y al crear tu cuenta con el mismo correo recibirás <strong style="color:var(--gold)">1 mes de plan Premium</strong> sin costo.
+      </p>
+
+      <div class="reveal reveal-delay-2">
+        <div class="ea-counter">
+          <span class="ea-num" id="ea-count">—</span>
+          <span class="ea-denom">/ 100 cupos restantes</span>
+        </div>
+      </div>
+
+      <div class="ea-bar-track reveal reveal-delay-3">
+        <div class="ea-bar-fill" id="ea-bar" style="width:0%"></div>
+      </div>
+
+      <div class="reveal reveal-delay-3">
+        <form class="ea-form" id="ea-form" onsubmit="submitEarlyAccess(event)">
+          <input class="ea-input" type="text" id="ea-name" placeholder="Tu nombre (opcional)" autocomplete="name">
+          <input class="ea-input" type="email" id="ea-email" placeholder="tu@email.com" required autocomplete="email">
+          <button class="ea-submit" type="submit" id="ea-btn">Reservar mi cupo</button>
+        </form>
+        <div class="ea-msg" id="ea-msg"></div>
+      </div>
+
+      <p style="font-family:var(--fm);font-size:9px;color:var(--text-3);margin-top:20px;letter-spacing:.4px;line-height:1.6;">
+        El cupo Premium se activa automáticamente al registrarte con el mismo correo.<br>
+        Sin tarjeta de crédito. Sin compromisos.
+      </p>
+    </div>
+  </div>
+</section>
+
 <!-- ══ CTA FINAL ════════════════════════════════════════ -->
 <section class="s-cta" id="cta">
   <div class="section-inner">
@@ -1281,6 +1383,87 @@ document.querySelectorAll('.nav-links a').forEach(a => {
     }
   });
 });
+
+// ── Early Access ──────────────────────────────────────
+async function loadEarlyAccessStatus() {
+  try {
+    const res  = await fetch('/api/early-access/status');
+    if (!res.ok) return;
+    const data = await res.json();
+    const countEl = document.getElementById('ea-count');
+    const barEl   = document.getElementById('ea-bar');
+    const btnEl   = document.getElementById('ea-btn');
+    const msgEl   = document.getElementById('ea-msg');
+
+    const remaining = data.slots_remaining ?? 0;
+    const taken     = data.slots_taken     ?? 0;
+    const max       = data.max_slots       ?? 100;
+    const pct       = Math.min(100, Math.round((taken / max) * 100));
+
+    if (countEl) countEl.textContent = remaining;
+    if (barEl)   barEl.style.width   = pct + '%';
+
+    if (!data.active) {
+      if (btnEl) { btnEl.disabled = true; btnEl.textContent = remaining === 0 ? 'Cupos agotados' : 'Registro cerrado'; }
+      if (msgEl) { msgEl.textContent = remaining === 0 ? 'Los cupos de acceso anticipado están agotados.' : 'El período de registro anticipado ha finalizado.'; msgEl.className = 'ea-msg info'; }
+    }
+  } catch (e) {
+    const countEl = document.getElementById('ea-count');
+    if (countEl) countEl.textContent = '?';
+  }
+}
+
+async function submitEarlyAccess(e) {
+  e.preventDefault();
+  const email = document.getElementById('ea-email')?.value?.trim();
+  const name  = document.getElementById('ea-name')?.value?.trim();
+  const btn   = document.getElementById('ea-btn');
+  const msg   = document.getElementById('ea-msg');
+  if (!email) return;
+
+  btn.disabled    = true;
+  btn.textContent = 'Registrando...';
+  msg.textContent = '';
+  msg.className   = 'ea-msg';
+
+  try {
+    const res  = await fetch('/api/early-access', {
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify({ email, name: name || undefined }),
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      const form = document.getElementById('ea-form');
+      if (form) form.style.display = 'none';
+      msg.textContent = data.redeemed
+        ? 'Cupo reservado y Premium activado en tu cuenta.'
+        : 'Cupo reservado. El Premium se activará al registrarte con este correo.';
+      msg.className = 'ea-msg success';
+      loadEarlyAccessStatus();
+    } else if (res.status === 409) {
+      msg.textContent = 'Este correo ya está registrado en la lista de espera.';
+      msg.className   = 'ea-msg info';
+      btn.disabled    = false;
+      btn.textContent = 'Reservar mi cupo';
+    } else if (res.status === 410) {
+      msg.textContent = data.code === 'NO_SLOTS' ? 'Los cupos se agotaron.' : 'El registro anticipado está cerrado.';
+      msg.className   = 'ea-msg error';
+      btn.disabled    = true;
+      btn.textContent = 'No disponible';
+    } else {
+      throw new Error(data.error || 'Error');
+    }
+  } catch (err) {
+    msg.textContent = 'Error al procesar. Intenta nuevamente.';
+    msg.className   = 'ea-msg error';
+    btn.disabled    = false;
+    btn.textContent = 'Reservar mi cupo';
+  }
+}
+
+loadEarlyAccessStatus();
 </script>
 
 </body>

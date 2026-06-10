@@ -20,7 +20,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
 :root {
@@ -29,9 +29,9 @@
   --gold:#C4A344; --gold-lt:#D4B05A; --gold-dim:rgba(196,163,68,0.09); --gold-glow:rgba(196,163,68,0.18);
   --slate:#7A8899; --slate-dim:rgba(122,136,153,0.10);
   --positive:#3DB87A; --negative:#D96B6B; --blue:#5B8DB8; --amber:#9D8B6E; --orange:#C4844A;
-  --text:#DDD9CF; --text-2:#8A94A8; --text-3:#545E73;
+  --text:#DDD9CF; --text-2:rgba(240,237,230,0.72); --text-3:rgba(240,237,230,0.52);
   --font-serif:'Cormorant Garamond',Georgia,serif;
-  --font-sans:'DM Sans',sans-serif;
+  --font-sans:'Helvetica Neue',Helvetica,Arial,sans-serif;
   --font-mono:'JetBrains Mono',monospace;
   --r:8px; --rs:5px;
 }
@@ -305,6 +305,47 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
 .stress-constructor-layout{display:grid;grid-template-columns:320px 1fr;gap:24px;align-items:start;}
 .stress-preview-wrap{position:relative;height:200px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;}
 @media(max-width:900px){.stress-constructor-layout{grid-template-columns:1fr !important;}}
+/* Premium gate overlay (no emoji, no lock icon) */
+.premium-gate{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:32px 24px;text-align:center;
+}
+.premium-gate-label{font-family:var(--font-mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;}
+.premium-gate-title{font-family:var(--font-serif);font-size:20px;color:var(--text);margin-bottom:8px;}
+.premium-gate-desc{font-size:12px;color:var(--text-2);max-width:340px;margin:0 auto 18px;line-height:1.7;}
+.premium-gate-btn{
+  display:inline-block;padding:8px 22px;border:1px solid rgba(196,163,68,.4);border-radius:var(--rs);
+  background:var(--gold-dim);color:var(--gold);font-family:var(--font-mono);font-size:10px;
+  letter-spacing:.8px;cursor:pointer;transition:all .15s;
+}
+.premium-gate-btn:hover{background:var(--gold-glow);}
+/* Investment horizon & phases redesign */
+.invest-horizon-row{display:flex;align-items:center;gap:8px;margin:6px 0 4px;}
+.invest-horizon-input{
+  width:72px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);
+  color:var(--text);font-family:var(--font-mono);font-size:15px;font-weight:700;
+  padding:5px 8px;outline:none;text-align:center;
+}
+.invest-horizon-input:focus{border-color:rgba(196,163,68,.35);}
+.invest-unit{font-family:var(--font-mono);font-size:11px;color:var(--text-3);}
+.invest-months-hint{font-family:var(--font-mono);font-size:10px;color:var(--text-3);letter-spacing:.3px;margin-bottom:12px;}
+.invest-mode-row{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:3px;margin-bottom:12px;}
+.invest-mode-btn{
+  flex:1;padding:5px 0;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.8px;text-transform:uppercase;
+  background:transparent;border:1px solid transparent;border-radius:4px;color:var(--text-3);cursor:pointer;transition:all .15s;
+}
+.invest-mode-btn.active{background:var(--card-hi);border-color:var(--border);color:var(--text-2);}
+.phases-counter{font-family:var(--font-mono);font-size:9px;color:var(--text-3);padding:6px 0;border-top:1px solid var(--border);margin-top:6px;}
+.phases-counter strong{color:var(--gold);}
+.phases-counter.over strong{color:var(--negative);}
+.const-monthly-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.const-monthly-label{font-family:var(--font-mono);font-size:8.5px;color:var(--text-3);letter-spacing:.5px;flex-shrink:0;}
+.const-monthly-input{
+  flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);
+  color:var(--text);font-family:var(--font-mono);font-size:13px;font-weight:700;
+  padding:5px 8px;outline:none;text-align:right;
+}
+.const-monthly-input:focus{border-color:rgba(196,163,68,.35);}
 .stress-gate{
   position:absolute;top:0;left:0;right:0;bottom:0;
   background:rgba(6,8,15,.90);backdrop-filter:blur(5px);
@@ -590,11 +631,24 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
 .cm-tf-btn.active{background:var(--gold-dim);border-color:rgba(196,163,68,.35);color:var(--gold);}
 
 /* PROYECCIONES FULL VIEW */
+/* PROYECCIONES FULL VIEW */
 .proy-full-view{position:fixed;top:86px;left:0;right:0;bottom:0;background:var(--bg);overflow-y:auto;z-index:100;}
 .proy-container{padding:28px;max-width:1400px;margin:0 auto;}
-.proy-header{margin-bottom:32px;}
-.proy-header h1{font-family:var(--font-serif);font-size:36px;font-weight:600;color:var(--gold);margin:0 0 6px 0;}
-.proy-header p{font-family:var(--font-mono);font-size:11px;color:var(--text-3);letter-spacing:1px;}
+.proy-header{margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.proy-header h1{font-family:var(--font-serif);font-size:32px;font-weight:600;color:var(--gold);margin:0 0 4px 0;}
+.proy-header p{font-family:var(--font-mono);font-size:10px;color:var(--text-3);letter-spacing:1.5px;}
+/* Subtabs */
+.proy-subtabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:3px;margin-bottom:24px;}
+.proy-stab{
+  flex:1;padding:7px 14px;text-align:center;cursor:pointer;border-radius:6px;
+  font-family:var(--font-mono);font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--text-3);border:none;background:transparent;transition:all .15s;
+}
+.proy-stab:hover{color:var(--text-2);}
+.proy-stab.active{background:var(--card-hi);color:var(--gold);border:1px solid var(--border-hi);}
+.proy-tab-panel{display:none;animation:fadeTab .15s ease;}
+.proy-tab-panel.active{display:block;}
+@keyframes fadeTab{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
 .proy-section{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:20px;}
 .proy-section-title{font-family:var(--font-serif);font-size:20px;font-weight:600;color:var(--text);margin-bottom:18px;}
 .proy-chart-wrap{position:relative;width:100%;}
@@ -1299,9 +1353,30 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
       <div class="port-meta" id="port-meta"></div>
     </div>
     <div class="card">
-      <div class="ctitle">Fases de aportación</div>
-      <div id="phases-list"></div>
-      <button class="btn-phase" onclick="addPhase()">+ Nueva fase</button>
+      <div class="ctitle">Horizonte de inversión</div>
+      <div style="margin-bottom:10px">
+        <input class="invest-horizon-input" type="number" id="horizYrs" min="1" max="40" value="20"
+          oninput="updateHorizon()">
+        <div id="horiz-months-label" style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);margin-top:4px;letter-spacing:.04em">
+          = 240 meses totales
+        </div>
+      </div>
+      <div class="invest-mode-row">
+        <button class="invest-mode-btn active" id="mode-btn-const" onclick="setInvestMode('const')">Aporte Constante</button>
+        <button class="invest-mode-btn" id="mode-btn-phases" onclick="setInvestMode('phases')">Fases Personalizadas</button>
+      </div>
+      <div id="invest-const-panel">
+        <div class="p-field">
+          <label>Aporte mensual (USD)</label>
+          <input class="const-monthly-input" type="number" id="const-monthly" value="500" min="0"
+            oninput="applyConstantMode()">
+        </div>
+      </div>
+      <div id="invest-phases-panel" style="display:none">
+        <div id="phases-list"></div>
+        <button class="btn-phase" onclick="addPhase()">+ Nueva fase</button>
+        <div class="phases-counter" id="phases-counter"></div>
+      </div>
     </div>
     <div class="card">
       <div class="ctitle">Inversión inicial</div>
@@ -1321,11 +1396,6 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
     <div class="card">
       <div class="ctitle">Proyección Monte Carlo
         <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-3)">1,000 simulaciones</span>
-      </div>
-      <div class="horizon-row">
-        <label>Horizonte</label>
-        <input type="range" id="horizYrs" min="5" max="40" value="20" oninput="updateHorizon()">
-        <span class="horizon-val" id="horiz-val">20 años</span>
       </div>
       <div class="chart-controls">
         <button class="cc-btn on" id="cc-p10" onclick="toggleBand('p10')">P10</button>
@@ -1456,117 +1526,132 @@ input[type=range]{flex:1;accent-color:var(--gold);height:3px;cursor:pointer;}
 <div class="proy-full-view" id="proyeccionesFullView" style="display:none;">
   <div class="proy-container">
     <div class="proy-header">
-      <h1>Proyecciones Detalladas</h1>
-      <p id="proy-subtitle">SIMULACIÓN MONTE CARLO · 1,000 ESCENARIOS</p>
-    </div>
-
-    <!-- Sección 1: Gráfico grande -->
-    <div class="proy-section">
-      <div class="proy-section-title">Trayectorias de Capital</div>
-      <div class="proy-chart-wrap" style="height:400px;">
-        <canvas id="projBigChart"></canvas>
-      </div>
-      <table class="proy-table" id="proy-key-table">
-        <thead>
-          <tr>
-            <th>Año</th>
-            <th style="color:var(--positive)">P90</th>
-            <th style="color:var(--slate)">P75</th>
-            <th style="color:var(--gold)">Mediana</th>
-            <th style="color:var(--orange)">P25</th>
-            <th style="color:var(--negative)">P10</th>
-            <th style="color:var(--text-3)">Aportado</th>
-          </tr>
-        </thead>
-        <tbody id="proy-table-body"></tbody>
-      </table>
-    </div>
-
-    <!-- Sección 2: Histograma -->
-    <div class="proy-section">
-      <div class="proy-section-title">Distribución de Resultados Finales</div>
-      <div class="proy-chart-wrap" style="height:260px;">
-        <canvas id="histChart"></canvas>
-      </div>
-      <div class="proy-prob-row" id="proy-prob-row"></div>
-    </div>
-
-    <!-- Sección 3: Composición -->
-    <div class="proy-section proy-two-col" id="proy-composition">
-      <div class="proy-pie-wrap">
-        <div style="font-family:var(--font-serif);font-size:16px;color:var(--text);margin-bottom:8px;">Composición</div>
-        <canvas id="portPieChart" width="240" height="240" style="max-width:240px;"></canvas>
-        <div id="proy-pie-legend" style="width:100%;margin-top:8px;"></div>
-      </div>
       <div>
-        <div class="proy-section-title" style="margin-bottom:14px;">Métricas del Portafolio</div>
-        <div class="proy-metrics-grid" id="proy-metrics-grid"></div>
+        <h1>Proyecciones</h1>
+        <p id="proy-subtitle">SIMULACIÓN MONTE CARLO · 1,000 ESCENARIOS</p>
       </div>
     </div>
 
-    <!-- Sección 4: Estrés -->
-    <div class="proy-section">
-      <div class="proy-section-title">Escenarios de Estrés</div>
-      <div class="stress-grid">
-        <div class="stress-card" id="stress-0">
-          <div class="stress-card-title">CRASH DE MERCADO</div>
-          <div class="stress-card-desc">Caída del −40% en el mes 12, seguida de recuperación normal.</div>
-          <div class="stress-chart-wrap"><canvas id="stressChart0"></canvas></div>
-          <div class="stress-final" id="stress-final-0"></div>
+    <!-- Subtabs -->
+    <div class="proy-subtabs">
+      <button class="proy-stab active" id="pstab-proyeccion" onclick="switchProyTab('proyeccion')">PROYECCIÓN</button>
+      <button class="proy-stab" id="pstab-estres" onclick="switchProyTab('estres')">ESCENARIOS DE ESTRÉS</button>
+      <button class="proy-stab" id="pstab-riesgo" onclick="switchProyTab('riesgo')">ANÁLISIS DE RIESGO</button>
+    </div>
+
+    <!-- ── Tab 1: Proyección ─────────────────────────── -->
+    <div class="proy-tab-panel active" id="proy-tab-proyeccion">
+      <div class="proy-section">
+        <div class="proy-section-title">Trayectorias de Capital</div>
+        <div class="proy-chart-wrap" style="height:380px;">
+          <canvas id="projBigChart"></canvas>
         </div>
-        <div class="stress-card" id="stress-1">
-          <div class="stress-card-title">INFLACIÓN ALTA</div>
-          <div class="stress-card-desc">Retorno real reducido en −3% anual durante todo el horizonte.</div>
-          <div class="stress-chart-wrap"><canvas id="stressChart1"></canvas></div>
-          <div class="stress-final" id="stress-final-1"></div>
+        <table class="proy-table" id="proy-key-table">
+          <thead>
+            <tr>
+              <th>Año</th>
+              <th style="color:var(--positive)">P90</th>
+              <th style="color:var(--slate)">P75</th>
+              <th style="color:var(--gold)">Mediana</th>
+              <th style="color:var(--orange)">P25</th>
+              <th style="color:var(--negative)">P10</th>
+              <th style="color:var(--text-3)">Aportado</th>
+            </tr>
+          </thead>
+          <tbody id="proy-table-body"></tbody>
+        </table>
+      </div>
+      <div class="proy-section">
+        <div class="proy-section-title">Distribución de Resultados Finales</div>
+        <div class="proy-chart-wrap" style="height:240px;">
+          <canvas id="histChart"></canvas>
         </div>
-        <div class="stress-card" id="stress-2">
-          <div class="stress-card-title">MERCADO ALCISTA</div>
-          <div class="stress-card-desc">Impulso de +2% anual extra durante los primeros 5 años.</div>
-          <div class="stress-chart-wrap"><canvas id="stressChart2"></canvas></div>
-          <div class="stress-final" id="stress-final-2"></div>
+        <div class="proy-prob-row" id="proy-prob-row"></div>
+      </div>
+    </div>
+
+    <!-- ── Tab 2: Escenarios de Estrés ──────────────── -->
+    <div class="proy-tab-panel" id="proy-tab-estres">
+      <!-- Escenarios base -->
+      <div class="proy-section">
+        <div class="proy-section-title">Escenarios Base</div>
+        <div class="stress-grid">
+          <div class="stress-card" id="stress-0">
+            <div class="stress-card-title">CRASH DE MERCADO</div>
+            <div class="stress-card-desc">Caída del −40% en el mes 12, seguida de recuperación normal.</div>
+            <div class="stress-chart-wrap"><canvas id="stressChart0"></canvas></div>
+            <div class="stress-final" id="stress-final-0"></div>
+          </div>
+          <div class="stress-card" id="stress-1">
+            <div class="stress-card-title">INFLACIÓN ALTA</div>
+            <div class="stress-card-desc">Retorno real reducido en −3% anual durante todo el horizonte.</div>
+            <div class="stress-chart-wrap"><canvas id="stressChart1"></canvas></div>
+            <div class="stress-final" id="stress-final-1"></div>
+          </div>
+          <div class="stress-card" id="stress-2">
+            <div class="stress-card-title">MERCADO ALCISTA</div>
+            <div class="stress-card-desc">Impulso de +2% anual extra durante los primeros 5 años.</div>
+            <div class="stress-chart-wrap"><canvas id="stressChart2"></canvas></div>
+            <div class="stress-final" id="stress-final-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Constructor personalizado -->
+      <div class="proy-section" id="stress-constructor-proy">
+        <!-- Premium gate (no emoji) -->
+        <div id="stress-gate" style="display:none;">
+          <div class="premium-gate">
+            <div class="premium-gate-label">Función Premium</div>
+            <div class="premium-gate-title">Constructor de Escenarios</div>
+            <div class="premium-gate-desc">Simula el impacto de shocks económicos específicos sobre tu portafolio. Disponible en Plan Premium.</div>
+            <button class="premium-gate-btn" onclick="openProfilePanel()">Actualizar a Premium</button>
+          </div>
+        </div>
+        <!-- Constructor content -->
+        <div id="stress-content">
+          <div class="proy-section-title">Constructor Personalizado</div>
+          <div class="stress-chips" id="stress-chips"></div>
+          <div class="stress-constructor-layout">
+            <div>
+              <input type="text" id="stress-name" class="stress-input" placeholder="Nombre del escenario">
+              <select id="stress-type" class="stress-select" onchange="onStressTypeChange()">
+                <option value="crash_mercado">Crash de Mercado</option>
+                <option value="recesion">Recesión</option>
+                <option value="inflacion_alta">Inflación Alta</option>
+                <option value="subida_tasas">Subida de Tasas</option>
+                <option value="recuperacion_bull">Mercado Alcista</option>
+                <option value="crisis_regional">Crisis Regional</option>
+              </select>
+              <div id="stress-params"></div>
+              <div class="stress-actions">
+                <button class="stress-btn-sim" onclick="applyStress()">Simular</button>
+                <button class="stress-btn-save" onclick="saveStress()">Guardar</button>
+                <button class="stress-btn-clear" onclick="clearStressOverlay()">Limpiar</button>
+              </div>
+            </div>
+            <div>
+              <div class="stress-preview-wrap" id="stress-preview-wrap" style="display:none;">
+                <canvas id="stressPreviewChart"></canvas>
+              </div>
+              <div id="stress-metrics" style="display:none;"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Sección 5: Constructor Personalizado -->
-    <div class="proy-section" id="stress-constructor-proy">
-      <div id="stress-gate" class="stress-gate" style="display:none;">
-        <div class="stress-gate-icon">🔒</div>
-        <div class="stress-gate-title">Constructor de Escenarios</div>
-        <div class="stress-gate-desc">Disponible en Plan Pro.</div>
-        <button class="stress-gate-btn" onclick="openProfilePanel()">Upgrade a Pro →</button>
-      </div>
-      <div id="stress-content">
-        <div class="proy-section-title">Constructor de Escenarios</div>
-        <!-- Saved scenario chips -->
-        <div class="stress-chips" id="stress-chips"></div>
-        <div class="stress-constructor-layout">
-          <!-- LEFT: Form -->
-          <div>
-            <input type="text" id="stress-name" class="stress-input" placeholder="Nombre del escenario...">
-            <select id="stress-type" class="stress-select" onchange="onStressTypeChange()">
-              <option value="crash_mercado">💥 Crash de Mercado</option>
-              <option value="recesion">📉 Recesión</option>
-              <option value="inflacion_alta">🔥 Inflación Alta</option>
-              <option value="subida_tasas">📈 Subida de Tasas</option>
-              <option value="recuperacion_bull">🚀 Mercado Bull</option>
-              <option value="crisis_regional">🌍 Crisis Regional</option>
-            </select>
-            <div id="stress-params"></div>
-            <div class="stress-actions">
-              <button class="stress-btn-sim" onclick="applyStress()">▶ Simular</button>
-              <button class="stress-btn-save" onclick="saveStress()">💾 Guardar</button>
-              <button class="stress-btn-clear" onclick="clearStressOverlay()">✕ Limpiar</button>
-            </div>
-          </div>
-          <!-- RIGHT: Preview chart + metrics -->
-          <div>
-            <div class="stress-preview-wrap" id="stress-preview-wrap" style="display:none;">
-              <canvas id="stressPreviewChart"></canvas>
-            </div>
-            <div id="stress-metrics" style="display:none;"></div>
-          </div>
+    <!-- ── Tab 3: Análisis de Riesgo ─────────────────── -->
+    <div class="proy-tab-panel" id="proy-tab-riesgo">
+      <div class="proy-section proy-two-col" id="proy-composition">
+        <div class="proy-pie-wrap">
+          <div style="font-family:var(--font-serif);font-size:16px;color:var(--text);margin-bottom:8px;">Composición</div>
+          <canvas id="portPieChart" width="240" height="240" style="max-width:240px;"></canvas>
+          <div id="proy-pie-legend" style="width:100%;margin-top:8px;"></div>
+        </div>
+        <div>
+          <div class="proy-section-title" style="margin-bottom:14px;">Métricas del Portafolio</div>
+          <div class="proy-metrics-grid" id="proy-metrics-grid"></div>
         </div>
       </div>
     </div>
@@ -1775,9 +1860,13 @@ async function loadUser() {
   try {
     const usage = await api('/api/user/usage');
     const plan = (usage.plan || 'free').toLowerCase();
-    S.userPlan = plan;
+    S.userPlan  = plan;
+    S.userRole  = usage.role  || 'user';
+    S.features  = usage.features || {};
+    S.aiLimit   = usage.limit || 5;
+    S.aiUsed    = usage.used  || 0;
     initStressGate();
-    const planLabel = plan === 'elite' ? 'ELITE' : plan === 'pro' ? 'PRO' : 'FREE';
+    const planLabel = plan === 'premium' ? 'PREMIUM' : plan === 'elite' ? 'ELITE' : plan === 'pro' ? 'PRO' : 'FREE';
     const planClass = plan === 'elite' ? 'plan-elite' : plan === 'pro' ? 'plan-pro' : 'plan-free';
     const ppClass   = plan === 'elite' ? 'pp-plan-elite' : plan === 'pro' ? 'pp-plan-pro' : 'pp-plan-free';
 
@@ -2543,11 +2632,18 @@ let S = {
   realData:     {},   // { SYM: { mu, sigma, return_5y, max_drawdown, ... } }
   correlations: {},   // { 'SPY-QQQ': 0.92, ... }
   histLoading:  false,
-  // Stress Testing
+  // Plan & features
   userPlan: 'free',
+  userRole: 'user',
+  features: null,
+  aiLimit: 5,
+  aiUsed:  0,
+  // Stress Testing
   stressScenarios: [],          // [{id, name, config, result, active}]
   stressCurrentResult: null,    // {p10, p50, p90, M} from last run
   stressCurrentConfig: null,    // config used for last run
+  // Investment mode
+  investMode: 'const',          // 'const' | 'phases'
 };
 
 // ════════════════════════════════════════════════════════
@@ -2956,12 +3052,12 @@ function renderPhases() {
   const el = document.getElementById('phases-list');
   if (!S.phases.length) {
     el.innerHTML = '<div style="font-size:11px;color:var(--text-3);text-align:center;padding:10px">Sin fases configuradas</div>';
+    updatePhasesCounter();
     return;
   }
   el.innerHTML = S.phases.map((p,i) => {
     const yrFrom = Math.ceil(p.start / 12);
     const yrTo   = Math.ceil(p.end   / 12);
-    const isFirst = i === 0;
     return `
     <div class="phase-row">
       <div class="phase-head">
@@ -2989,6 +3085,7 @@ function renderPhases() {
       </div>
     </div>`;
   }).join('');
+  updatePhasesCounter();
 }
 
 function updatePhaseEnd(id, val) {
@@ -3131,11 +3228,24 @@ function renderProjStats(pct, apt, M) {
 }
 
 function updateHorizon() {
-  const H = parseInt(document.getElementById('horizYrs').value) || 20;
-  document.getElementById('horiz-val').textContent = `${H} años`;
+  let H = parseInt(document.getElementById('horizYrs').value) || 20;
+  H = Math.max(1, Math.min(40, H));
+  document.getElementById('horizYrs').value = H;
+
+  // Update months label
+  const label = document.getElementById('horiz-months-label');
+  if (label) label.textContent = `= ${H * 12} meses totales para distribuir en tus fases`;
+
+  // Sync mobile slider
+  const mSlider  = document.getElementById('m-horizYrs');
+  const mHorizVal = document.getElementById('m-horiz-val');
+  if (mSlider)   mSlider.value = H;
+  if (mHorizVal) mHorizVal.textContent = `${H} años`;
+
   const total = H * 12;
-  // Clamp all phase ends to new horizon; update last phase to end at horizon
-  if (S.phases.length) {
+  if (S.investMode === 'const') {
+    applyConstantMode(false);
+  } else if (S.phases.length) {
     for (let i = 0; i < S.phases.length; i++) {
       S.phases[i].end = Math.min(S.phases[i].end, total);
       if (S.phases[i].start > total) S.phases[i].start = total;
@@ -3145,6 +3255,31 @@ function updateHorizon() {
     renderPhases();
   }
   runSim();
+}
+
+function setInvestMode(mode) {
+  S.investMode = mode;
+  document.getElementById('mode-btn-const').classList.toggle('active',  mode === 'const');
+  document.getElementById('mode-btn-phases').classList.toggle('active', mode === 'phases');
+  document.getElementById('invest-const-panel').style.display  = mode === 'const'  ? 'block' : 'none';
+  document.getElementById('invest-phases-panel').style.display = mode === 'phases' ? 'block' : 'none';
+  if (mode === 'const') applyConstantMode();
+}
+
+function applyConstantMode(rerun = true) {
+  const monthly = parseInt(document.getElementById('const-monthly').value) || 500;
+  const total   = getHorizonMonths();
+  S.phases = [{id: Date.now(), start: 1, end: total, monthly}];
+  if (rerun) { scheduleSave(); runSim(); }
+}
+
+function updatePhasesCounter() {
+  const el = document.getElementById('phases-counter');
+  if (!el) return;
+  const total    = getHorizonMonths();
+  const assigned = S.phases.length ? S.phases[S.phases.length - 1].end : 0;
+  el.classList.toggle('over', assigned > total);
+  el.innerHTML   = `Meses asignados: <strong>${assigned}</strong> / ${total}`;
 }
 
 function toggleBand(b) {
@@ -3162,6 +3297,26 @@ function destroyProyCharts() {
   Object.keys(PROY_CHARTS).forEach(k => { try { PROY_CHARTS[k].destroy(); } catch(e){} delete PROY_CHARTS[k]; });
 }
 
+function switchProyTab(tab) {
+  ['proyeccion','estres','riesgo'].forEach(t => {
+    const panel = document.getElementById(`proy-tab-${t}`);
+    const btn   = document.getElementById(`pstab-${t}`);
+    if (!panel || !btn) return;
+    const active = t === tab;
+    panel.classList.toggle('active', active);
+    btn.classList.toggle('active', active);
+  });
+  // Render tab-specific content that needs canvas sizing
+  if (tab === 'estres') {
+    if (S.simData) { renderStressScenarios(); onStressTypeChange(); renderStressChips(); }
+    if (S.stressCurrentResult) renderStressPreviewChart(S.stressCurrentResult);
+  }
+  if (tab === 'riesgo' && S.simData) {
+    const {pct, apt, M} = S.simData;
+    renderPortPieChart(pct, apt, M);
+  }
+}
+
 function renderProyeccionesView() {
   if (!S.simData) return;
   destroyProyCharts();
@@ -3175,10 +3330,8 @@ function renderProyeccionesView() {
   renderHistogramChart(finalVals, apt[M]);
   renderPortPieChart(pct, apt, M);
   renderStressScenarios();
-  // Re-init stress constructor params (in case horizonte changed)
   onStressTypeChange();
   renderStressChips();
-  // Restore active stress preview if any
   if (S.stressCurrentResult) renderStressPreviewChart(S.stressCurrentResult);
 }
 
@@ -3415,11 +3568,16 @@ const STRESS_SECTOR_NAMES = {
 };
 
 function initStressGate() {
-  // Gate disabled — constructor available to all users during testing
-  const gate = document.getElementById('stress-gate');
-  if (gate) gate.style.display = 'none';
-  onStressTypeChange();
-  renderStressChips();
+  const gate    = document.getElementById('stress-gate');
+  const content = document.getElementById('stress-content');
+  if (!gate || !content) return;
+  const hasPremium = S.features?.stress_constructor ?? true; // default open if features not loaded
+  gate.style.display    = hasPremium ? 'none'  : 'block';
+  content.style.display = hasPremium ? 'block' : 'none';
+  if (hasPremium) {
+    onStressTypeChange();
+    renderStressChips();
+  }
 }
 
 function onStressTypeChange() {
@@ -3871,7 +4029,23 @@ async function loadPortfolio() {
           const monthly = p.monthly_amount || 500;
           return {id: Date.now() + i, start, end, monthly};
         });
-      rechainPhases(); // garantiza consistencia
+      rechainPhases();
+      // Auto-detect mode: single phase = constant mode, multiple = phases mode
+      if (S.phases.length > 1) {
+        S.investMode = 'phases';
+        const constPanel  = document.getElementById('invest-const-panel');
+        const phasesPanel = document.getElementById('invest-phases-panel');
+        const btnConst    = document.getElementById('mode-btn-const');
+        const btnPhases   = document.getElementById('mode-btn-phases');
+        if (constPanel)  constPanel.style.display  = 'none';
+        if (phasesPanel) phasesPanel.style.display = 'block';
+        if (btnConst)    btnConst.classList.remove('active');
+        if (btnPhases)   btnPhases.classList.add('active');
+      } else if (S.phases.length === 1) {
+        const monthly = S.phases[0].monthly;
+        const input = document.getElementById('const-monthly');
+        if (input) input.value = monthly;
+      }
     }
     console.log(`[Portfolio] Cargado: ${S.port.length} activos, ${S.phases.length} fases`);
   } catch(e) {
@@ -5468,8 +5642,7 @@ fetchTickerPrices();
 [{t:'SPY',w:50},{t:'QQQ',w:30},{t:'GLD',w:20}].forEach(x => S.port.push(x));
 renderAssets(); updateAllocBar(); updatePortMeta();
 
-S.phases.push({id:1, start:1, end:60, monthly:500});
-S.phases.push({id:2, start:61, end:getHorizonMonths(), monthly:1000});
+applyConstantMode(false);
 renderPhases();
 
 loadUser();
