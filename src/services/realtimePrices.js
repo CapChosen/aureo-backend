@@ -102,12 +102,26 @@ class RealtimePriceService extends EventEmitter {
 
   // ── Internos ─────────────────────────────────────────
   _toFinnhub(symbol) {
-    const MAP = { 'BTC-USD': 'BINANCE:BTCUSDT', 'ETH-USD': 'BINANCE:ETHUSDT' };
+    const MAP = {
+      'BTC-USD':  'BINANCE:BTCUSDT',
+      'ETH-USD':  'BINANCE:ETHUSDT',
+      'SOL-USD':  'BINANCE:SOLUSDT',
+      'BNB-USD':  'BINANCE:BNBUSDT',
+      'XRP-USD':  'BINANCE:XRPUSDT',
+      'DOGE-USD': 'BINANCE:DOGEUSDT',
+    };
     return MAP[symbol] || symbol;
   }
 
   _reverseMap(finnhubSym) {
-    const REV = { 'BINANCE:BTCUSDT': 'BTC-USD', 'BINANCE:ETHUSDT': 'ETH-USD' };
+    const REV = {
+      'BINANCE:BTCUSDT':  'BTC-USD',
+      'BINANCE:ETHUSDT':  'ETH-USD',
+      'BINANCE:SOLUSDT':  'SOL-USD',
+      'BINANCE:BNBUSDT':  'BNB-USD',
+      'BINANCE:XRPUSDT':  'XRP-USD',
+      'BINANCE:DOGEUSDT': 'DOGE-USD',
+    };
     return REV[finnhubSym] || finnhubSym;
   }
 

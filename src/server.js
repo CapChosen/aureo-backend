@@ -185,6 +185,8 @@ app.listen(PORT, () => {
 
   // ── Servicio WebSocket de precios en tiempo real ──────
   realtimePrices.connect();
+  ['BTC-USD', 'ETH-USD', 'SOL-USD', 'AAPL', 'MSFT', 'NVDA', 'SPY', 'QQQ', 'TSLA', 'AMZN']
+    .forEach(s => realtimePrices.subscribe(s));
 
   // ── Job nocturno: 5 AM UTC (= 2 AM Santiago) ─────────
   cron.schedule('0 5 * * *', () => {

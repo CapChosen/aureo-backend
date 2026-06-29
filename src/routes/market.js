@@ -79,18 +79,62 @@ const EXTENDED_SYMBOLS = [
   // Internacionales
   'SAP','NVO','RHHBY','NVS','UL','BP','SHEL','BABA','TCEHY','PDD','NIO','SONY',
   'LVMH','OR','NESN','VOW','BMW',
+  // Chile — IPSA / Bolsa de Santiago
+  'FALABELLA.SN','CENCOSUD.SN','COPEC.SN','SQM-B.SN','BSANTANDER.SN','BCI.SN',
+  'CHILE.SN','CMPC.SN','ENEL.SN','COLBUN.SN','ENELAM.SN','ECL.SN','RIPLEY.SN',
+  'FORUS.SN','CAP.SN','VAPORES.SN','ITAUCL.SN','SECURITY.SN','CONCHA.SN',
+  // ETFs Chile / LATAM
+  'ECH','ILF',
+  // Crypto adicional
+  'SOL-USD','BNB-USD','XRP-USD','DOGE-USD',
 ];
 
 // Mapeo de símbolos propios → formato Finnhub
 const QUOTE_SYMBOL_MAP = {
-  'BTC-USD': 'BINANCE:BTCUSDT',
-  'ETH-USD': 'BINANCE:ETHUSDT',
+  'BTC-USD':  'BINANCE:BTCUSDT',
+  'ETH-USD':  'BINANCE:ETHUSDT',
+  'SOL-USD':  'BINANCE:SOLUSDT',
+  'BNB-USD':  'BINANCE:BNBUSDT',
+  'XRP-USD':  'BINANCE:XRPUSDT',
+  'DOGE-USD': 'BINANCE:DOGEUSDT',
 };
+
+// ════════════════════════════════════════════════════════
+// Inferir exchange/currency a partir del sufijo del símbolo
+// (Finnhub /search y /quote no devuelven estos campos en el plan free)
+// ════════════════════════════════════════════════════════
+const SUFFIX_EXCHANGE_MAP = {
+  '.SN': { exchange: 'Santiago',     currency: 'CLP' },
+  '.MX': { exchange: 'Mexico',       currency: 'MXN' },
+  '.BA': { exchange: 'Buenos Aires', currency: 'ARS' },
+  '.SA': { exchange: 'Sao Paulo',    currency: 'BRL' },
+  '.TO': { exchange: 'Toronto',      currency: 'CAD' },
+  '.L':  { exchange: 'London',       currency: 'GBP' },
+  '.DE': { exchange: 'Frankfurt',    currency: 'EUR' },
+  '.PA': { exchange: 'Paris',        currency: 'EUR' },
+  '.HK': { exchange: 'Hong Kong',    currency: 'HKD' },
+  '.T':  { exchange: 'Tokyo',        currency: 'JPY' },
+};
+function inferExchangeCurrency(symbol) {
+  for (const [suffix, info] of Object.entries(SUFFIX_EXCHANGE_MAP)) {
+    if (symbol.endsWith(suffix)) return info;
+  }
+  return { exchange: 'US', currency: 'USD' };
+}
+
+// Patrón de ticker chileno: letras/guiones seguidos de .SN
+const CL_TICKER_RE = /^[A-Za-z.\-]+\.SN$/i;
+
+// Finnhub ya usa el sufijo .SN nativamente para Bolsa de Santiago;
+// se aísla en una función por si el formato cambia más adelante.
+function toSantiagoFinnhubSymbol(symbol) { return symbol; }
 
 // Cache extendida (todos los activos extra)
 let extendedCache = {};
 let extendedTimestamp = 0;
 let preloadRunning = false;
+// Rate-limit de reintentos para símbolos sin precio en /price/spot
+const _notFoundAttempts = {};
 
 // Cache para datos de velas (chart)
 const candleCache = {};
@@ -109,7 +153,8 @@ const TICKER_CACHE_TTL = 60 * 1000;
 // ════════════════════════════════════════════════════════
 async function fetchPrice(symbol) {
   try {
-    const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_KEY}`;
+    const finnhubSymbol = QUOTE_SYMBOL_MAP[symbol] || symbol;
+    const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(finnhubSymbol)}&token=${FINNHUB_KEY}`;
     const response = await fetch(url);
     const data = await response.json();
 
@@ -289,6 +334,118 @@ router.get('/price/:symbol', requireAuth, async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════
+// GET /api/market/price/dynamic/:symbol - Precio con fallback (público)
+// Revisa cache (5 min) → si no hay, llama a Finnhub directamente.
+// ════════════════════════════════════════════════════════
+router.get('/price/dynamic/:symbol', async (req, res) => {
+  const symbol = req.params.symbol.toUpperCase();
+  const now = Date.now();
+  const FRESH_MS = 5 * 60 * 1000;
+
+  const cached = extendedCache[symbol] || priceCache[symbol];
+  if (cached?.price != null && cached.ts && (now - cached.ts) < FRESH_MS) {
+    return res.json({
+      symbol,
+      price:      cached.price,
+      change:     cached.change ?? 0,
+      change_pct: cached.change_pct ?? 0,
+      currency:   cached.currency || inferExchangeCurrency(symbol).currency,
+      source:     'cache',
+    });
+  }
+
+  try {
+    const finnhubSymbol = symbol.endsWith('.SN') ? toSantiagoFinnhubSymbol(symbol) : symbol;
+    const price = await fetchPrice(finnhubSymbol);
+
+    if (!price) {
+      return res.status(404).json({ error: `Símbolo ${symbol} no encontrado o sin datos` });
+    }
+
+    const currency = inferExchangeCurrency(symbol).currency;
+    extendedCache[symbol] = {
+      symbol, price: price.price, change: price.change, change_pct: price.change_pct,
+      currency, ts: now,
+    };
+
+    res.json({
+      symbol, price: price.price, change: price.change,
+      change_pct: price.change_pct, currency, source: 'live',
+    });
+  } catch (error) {
+    console.error(`[price/dynamic] Error ${symbol}:`, error.message);
+    res.status(500).json({ error: 'Error al obtener precio' });
+  }
+});
+
+// ════════════════════════════════════════════════════════
+// GET /api/market/price/spot/:symbol - Precio spot on-demand (público)
+// Usado por el lazy-loading del Explorador de Activos para llenar
+// precios faltantes sin esperar el preload completo en background.
+// ════════════════════════════════════════════════════════
+router.get('/price/spot/:symbol', async (req, res) => {
+  const symbol = req.params.symbol.toUpperCase();
+  const now = Date.now();
+  const FRESH_MS = 10 * 60 * 1000;
+  const NOT_FOUND_RETRY_MS = 60 * 1000;
+
+  const cached = extendedCache[symbol] || priceCache[symbol];
+  if (cached?.price != null && cached.ts && (now - cached.ts) < FRESH_MS) {
+    return res.json({
+      symbol, price: cached.price, change: cached.change ?? 0,
+      change_pct: cached.change_pct ?? 0, prev_close: cached.prev_close ?? null,
+      source: 'cache',
+    });
+  }
+
+  // Si el último intento sin precio fue hace menos de 60s, no reintentar contra Finnhub
+  const lastNotFound = _notFoundAttempts[symbol];
+  if (lastNotFound && (now - lastNotFound) < NOT_FOUND_RETRY_MS) {
+    return res.json({ symbol, price: null, change: 0, change_pct: 0, prev_close: null, source: 'not_found' });
+  }
+
+  try {
+    const price = await fetchPrice(symbol); // .SN ya es el formato nativo de Finnhub
+
+    if (!price) {
+      _notFoundAttempts[symbol] = now;
+      return res.json({ symbol, price: null, change: 0, change_pct: 0, prev_close: null, source: 'not_found' });
+    }
+
+    delete _notFoundAttempts[symbol];
+    extendedCache[symbol] = {
+      symbol, price: price.price, change: price.change, change_pct: price.change_pct,
+      prev_close: price.prev_close, ts: now,
+    };
+
+    res.json({
+      symbol, price: price.price, change: price.change,
+      change_pct: price.change_pct, prev_close: price.prev_close, source: 'live',
+    });
+  } catch (error) {
+    console.error(`[price/spot] Error ${symbol}:`, error.message);
+    res.status(500).json({ error: 'Error al obtener precio' });
+  }
+});
+
+// ════════════════════════════════════════════════════════
+// GET /api/market/preload/status - Estado del preload en background
+// ════════════════════════════════════════════════════════
+router.get('/preload/status', (_req, res) => {
+  const total    = EXTENDED_SYMBOLS.length;
+  const missing  = EXTENDED_SYMBOLS.filter(s => extendedCache[s]?.price == null);
+  const loaded   = total - missing.length;
+
+  res.json({
+    running: preloadRunning,
+    total,
+    loaded,
+    pct: total > 0 ? Math.round((loaded / total) * 100) : 100,
+    symbols_missing: missing,
+  });
+});
+
+// ════════════════════════════════════════════════════════
 // POST /api/market/batch - Precios de múltiples símbolos
 // ════════════════════════════════════════════════════════
 router.post('/batch', requireAuth, async (req, res) => {
@@ -299,8 +456,8 @@ router.post('/batch', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Debe enviar un array de símbolos' });
     }
 
-    if (symbols.length > 20) {
-      return res.status(400).json({ error: 'Máximo 20 símbolos por request' });
+    if (symbols.length > 50) {
+      return res.status(400).json({ error: 'Máximo 50 símbolos por request' });
     }
 
     const results = await fetchPricesBatched(symbols.map(s => s.toUpperCase()));
@@ -318,9 +475,13 @@ router.post('/batch', requireAuth, async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════
-// GET /api/market/search/:query - Buscar símbolos
+// GET /api/market/search/:query - Buscar símbolos (público)
 // ════════════════════════════════════════════════════════
-router.get('/search/:query', requireAuth, async (req, res) => {
+const SEARCH_ALLOWED_TYPES = new Set([
+  'Common Stock', 'ETP', 'ETF', 'ADR', 'Crypto', 'Forex', 'Fund', 'Bond',
+]);
+
+router.get('/search/:query', async (req, res) => {
   try {
     const { query } = req.params;
 
@@ -333,19 +494,28 @@ router.get('/search/:query', requireAuth, async (req, res) => {
     const data = await response.json();
 
     if (data.result && data.result.length > 0) {
-      const results = data.result
-        .filter(item =>
-          item.type === 'Common Stock' ||
-          item.type === 'ETP' ||
-          item.type === 'ETF'
-        )
-        .slice(0, 20)
-        .map(item => ({
-          symbol: item.symbol,
-          description: item.description,
-          type: item.type,
-          displaySymbol: item.displaySymbol
-        }));
+      let results = data.result
+        .filter(item => SEARCH_ALLOWED_TYPES.has(item.type))
+        .slice(0, 50)
+        .map(item => {
+          const { exchange, currency } = inferExchangeCurrency(item.symbol);
+          return {
+            symbol: item.symbol,
+            description: item.description,
+            type: item.type,
+            displaySymbol: item.displaySymbol,
+            exchange,
+            currency,
+          };
+        });
+
+      // Priorizar tickers chilenos cuando el query mismo tiene el patrón .SN
+      if (CL_TICKER_RE.test(query)) {
+        results = [
+          ...results.filter(r => r.symbol.endsWith('.SN')),
+          ...results.filter(r => !r.symbol.endsWith('.SN')),
+        ];
+      }
 
       res.json({ results, count: results.length });
     } else {
@@ -355,6 +525,58 @@ router.get('/search/:query', requireAuth, async (req, res) => {
   } catch (error) {
     console.error(`Error buscando ${req.params.query}:`, error);
     res.status(500).json({ error: 'Error al buscar símbolos' });
+  }
+});
+
+// ════════════════════════════════════════════════════════
+// GET /api/market/exchange/:exchange - Listado de activos por bolsa
+// Exchanges soportados: SN (Santiago), BM (México), BA (Buenos Aires).
+// 'US' no se implementa — devuelve demasiados resultados; usar /search.
+// Cache en memoria 24h (el listado de símbolos por bolsa no cambia seguido).
+// ════════════════════════════════════════════════════════
+const SUPPORTED_EXCHANGES = new Set(['SN', 'BM', 'BA']);
+const _exchangeCache = {}; // { SN: { data, ts } }
+const EXCHANGE_CACHE_TTL = 24 * 60 * 60 * 1000;
+
+router.get('/exchange/:exchange', requireAuth, async (req, res) => {
+  const exchange = req.params.exchange.toUpperCase();
+
+  if (!SUPPORTED_EXCHANGES.has(exchange)) {
+    return res.status(400).json({
+      error: `Exchange '${exchange}' no soportado`,
+      supported: [...SUPPORTED_EXCHANGES],
+    });
+  }
+
+  const cached = _exchangeCache[exchange];
+  if (cached && (Date.now() - cached.ts) < EXCHANGE_CACHE_TTL) {
+    return res.json({ exchange, results: cached.data, count: cached.data.length, cached: true });
+  }
+
+  try {
+    const url = `https://finnhub.io/api/v1/stock/symbol?exchange=${exchange}&token=${FINNHUB_KEY}`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!response.ok || !Array.isArray(data)) {
+      return res.status(502).json({ error: 'Error al obtener listado de Finnhub' });
+    }
+
+    const results = data
+      .slice(0, 500)
+      .map(item => ({
+        symbol:      item.symbol,
+        description: item.description,
+        type:        item.type,
+        currency:    item.currency || inferExchangeCurrency(item.symbol).currency,
+      }));
+
+    _exchangeCache[exchange] = { data: results, ts: Date.now() };
+
+    res.json({ exchange, results, count: results.length, cached: false });
+  } catch (error) {
+    console.error(`Error obteniendo exchange ${exchange}:`, error);
+    res.status(500).json({ error: 'Error al obtener listado de activos' });
   }
 });
 
@@ -801,10 +1023,16 @@ async function fetchPriceSimple(symbol) {
     const data = await response.json();
     if (!response.ok || data.error) return null;
     if (data.c && data.c > 0) {
-      return { symbol, price: parseFloat(data.c.toFixed(2)), change_pct: parseFloat(data.dp?.toFixed(2) || 0) };
+      return {
+        symbol, price: parseFloat(data.c.toFixed(2)),
+        change: parseFloat(data.d?.toFixed(2) || 0),
+        change_pct: parseFloat(data.dp?.toFixed(2) || 0),
+        prev_close: parseFloat(data.pc?.toFixed(2) || 0),
+        ts: Date.now(),
+      };
     }
     if (data.pc && data.pc > 0) {
-      return { symbol, price: parseFloat(data.pc.toFixed(2)), change_pct: 0 };
+      return { symbol, price: parseFloat(data.pc.toFixed(2)), change: 0, change_pct: 0, prev_close: parseFloat(data.pc.toFixed(2)), ts: Date.now() };
     }
     return null;
   } catch { return null; }

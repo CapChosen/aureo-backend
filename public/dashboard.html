@@ -4353,7 +4353,10 @@ function renderAssetsExplorer() {
   filterAssetsView();
 }
 
+let _assetsRenderGen = 0;
+
 function renderAssetsGrid(entries) {
+  const gen = ++_assetsRenderGen;
   const container = document.getElementById('assets-grid-container');
   if (!container) return;
   if (!entries.length) {
@@ -4389,11 +4392,14 @@ function renderAssetsGrid(entries) {
       const ext  = ALL_PRICES_DATA[sym];
       const liveP = tick ? { p: tick.p, c: tick.c } : ext ? { p: ext.price, c: ext.change_pct } : null;
       const livePriceHtml = liveP
-        ? `<div class="asset-live-price">
+        ? `<div class="asset-live-price" data-sym="${safeSym}">
             <span class="alp-price">$${liveP.p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
             <span class="alp-chg ${liveP.c>=0?'up':'dn'}">${liveP.c>=0?'+':''}${liveP.c.toFixed(2)}%</span>
            </div>`
-        : `<div class="asset-live-price"><span class="alp-price" style="color:var(--text-3)">—</span></div>`;
+        : `<div class="asset-live-price" data-sym="${safeSym}" data-missing="1">
+            <span class="alp-price" style="color:var(--text-3)">—</span>
+            <span class="alp-chg" style="display:none"></span>
+           </div>`;
       // FIX 4: leader label
       const isStock = d.type === 'Stock';
       const isCrypto = d.type === 'Crypto';
@@ -4430,6 +4436,45 @@ function renderAssetsGrid(entries) {
       </div>`;
     }).join('')}
   </div>`;
+  lazyLoadMissingPrices(container, gen);
+}
+
+// Carga precios faltantes on-demand (activos sin precio en TICKER_DATA/ALL_PRICES_DATA).
+// Una sola pasada por render — no hace polling continuo.
+function lazyLoadMissingPrices(container, gen) {
+  const missing = [...container.querySelectorAll('.asset-live-price[data-missing="1"]')];
+  missing.forEach((el, i) => {
+    const sym = el.dataset.sym;
+    if (!sym) return;
+    setTimeout(async () => {
+      if (gen !== _assetsRenderGen) return; // el filtro cambió, descartar resultado
+      try {
+        const res  = await fetch(`${BACKEND}/api/market/price/spot/${encodeURIComponent(sym)}`);
+        const data = await res.json();
+        if (gen !== _assetsRenderGen) return;
+
+        const liveEl = container.querySelector(`.asset-live-price[data-sym="${sym}"]`);
+        if (!liveEl) return;
+        const priceEl = liveEl.querySelector('.alp-price');
+        const chgEl   = liveEl.querySelector('.alp-chg');
+
+        if (data.source === 'not_found' || data.price == null) {
+          priceEl.textContent  = 'N/D';
+          priceEl.style.color  = '#666';
+          if (chgEl) chgEl.style.display = 'none';
+        } else {
+          priceEl.textContent  = '$' + data.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+          priceEl.style.color  = '';
+          if (chgEl) {
+            const c = data.change_pct ?? 0;
+            chgEl.textContent  = (c>=0?'+':'') + c.toFixed(2) + '%';
+            chgEl.className    = 'alp-chg ' + (c>=0?'up':'dn');
+            chgEl.style.display = '';
+          }
+        }
+      } catch (e) { /* silencioso — no bloquear el resto de la cola */ }
+    }, i * 300);
+  });
 }
 
 function addAssetFromExplorer(sym) {
