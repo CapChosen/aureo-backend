@@ -125,10 +125,6 @@ function inferExchangeCurrency(symbol) {
 // Patrón de ticker chileno: letras/guiones seguidos de .SN
 const CL_TICKER_RE = /^[A-Za-z.\-]+\.SN$/i;
 
-// Finnhub ya usa el sufijo .SN nativamente para Bolsa de Santiago;
-// se aísla en una función por si el formato cambia más adelante.
-function toSantiagoFinnhubSymbol(symbol) { return symbol; }
-
 // Cache extendida (todos los activos extra)
 let extendedCache = {};
 let extendedTimestamp = 0;
@@ -335,7 +331,8 @@ router.get('/price/:symbol', requireAuth, async (req, res) => {
 
 // ════════════════════════════════════════════════════════
 // GET /api/market/price/dynamic/:symbol - Precio con fallback (público)
-// Revisa cache (5 min) → si no hay, llama a Finnhub directamente.
+// Revisa cache (5 min) → si no hay, prueba Finnhub y luego Twelve Data
+// (Twelve Data cubre exchanges internacionales que Finnhub free no tiene).
 // ════════════════════════════════════════════════════════
 router.get('/price/dynamic/:symbol', async (req, res) => {
   const symbol = req.params.symbol.toUpperCase();
@@ -355,22 +352,21 @@ router.get('/price/dynamic/:symbol', async (req, res) => {
   }
 
   try {
-    const finnhubSymbol = symbol.endsWith('.SN') ? toSantiagoFinnhubSymbol(symbol) : symbol;
-    const price = await fetchPrice(finnhubSymbol);
+    const result = await fetchPriceMultiSource(symbol);
 
-    if (!price) {
+    if (!result) {
       return res.status(404).json({ error: `Símbolo ${symbol} no encontrado o sin datos` });
     }
 
     const currency = inferExchangeCurrency(symbol).currency;
     extendedCache[symbol] = {
-      symbol, price: price.price, change: price.change, change_pct: price.change_pct,
+      symbol, price: result.price, change: result.change, change_pct: result.change_pct,
       currency, ts: now,
     };
 
     res.json({
-      symbol, price: price.price, change: price.change,
-      change_pct: price.change_pct, currency, source: 'live',
+      symbol, price: result.price, change: result.change,
+      change_pct: result.change_pct, currency, source: 'live', provider: result.source,
     });
   } catch (error) {
     console.error(`[price/dynamic] Error ${symbol}:`, error.message);
@@ -405,22 +401,22 @@ router.get('/price/spot/:symbol', async (req, res) => {
   }
 
   try {
-    const price = await fetchPrice(symbol); // .SN ya es el formato nativo de Finnhub
+    const result = await fetchPriceMultiSource(symbol);
 
-    if (!price) {
+    if (!result) {
       _notFoundAttempts[symbol] = now;
       return res.json({ symbol, price: null, change: 0, change_pct: 0, prev_close: null, source: 'not_found' });
     }
 
     delete _notFoundAttempts[symbol];
     extendedCache[symbol] = {
-      symbol, price: price.price, change: price.change, change_pct: price.change_pct,
-      prev_close: price.prev_close, ts: now,
+      symbol, price: result.price, change: result.change, change_pct: result.change_pct,
+      prev_close: result.prev_close ?? null, ts: now,
     };
 
     res.json({
-      symbol, price: price.price, change: price.change,
-      change_pct: price.change_pct, prev_close: price.prev_close, source: 'live',
+      symbol, price: result.price, change: result.change,
+      change_pct: result.change_pct, prev_close: result.prev_close ?? null, source: 'live', provider: result.source,
     });
   } catch (error) {
     console.error(`[price/spot] Error ${symbol}:`, error.message);
@@ -635,34 +631,69 @@ function pearsonCorr(a, b) {
   return denom < 1e-12 ? 0 : parseFloat((num/denom).toFixed(4));
 }
 
-// Mapea símbolo de la app al formato Stooq (fuente primaria para históricos)
-// Yahoo Finance bloquea requests de servidores cloud; Stooq es más confiable.
-function toStooqSymbol(symbol) {
-  if (symbol === 'BTC-USD') return 'btc.v';
-  if (symbol === 'ETH-USD') return 'eth.v';
-  if (symbol === 'BRK.B')   return 'brk-b.us';
-  // Acciones internacionales con sufijo distinto
-  const intl = {
-    'LVMH':'lvmh.fr','OR':'or.fr','NESN':'nesn.sw',
-    'VOW':'vow3.de','BMW':'bmw.de','SAP':'sap.de',
-  };
-  if (intl[symbol]) return intl[symbol];
-  return symbol.toLowerCase() + '.us';
-}
-
 // ────────────────────────────────────────────────────────
 // Twelve Data — cloud-friendly, unified endpoint for stocks+crypto
 // Env var: TWELVE_DATA_KEY  (get free key at twelvedata.com)
 // Free: 800 calls/day, 8 calls/min → 7.5s between calls
 // Basic ($8/mo): 120 calls/min → remove delay, instant correlations
 // ────────────────────────────────────────────────────────
-function isCrypto(symbol) { return symbol === 'BTC-USD' || symbol === 'ETH-USD'; }
+const CRYPTO_SYMBOLS = new Set(['BTC-USD', 'ETH-USD', 'SOL-USD', 'BNB-USD', 'XRP-USD', 'DOGE-USD']);
+function isCrypto(symbol) { return CRYPTO_SYMBOLS.has(symbol); }
 
 // Map internal symbol → Twelve Data symbol
 function toTdSymbol(symbol) {
-  if (symbol === 'BTC-USD') return 'BTC/USD';
-  if (symbol === 'ETH-USD') return 'ETH/USD';
+  if (isCrypto(symbol)) return symbol.replace('-', '/');
   return symbol;
+}
+
+// Exchanges internacionales que Finnhub free no cubre pero Twelve Data sí
+// (confirmado vía symbol_search: BVS=Santiago, BMV=México, BCBA=Buenos Aires)
+const TD_EXCHANGE_MAP = { '.SN': 'BVS', '.MX': 'BMV', '.BA': 'BCBA' };
+function toTdQuoteTarget(symbol) {
+  for (const [suffix, exchange] of Object.entries(TD_EXCHANGE_MAP)) {
+    if (symbol.endsWith(suffix)) return { symbol: symbol.slice(0, -suffix.length), exchange };
+  }
+  return { symbol: toTdSymbol(symbol), exchange: null };
+}
+
+// Cotización en vivo via Twelve Data — usado como fallback cuando Finnhub
+// no cubre el símbolo (exchanges internacionales en plan free).
+async function tdQuote(symbol, exchange) {
+  const key = process.env.TWELVE_DATA_KEY;
+  if (!key) return null;
+  let url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbol)}&apikey=${key}`;
+  if (exchange) url += `&exchange=${encodeURIComponent(exchange)}`;
+  try {
+    const res = await tdGet(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.status === 'error' || data.code || !data.close) {
+      if (data.message) console.warn(`[TD] quote ${symbol}:`, data.message);
+      return null;
+    }
+    return {
+      price:      parseFloat(data.close),
+      change:     parseFloat(data.change || 0),
+      change_pct: parseFloat(data.percent_change || 0),
+      prev_close: parseFloat(data.previous_close ?? data.close),
+    };
+  } catch (e) {
+    console.error(`[TD] quote ${symbol}:`, e.message);
+    return null;
+  }
+}
+
+// Precio en vivo multi-fuente: Finnhub primero (rápido, US+crypto),
+// Twelve Data como fallback (cubre exchanges internacionales: Chile, México, Argentina).
+async function fetchPriceMultiSource(symbol) {
+  const fh = await fetchPrice(symbol);
+  if (fh) return { ...fh, source: 'finnhub' };
+
+  const { symbol: tdSym, exchange } = toTdQuoteTarget(symbol);
+  const td = await tdQuote(tdSym, exchange);
+  if (td) return { symbol, ...td, source: 'twelvedata' };
+
+  return null;
 }
 
 // Rate limiter: max 8 TD calls/min (free plan). Set TD_PREMIUM=1 in Railway to skip delay.
@@ -751,27 +782,9 @@ async function avWeeklyRows(symbol) {
   } catch (e) { console.error(`[TD] weekly ${symbol}:`, e.message); return null; }
 }
 
-// Parsea el CSV devuelto por Stooq (fallback)
-function parseStooqCSV(csvText) {
-  const lines = csvText.trim().split('\n');
-  if (lines.length < 2) return null;
-  const rows = lines.slice(1)
-    .map(l => { const p = l.split(','); return { date: p[0]?.trim(), close: parseFloat(p[4]) }; })
-    .filter(r => r.date && !isNaN(r.close) && r.close > 0)
-    .sort((a, b) => (a.date < b.date ? -1 : 1));
-  return rows.length < 2 ? null : rows;
-}
-
-async function stooqMonthlyRows(symbol) {
-  try {
-    const url = `https://stooq.com/q/d/l/?s=${toStooqSymbol(symbol)}&i=m`;
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/csv,*/*' }, signal: AbortSignal.timeout(8000) });
-    if (!res.ok) return null;
-    return parseStooqCSV(await res.text());
-  } catch { return null; }
-}
-
-// Obtiene datos históricos mensuales — Supabase cache → TD → Stooq
+// Obtiene datos históricos mensuales — Supabase cache → Twelve Data
+// (Stooq se retiró: su endpoint de descarga ahora exige un challenge JS
+// anti-bot que bloquea cualquier request server-side, incluyendo Railway).
 async function fetchHistorical(symbol) {
   const cached = historicalCache[symbol];
   if (cached && (Date.now() - cached.timestamp) < HIST_CACHE_TTL) {
@@ -795,8 +808,6 @@ async function fetchHistorical(symbol) {
 
   // 2. Twelve Data (rate-limited, 8/min free)
   if (!rows) rows = await avMonthlyRows(symbol);
-  // 3. Stooq (fallback)
-  if (!rows) rows = await stooqMonthlyRows(symbol);
 
   if (!rows || rows.length < 12) {
     console.log(`[Hist] Sin datos ${symbol}: ${rows?.length ?? 0} pts`);
@@ -1082,7 +1093,7 @@ router.get('/allprices', (_req, res) => {
 
 // ════════════════════════════════════════════════════════
 // GET /api/market/candle/:symbol?tf=D
-// Uses Stooq — free, no key, reliable from cloud servers.
+// Fuentes: Supabase cache (job nocturno) → Twelve Data.
 // tf: 1H → daily last 30d, D → daily 1y, M/Y → monthly 5y
 // ════════════════════════════════════════════════════════
 
@@ -1124,27 +1135,6 @@ router.get('/candle/:symbol', async (req, res) => {
       else if (isMonthly) rows = await avMonthlyRows(raw);
       else                rows = await avDailyRows(raw);
       if (rows) source = 'TwelveData';
-    }
-
-    // Stooq fallback (mensual/diario)
-    if (!rows) {
-      const now = new Date();
-      const fmt = d => d.toISOString().slice(0, 10).replace(/-/g, '');
-      const si  = isMonthly ? 'm' : 'd';
-      const from = new Date(now - (isMonthly ? 10 : 2) * 365 * 86400000);
-      try {
-        const sr = await fetch(`https://stooq.com/q/d/l/?s=${toStooqSymbol(raw)}&i=${si}&d1=${fmt(from)}&d2=${fmt(now)}`,
-          { headers: { 'User-Agent': 'Mozilla/5.0' }, signal: AbortSignal.timeout(8000) });
-        if (sr.ok) {
-          const lines = (await sr.text()).trim().split('\n');
-          if (lines.length >= 2) {
-            rows = lines.slice(1).map(l => { const p = l.split(',');
-              return { date: p[0]?.trim(), open: parseFloat(p[1]), high: parseFloat(p[2]), low: parseFloat(p[3]), close: parseFloat(p[4]), volume: parseFloat(p[5])||0 };
-            }).filter(r => r.date && r.close > 0).sort((a, b) => a.date < b.date ? -1 : 1);
-            source = 'Stooq';
-          }
-        }
-      } catch { /* blocked */ }
     }
 
     // Filtrar al rango exacto del timeframe
